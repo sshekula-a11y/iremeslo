@@ -46,9 +46,9 @@ Všichni noví zákazníci dostanou tarif **Beta zdarma** (`plans.beta`). Placen
 
 1. Založit projekt v Supabase (region Frankfurt, `eu-central-1`).
 2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `006_admin.sql`, potom `db/supabase/storage.sql`.
+3. Soubor `db/local/000_supabase_stub.sql` se v Supabase **nespouští**, je jen pro lokální testy.
 4. Provozovatel (přístup do administrace `/ssh`): po registraci svého účtu jednou spustit
    `insert into app.platform_admins (user_id) select id from auth.users where email = 'vas@email.cz';`
-3. Soubor `db/local/000_supabase_stub.sql` se v Supabase **nespouští**, je jen pro lokální testy.
 
 Nové tabulky přidané později musí dostat `enable row level security` a vlastní politiky, jinak k nim aplikace nebude mít přístup.
 
