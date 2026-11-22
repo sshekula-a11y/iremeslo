@@ -134,6 +134,8 @@ select t_eq((select count(*) from jobs), 0, 'pracovník nemá přístup k tabulc
 select t_eq((select count(*) from job_materials), 0, 'pracovník nevidí nákupní a prodejní ceny');
 select t_eq((select count(*) from employees), 0, 'pracovník nevidí sazby zaměstnanců');
 select t_eq((select count(*) from clients), 0, 'pracovník nevidí adresář klientů');
+select t_eq((select count(*) from documents), 0, 'pracovník nevidí nabídky ani faktury');
+select t_fails(format($q$insert into documents (company_id, job_id, type, vat_mode, snapshot) values (%L, %L, 'quote', 'standard', '{"x":1}')$q$, :'company_a', :'job_a'), 'pracovník nemůže vystavit nabídku');
 select record_material_usage(:'mat_a', 55);
 select t_eq((select qty_actual::bigint from worker_job_materials(:'job_a') where id = :'mat_a'), 55, 'pracovník zapsal skutečnou spotřebu');
 insert into time_entries (company_id, job_id, employee_id, work_date, hours, created_by)
@@ -178,6 +180,17 @@ select t_fails(format('select issue_document(%L)', :'inv1'), 'vystavený doklad 
 select t_fails(format('delete from documents where id = %L', :'inv1'), 'vystavený doklad nejde smazat');
 select t_fails(format($q$update documents set total_due = 1 where id = %L$q$, :'inv1'), 'vystavenou fakturu nejde přepsat');
 select t_eq(t_affected(format($q$update documents set status = 'paid' where id = %L$q$, :'inv1')), 1, 'vystavenou fakturu jde označit jako zaplacenou');
+
+-- cenová nabídka: vlastní řada CN, může být i bez klienta, platnost 30 dní, po vystavení zamčená
+insert into documents (company_id, job_id, type, vat_mode, total_due, snapshot)
+  values (:'company_a', :'job_a', 'quote', 'standard', 65184, '{"kind":"quote","lines":[{"description":"Nátěr"}]}') returning id as cn1 \gset
+select t_text(issue_document(:'cn1', '2026-11-22'), 'CN-2026-001', 'cenová nabídka má vlastní řadu CN');
+select t_text((select valid_until::text from documents where id = :'cn1'), '2026-12-22', 'nabídka platí 30 dní');
+select t_fails(format($q$update documents set snapshot = '{}' where id = %L$q$, :'cn1'), 'vystavenou nabídku nejde přepsat');
+select t_fails(format('delete from documents where id = %L', :'cn1'), 'vystavenou nabídku nejde smazat');
+insert into documents (company_id, type, vat_mode, snapshot) values (:'company_a', 'quote', 'standard', '{}') returning id as cn_empty \gset
+select t_fails(format('select issue_document(%L)', :'cn_empty'), 'nabídku bez obsahu nejde vystavit');
+select t_eq(t_affected(format('delete from documents where id = %L', :'cn_empty')), 1, 'koncept nabídky jde smazat');
 
 -- odečet zálohy
 insert into documents (company_id, job_id, client_id, type, vat_mode, total_due, snapshot)

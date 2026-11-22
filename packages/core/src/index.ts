@@ -6,3 +6,4 @@ export * from "./numbering.ts";
 export * from "./bank.ts";
 export * from "./ico.ts";
 export * from "./spayd.ts";
+export * from "./document.ts";

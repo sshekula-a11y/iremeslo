@@ -20,8 +20,8 @@ Peníze se počítají v celých haléřích (v databázi `numeric`), nikdy ve f
 ## Testy
 
 ```bash
-npm test          # výpočty: 26 testů včetně kontrolního příkladu ze zadání
-npm run test:db   # databáze: 63 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
+npm test          # výpočty: 30 testů včetně kontrolního příkladu ze zadání
+npm run test:db   # databáze: 78 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
 npm run typecheck
 ```
 
@@ -59,7 +59,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 ## Další kroky
 
 1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář (hotovo).
-2. PDF nabídky a faktury podle návrhu (barevné varianty, logo, razítko, podpis, QR Platba).
+2. PDF nabídky (hotovo) a faktury: zálohy, DDPP, faktura s QR Platbou; nastavení firmy (logo, razítko, podpis, účet, barevná varianta).
 3. Odesílání e-mailem, pozvánky kolegů, superadmin.
 
 ## Webová aplikace (`apps/web`)
@@ -81,8 +81,14 @@ npm run dev                                     # http://localhost:3000
 | `/app/zakazky` | seznam s hledáním a filtrem stavu, nová zakázka, úprava zakázky |
 | `/app/klienti`, `/app/zamestnanci` | adresář klientů a lidé s nákladovými sazbami |
 | `/app/kalendar` | měsíc se zakázkami podle termínu a barvy stavu, u každé klient a lidé; na mobilu seznam po dnech od dneška |
+| `/app/doklady/[id]` | vystavená cenová nabídka: náhled a **Stáhnout PDF** (vytváří se v prohlížeči) |
 | `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
+
+Tlačítko **Vystavit nabídku** v zakázce ji nejdřív uloží a pak z ní vystaví cenovou nabídku s číslem z řady `CN-RRRR-NNN`
+(platnost 30 dní). Obsah se uloží do `documents.snapshot` (`buildQuote` v `packages/core/src/document.ts`) a vystavený doklad
+už nejde změnit; zákazník v něm vidí jen práce a účtovaný materiál, žádné náklady. Náhled i PDF kreslí stejný model
+`apps/web/src/lib/documents/view.ts`. Písma pro PDF (Inter, Archivo, licence OFL) jsou v `apps/web/public/fonts/pdf/`.
 
 Formulář zakázky počítá souhrn živě stejným jádrem `@iremeslo/core` jako testy; ukládá se jedním voláním
 databázové funkce `save_job` (hlavička + všech pět sekcí v jedné transakci).

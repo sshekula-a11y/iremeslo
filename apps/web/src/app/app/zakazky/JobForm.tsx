@@ -6,6 +6,7 @@ import { DEFAULT_UNITS, formatCzk, formatPercent, lineTotal, salePriceFromMarkup
 import { JOB_STATUSES, VAT_MODE_LABELS, type JobStatus } from "@/lib/labels";
 import { parseInput, toInput } from "@/lib/money";
 import { saveJob } from "./actions";
+import { createQuote } from "../doklady/actions";
 import { safeSummary } from "./summary";
 import type { CatalogOption, ClientOption, EmployeeOption, ExpenseRow, JobDraft, LaborRow, MaterialRow, WorkRow } from "./types";
 
@@ -36,6 +37,7 @@ export function JobForm({
   const router = useRouter();
   const [d, setD] = useState<JobDraft>(initial);
   const [saving, startSaving] = useTransition();
+  const [quoting, startQuoting] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const { summary, error: calcError } = useMemo(() => safeSummary(d, minMarginPct), [d, minMarginPct]);
 
@@ -104,6 +106,25 @@ export function JobForm({
       setMessage({ ok: true, text: "Uloženo" });
       if (!d.id) router.replace(`/app/zakazky/${res.id}`);
       else router.refresh();
+    });
+  }
+
+  // Nabídka se dělá z uložené zakázky: nejdřív uložit, pak vystavit, ať nabídka sedí s tím, co je na obrazovce.
+  function onQuote() {
+    setMessage(null);
+    startQuoting(async () => {
+      const saved = await saveJob(d);
+      if (!saved.ok) {
+        setMessage({ ok: false, text: saved.error });
+        return;
+      }
+      const res = await createQuote(saved.id);
+      if (!res.ok) {
+        setMessage({ ok: false, text: res.error });
+        if (!d.id) router.replace(`/app/zakazky/${saved.id}`);
+        return;
+      }
+      router.push(`/app/doklady/${res.id}`);
     });
   }
 
@@ -324,11 +345,14 @@ export function JobForm({
             <p className="text-[14px] text-warn">{calcError}</p>
           )}
           <div className="mt-3 flex items-center gap-3">
-            <button type="button" className="btn-primary flex-1" onClick={onSave} disabled={saving}>
+            <button type="button" className="btn-primary flex-1" onClick={onSave} disabled={saving || quoting}>
               {saving ? "Ukládám…" : "Uložit zakázku"}
             </button>
-            {message && <span className={`text-[13px] font-medium ${message.ok ? "text-ok" : "text-warn"}`} role="status">{message.text}</span>}
+            <button type="button" className="btn-ghost" onClick={onQuote} disabled={saving || quoting} title="Uloží zakázku a vystaví z ní cenovou nabídku s číslem">
+              {quoting ? "Vystavuji…" : "Vystavit nabídku"}
+            </button>
           </div>
+          {message && <p className={`mt-2 text-[13px] font-medium ${message.ok ? "text-ok" : "text-warn"}`} role="status">{message.text}</p>}
         </div>
       </aside>
       <div className="h-48 lg:hidden" aria-hidden="true" />
