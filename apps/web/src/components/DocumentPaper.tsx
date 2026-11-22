@@ -87,6 +87,17 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
         </div>
 
         {v.notes.length > 0 && <div className="space-y-1">{v.notes.map((n, i) => <p key={i} className="whitespace-pre-line">{n}</p>)}</div>}
+        {(v.stampUrl || v.signatureUrl) && (
+          <div className="ml-auto w-56 text-center">
+            <div className="flex h-20 items-end justify-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {v.stampUrl && <img src={v.stampUrl} alt="Razítko" className="max-h-20 max-w-28 object-contain" />}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {v.signatureUrl && <img src={v.signatureUrl} alt="Podpis" className="max-h-20 max-w-28 object-contain" />}
+            </div>
+            <p className="mt-1 border-t border-line pt-1 text-[12px] text-muted">Razítko a podpis dodavatele</p>
+          </div>
+        )}
         <p className="border-t border-line pt-2 text-[12px] text-muted">{v.footer}</p>
       </div>
     </article>

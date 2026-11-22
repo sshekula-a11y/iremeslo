@@ -56,6 +56,10 @@ const s = StyleSheet.create({
   grandLabel: { fontSize: 10, fontWeight: 700 },
   grandValue: { fontFamily: "Archivo", fontWeight: 800, fontSize: 15 },
   notes: { marginTop: 18, gap: 3 },
+  sign: { marginTop: 24, alignSelf: "flex-end", width: 200, alignItems: "center" },
+  signImages: { height: 64, flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 8 },
+  signImage: { maxHeight: 64, maxWidth: 120, objectFit: "contain" },
+  signLine: { width: "100%", borderTopWidth: 1, borderTopColor: LINE, marginTop: 4, paddingTop: 4, textAlign: "center", color: MUTED, fontSize: 7.5 },
   note: { color: INK },
   footer: { position: "absolute", left: 40, right: 40, bottom: 22, flexDirection: "row", justifyContent: "space-between", color: MUTED, fontSize: 7.5, borderTopWidth: 1, borderTopColor: LINE, paddingTop: 6 },
 });
@@ -124,6 +128,18 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
         {v.notes.length > 0 && (
           <View style={s.notes} wrap={false}>
             {v.notes.map((n, i) => <Text key={i} style={s.note}>{n}</Text>)}
+          </View>
+        )}
+
+        {(v.stampUrl || v.signatureUrl) && (
+          <View style={s.sign} wrap={false}>
+            <View style={s.signImages}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+              {v.stampUrl && <Image src={v.stampUrl} style={s.signImage} />}
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+              {v.signatureUrl && <Image src={v.signatureUrl} style={s.signImage} />}
+            </View>
+            <Text style={s.signLine}>Razítko a podpis dodavatele</Text>
           </View>
         )}
 

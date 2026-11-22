@@ -14,6 +14,8 @@ export interface DocumentView {
   accent: string;
   accentText: string;
   logoUrl: string | null;
+  stampUrl: string | null;
+  signatureUrl: string | null;
   supplier: { name: string; lines: string[] };
   customer: { name: string; lines: string[] } | null;
   meta: { label: string; value: string }[];
@@ -30,6 +32,8 @@ export interface DocumentMeta {
   validUntil: string | null;
   theme: string;
   logoUrl: string | null;
+  stampUrl?: string | null;
+  signatureUrl?: string | null;
 }
 
 const qty = (n: number) => toInput(n) || "0";
@@ -71,6 +75,8 @@ export function quoteView(s: QuoteSnapshot, m: DocumentMeta): DocumentView {
     accent: theme.accent,
     accentText: theme.accentText,
     logoUrl: m.logoUrl,
+    stampUrl: m.stampUrl ?? null,
+    signatureUrl: m.signatureUrl ?? null,
     supplier: { name: s.supplier.name, lines: partyLines(s.supplier) },
     customer: s.customer ? { name: s.customer.name, lines: partyLines(s.customer) } : null,
     meta: [

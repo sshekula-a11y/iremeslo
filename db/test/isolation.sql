@@ -229,6 +229,9 @@ select t_fails(format('select accept_invitation(%L)', :'token'), 'pozvánku nejd
 -- ---------- pojistky ----------
 select t_login('00000000-0000-0000-0000-00000000000a');
 select t_fails(format($q$update companies set read_only = true where id = %L$q$, :'company_a'), 'majitel si nemůže sám přepnout režim jen pro čtení');
+select t_eq(t_affected(format($q$update companies set invoice_theme = 'zelena', iban = 'CZ6508000000192000145399', payment_terms_days = 21 where id = %L$q$, :'company_a')), 1, 'majitel mění nastavení firmy (barva, účet, splatnost)');
+select t_fails(format($q$update companies set invoice_theme = 'ruzova' where id = %L$q$, :'company_a'), 'neznámou barvu dokladů databáze nepřijme');
+update companies set payment_terms_days = 14 where id = :'company_a';
 select issue_document(:'inv3', '2026-11-24') \g /dev/null
 select t_fails(format($q$delete from advance_deductions where advance_id = %L$q$, :'zf'), 'odečet zálohy na vystavené faktuře nejde odebrat');
 select t_fails(format($q$update subscriptions set plan_id = 'bez_limitu' where company_id = %L$q$, :'company_a'), 'tarif si uživatel nemůže změnit sám');

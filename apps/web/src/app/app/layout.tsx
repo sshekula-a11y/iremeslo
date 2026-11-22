@@ -19,7 +19,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <NavLinks worker={isWorker} variant="top" />
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden max-w-48 truncate text-[13px] text-muted md:inline">{company.name}</span>
+            {!isWorker && (
+              <Link href="/app/nastaveni" className="max-w-48 truncate rounded-lg px-2 py-1.5 text-[13px] text-muted hover:bg-paper hover:text-ink" title="Nastavení firmy">
+                <span className="md:hidden">Nastavení</span>
+                <span className="hidden md:inline">{company.name}</span>
+              </Link>
+            )}
             <form action={signOut}>
               <button className="rounded-lg px-2 py-1.5 text-[13px] text-muted hover:bg-paper hover:text-ink">Odhlásit</button>
             </form>

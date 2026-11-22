@@ -21,7 +21,7 @@ Peníze se počítají v celých haléřích (v databázi `numeric`), nikdy ve f
 
 ```bash
 npm test          # výpočty: 30 testů včetně kontrolního příkladu ze zadání
-npm run test:db   # databáze: 78 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
+npm run test:db   # databáze: 80 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
 npm run typecheck
 ```
 
@@ -59,7 +59,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 ## Další kroky
 
 1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář (hotovo).
-2. PDF nabídky (hotovo) a faktury: zálohy, DDPP, faktura s QR Platbou; nastavení firmy (logo, razítko, podpis, účet, barevná varianta).
+2. PDF nabídky a nastavení firmy (hotovo); faktury: zálohy, DDPP, faktura s QR Platbou a odečtem záloh.
 3. Odesílání e-mailem, pozvánky kolegů, superadmin.
 
 ## Webová aplikace (`apps/web`)
@@ -82,6 +82,7 @@ npm run dev                                     # http://localhost:3000
 | `/app/klienti`, `/app/zamestnanci` | adresář klientů a lidé s nákladovými sazbami |
 | `/app/kalendar` | měsíc se zakázkami podle termínu a barvy stavu, u každé klient a lidé; na mobilu seznam po dnech od dneška |
 | `/app/doklady/[id]` | vystavená cenová nabídka: náhled a **Stáhnout PDF** (vytváří se v prohlížeči) |
+| `/app/nastaveni` | nastavení firmy (mění jen majitel): údaje na dokladech, plátce DPH, splatnost, účet → IBAN, přirážka a hranice marže, barva dokladů, logo / razítko / podpis (PNG nebo JPG do 1 MB, soukromé úložiště) |
 | `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
 

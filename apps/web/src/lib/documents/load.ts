@@ -41,15 +41,18 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
       .eq("company_id", companyId)
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("companies").select("invoice_theme, logo_path").eq("id", companyId).single(),
+    supabase.from("companies").select("invoice_theme, logo_path, stamp_path, signature_path").eq("id", companyId).single(),
   ]);
   if (!d || !d.number || d.type !== "quote") notFound();
 
-  let logoUrl: string | null = null;
-  if (firm?.logo_path) {
-    const { data } = await supabase.storage.from("files").createSignedUrl(firm.logo_path, 60 * 60);
-    logoUrl = data?.signedUrl ?? null;
+  // Obrázky leží v soukromém úložišti; odkaz platí hodinu (na náhled i vytvoření PDF stačí).
+  const paths = [firm?.logo_path, firm?.stamp_path, firm?.signature_path].filter((p): p is string => !!p);
+  const signed = new Map<string, string>();
+  if (paths.length) {
+    const { data } = await supabase.storage.from("files").createSignedUrls(paths, 60 * 60);
+    for (const s of data ?? []) if (s.path && s.signedUrl) signed.set(s.path, s.signedUrl);
   }
+  const url = (p: string | null | undefined) => (p ? signed.get(p) ?? null : null);
 
   return {
     id: d.id,
@@ -62,7 +65,9 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
       issueDate: d.issue_date,
       validUntil: d.valid_until,
       theme: firm?.invoice_theme ?? "oranzova",
-      logoUrl,
+      logoUrl: url(firm?.logo_path),
+      stampUrl: url(firm?.stamp_path),
+      signatureUrl: url(firm?.signature_path),
     }),
   };
 }
