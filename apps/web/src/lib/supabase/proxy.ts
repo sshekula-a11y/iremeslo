@@ -1,0 +1,39 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+/** Obnoví přihlášení a nepřihlášené pošle z /app na přihlášení. */
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+          Object.entries(headers ?? {}).forEach(([key, value]) => supabaseResponse.headers.set(key, value));
+        },
+      },
+    },
+  );
+
+  // Mezi createServerClient a getClaims nesmí nic být (jinak hrozí náhodné odhlašování).
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+
+  const path = request.nextUrl.pathname;
+  if (!user && (path.startsWith("/app") || path.startsWith("/registrace-firmy"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/prihlaseni";
+    url.searchParams.set("next", path);
+    return NextResponse.redirect(url);
+  }
+
+  return supabaseResponse;
+}

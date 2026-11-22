@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Barvy a písma z návrhu iŘemeslo (design canvas) */
+@theme {
+  --color-paper: #f4f3ef;
+  --color-ink: #17191c;
+  --color-ink-2: #2a2d32;
+  --color-muted: #5b5f66;
+  --color-line: #e4e2dc;
+  --color-accent: #e8590c;
+  --color-accent-2: #ff8a3d;
+  --color-accent-soft: #fdeee4;
+  --color-ok: #1f7a4d;
+  --color-ok-soft: #e5f4ec;
+  --color-warn: #b42318;
+  --color-warn-soft: #fdecea;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-display: "Archivo Variable", "Inter Variable", system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+/* Čísla v tabulkách a souhrnech se nesmí „vlnit“ */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Políčka formulářů: velké a čitelné, aby šla vyplnit jednou rukou na stavbě */
+@utility field {
+  @apply w-full rounded-xl border border-line bg-white px-3 py-2.5 text-[16px] text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20;
+}
+@utility label {
+  @apply mb-1 block text-[13px] font-medium text-muted;
+}
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-white hover:bg-[#d14f0a];
+}
+@utility btn-dark {
+  @apply btn bg-ink text-white hover:bg-ink-2;
+}
+@utility btn-ghost {
+  @apply btn border border-line bg-white text-ink hover:bg-paper;
+}
+@utility card {
+  @apply rounded-2xl border border-line bg-white;
+}

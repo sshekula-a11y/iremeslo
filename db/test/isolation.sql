@@ -109,6 +109,10 @@ select t_fails(format($q$insert into memberships (company_id, user_id, role) val
 select t_fails(format($q$select record_material_usage(%L, 1)$q$, :'mat_a'), 'B nemůže zapsat spotřebu materiálu A');
 select t_eq(t_affected(format('update companies set name = %L where id = %L', 'hack', :'company_a')), 0, 'B nemůže přejmenovat firmu A');
 
+select t_fails(format($q$select save_job(%L, '{"title":"podvrh","vat_mode":"standard","vat_rate":21}'::jsonb)$q$, :'company_a'), 'B nemůže přes save_job zapsat do firmy A');
+select t_fails(format($q$select save_job(%L, jsonb_build_object('id', %L, 'title', 'x', 'vat_mode', 'standard', 'vat_rate', 21))$q$, :'company_b', :'job_a'),
+  'B nemůže přes save_job přepsat zakázku A ani se svou firmou');
+
 -- ---------- cizí uživatel bez firmy a nepřihlášený ----------
 select t_login('00000000-0000-0000-0000-0000000000ff');
 select t_eq((select count(*) from jobs), 0, 'cizí uživatel nevidí žádné zakázky');
@@ -138,6 +142,24 @@ select t_eq((select count(*) from time_entries), 1, 'pracovník zapsal a vidí s
 select t_fails(format($q$insert into time_entries (company_id, job_id, employee_id, work_date, hours, created_by) values (%L, %L, %L, current_date, 8, %L)$q$,
   :'company_a', :'job_a2', :'emp_a', '00000000-0000-0000-0000-0000000000a2'), 'pracovník nemůže psát hodiny na nepřiřazenou zakázku');
 select t_fails(format($q$insert into jobs (company_id, title) values (%L, 'x')$q$, :'company_a'), 'pracovník nemůže zakládat zakázky');
+
+-- ---------- uložení zakázky jedním voláním ----------
+select t_login('00000000-0000-0000-0000-00000000000a');
+select save_job(:'company_a', jsonb_build_object(
+  'title', 'Fasáda Dvořák', 'vat_mode', 'standard', 'vat_rate', 21, 'new_client_name', 'Eva Dvořáková',
+  'date_from', '2026-12-10', 'date_to', '2026-12-12', 'discount_kind', 'percent', 'discount_value', '10',
+  'work', jsonb_build_array(jsonb_build_object('description', 'Nátěr fasády', 'qty', '120.5', 'unit', 'm²', 'unit_price', '310')),
+  'materials', jsonb_build_array(jsonb_build_object('description', 'Barva', 'qty_planned', '40', 'unit', 'l', 'purchase_price', '150', 'sale_price', '210', 'billable', true)),
+  'labor', jsonb_build_array(jsonb_build_object('employee_id', :'emp_a', 'qty_planned', '3', 'unit', 'den', 'rate', '2500')),
+  'expenses', jsonb_build_array(jsonb_build_object('description', 'Plošina', 'qty_planned', '3', 'unit_price', '3000'))
+)) as saved_job \gset
+select t_eq((select count(*) from job_work_items where job_id = :'saved_job'), 1, 'save_job uložil práce');
+select t_eq((select count(*) from clients where name = 'Eva Dvořáková'), 1, 'save_job založil nového klienta');
+select save_job(:'company_a', jsonb_build_object('id', :'saved_job', 'title', 'Fasáda Dvořák – upraveno', 'vat_mode', 'standard', 'vat_rate', 12,
+  'work', jsonb_build_array(jsonb_build_object('description', 'A', 'qty', '1', 'unit', 'ks', 'unit_price', '1'), jsonb_build_object('description', 'B', 'qty', '2', 'unit', 'ks', 'unit_price', '2')))) \g /dev/null
+select t_eq((select count(*) from job_work_items where job_id = :'saved_job'), 2, 'úprava zakázky nahradila řádky');
+select t_eq((select count(*) from job_materials where job_id = :'saved_job'), 0, 'odebrané sekce se smazaly');
+select t_text((select title from jobs where id = :'saved_job'), 'Fasáda Dvořák – upraveno', 'hlavička zakázky se přepsala');
 
 -- ---------- doklady: číslování bez mezer, vystavený doklad je zamčený ----------
 select t_login('00000000-0000-0000-0000-0000000000a1');  -- kancelář A
@@ -187,7 +209,7 @@ select create_invitation(:'company_a', 'cizi@test.cz', 'office') as token \gset
 select t_login('00000000-0000-0000-0000-0000000000ff');
 select t_fails(format('select accept_invitation(%L)', 'spatny-kod'), 'neplatný kód pozvánky neprojde');
 select t_text(accept_invitation(:'token')::text, :'company_a', 'pozvaný kolega se přidal do firmy A');
-select t_eq((select count(*) from jobs), 2, 'pozvaný kolega (kancelář) teď vidí zakázky A');
+select t_eq((select count(*) from jobs), 3, 'pozvaný kolega (kancelář) teď vidí zakázky A');
 select t_eq((select count(*) from jobs where company_id = :'company_b'), 0, '…ale pořád ne zakázky B');
 select t_fails(format('select accept_invitation(%L)', :'token'), 'pozvánku nejde použít dvakrát');
 
@@ -212,7 +234,7 @@ select t_login(null) \g /dev/null
 update companies set read_only = true where id = :'company_a';
 set role authenticated;
 select t_login('00000000-0000-0000-0000-00000000000a');
-select t_eq((select count(*) from jobs), 2, 'v režimu jen pro čtení data zůstávají vidět');
+select t_eq((select count(*) from jobs), 3, 'v režimu jen pro čtení data zůstávají vidět');
 select t_fails(format($q$insert into clients (company_id, kind, name) values (%L, 'person', 'x')$q$, :'company_a'), 'v režimu jen pro čtení nejde zapisovat');
 select t_eq(t_affected(format($q$update jobs set title = 'x' where id = %L$q$, :'job_a')), 0, 'v režimu jen pro čtení nejde měnit');
 

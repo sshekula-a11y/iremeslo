@@ -61,3 +61,28 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář.
 2. PDF nabídky a faktury podle návrhu (barevné varianty, logo, razítko, podpis, QR Platba).
 3. Odesílání e-mailem, pozvánky kolegů, superadmin.
+
+## Webová aplikace (`apps/web`)
+
+Next.js 16 + Supabase (přihlášení e-mailem a heslem, data přes RLS). Spuštění:
+
+```bash
+cp apps/web/.env.example apps/web/.env.local   # doplnit URL a publishable key ze Supabase
+npm install
+npm run dev                                     # http://localhost:3000
+```
+
+| Stránka | Co dělá |
+| --- | --- |
+| `/` | úvodní stránka |
+| `/prihlaseni` | přihlášení a registrace účtu (potvrzení e-mailem přes `/auth/confirm`) |
+| `/registrace-firmy` | založení firmy, údaje z ARES podle IČO |
+| `/app` | přehled: zakázky tento týden, poptávky |
+| `/app/zakazky` | seznam s hledáním a filtrem stavu, nová zakázka, úprava zakázky |
+| `/app/klienti`, `/app/zamestnanci` | adresář klientů a lidé s nákladovými sazbami |
+| `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
+
+Formulář zakázky počítá souhrn živě stejným jádrem `@iremeslo/core` jako testy; ukládá se jedním voláním
+databázové funkce `save_job` (hlavička + všech pět sekcí v jedné transakci).
+
+Písma (Inter, Archivo) jsou na vlastním serveru, bez Google Fonts.
