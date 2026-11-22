@@ -9,9 +9,9 @@ export default async function RegisterCompanyPage() {
   await requireUser();
   return (
     <main className="min-h-dvh bg-paper">
-      <header className="bg-ink px-5 py-4">
+      <header className="border-b border-line bg-white px-5 py-3">
         <div className="mx-auto max-w-md">
-          <Logo />
+          <Logo variant="full" height={40} priority />
         </div>
       </header>
       <div className="mx-auto max-w-md px-5 py-8">

@@ -26,7 +26,7 @@ export default async function EmployeesPage() {
               <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <div>
                   <p className="font-semibold">{e.name}</p>
-                  {e.phone && <a className="text-[13px] text-accent" href={`tel:${e.phone}`}>{e.phone}</a>}
+                  {e.phone && <a className="text-[13px] text-accent-ink" href={`tel:${e.phone}`}>{e.phone}</a>}
                 </div>
                 <p className="num text-[14px] text-muted">
                   {czk(e.rate_hour)} / hod · {czk(e.rate_day)} / den

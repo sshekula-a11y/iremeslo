@@ -10,15 +10,17 @@ const benefits = [
 export default function Home() {
   return (
     <main>
-      <header className="bg-ink text-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <Logo />
-          <Link href="/prihlaseni" className="text-[15px] font-medium text-white/80 hover:text-white">
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3">
+          <Logo variant="full" height={44} priority />
+          <Link href="/prihlaseni" className="shrink-0 text-[15px] font-semibold text-ink hover:text-accent-ink">
             Přihlásit se
           </Link>
         </div>
-        <div className="mx-auto max-w-5xl px-5 pb-16 pt-10">
-          <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[13px] font-medium text-accent-2">
+      </div>
+      <header className="bg-ink text-white">
+        <div className="mx-auto max-w-5xl px-5 pb-16 pt-12">
+          <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[13px] font-semibold text-accent">
             Beta – zatím úplně zdarma
           </p>
           <h1 className="max-w-2xl font-display text-[34px] font-extrabold leading-[1.1] tracking-tight sm:text-[46px]">
@@ -47,7 +49,7 @@ export default function Home() {
         ))}
       </section>
 
-      <footer className="mx-auto max-w-5xl px-5 pb-10 text-[13px] text-muted">© {2026} iŘemeslo · iremeslo.cz</footer>
+      <footer className="mx-auto max-w-5xl px-5 pb-10 text-[13px] text-muted">© 2026 iRemeslo.cz · Řemeslná práce pod kontrolou</footer>
     </main>
   );
 }

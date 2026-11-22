@@ -2,14 +2,15 @@
 
 /* Barvy a písma z návrhu iŘemeslo (design canvas) */
 @theme {
-  --color-paper: #f4f3ef;
-  --color-ink: #17191c;
-  --color-ink-2: #2a2d32;
-  --color-muted: #5b5f66;
-  --color-line: #e4e2dc;
-  --color-accent: #e8590c;
-  --color-accent-2: #ff8a3d;
-  --color-accent-soft: #fdeee4;
+  --color-paper: #f4f6f9;
+  --color-ink: #05264c;
+  --color-ink-2: #0e3a6b;
+  --color-muted: #556273;
+  --color-line: #dfe4eb;
+  --color-accent: #fe820d;
+  --color-accent-ink: #b4540a;
+  --color-accent-2: #fe820d;
+  --color-accent-soft: #fff1e3;
   --color-ok: #1f7a4d;
   --color-ok-soft: #e5f4ec;
   --color-warn: #b42318;
@@ -45,7 +46,7 @@ body {
   @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
-  @apply btn bg-accent text-white hover:bg-[#d14f0a];
+  @apply btn bg-accent text-ink hover:bg-[#f07400];
 }
 @utility btn-dark {
   @apply btn bg-ink text-white hover:bg-ink-2;

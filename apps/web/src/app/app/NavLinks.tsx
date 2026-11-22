@@ -25,7 +25,7 @@ export function NavLinks({ worker, variant }: { worker: boolean; variant: "top" 
           <li key={i.href}>
             <Link
               href={i.href}
-              className={`rounded-lg px-3 py-2 text-[14px] font-medium ${active(i.href, i.exact) ? "bg-white/10 text-white" : "text-white/65 hover:text-white"}`}
+              className={`rounded-lg px-3 py-2 text-[14px] font-medium ${active(i.href, i.exact) ? "bg-accent-soft text-ink" : "text-muted hover:text-ink"}`}
             >
               {i.label}
             </Link>
@@ -40,7 +40,7 @@ export function NavLinks({ worker, variant }: { worker: boolean; variant: "top" 
         <li key={i.href}>
           <Link
             href={i.href}
-            className={`flex min-h-14 items-center justify-center text-[13px] font-semibold ${active(i.href, i.exact) ? "text-accent" : "text-muted"}`}
+            className={`flex min-h-14 items-center justify-center text-[13px] font-semibold ${active(i.href, i.exact) ? "text-accent-ink" : "text-muted"}`}
           >
             {i.label}
           </Link>

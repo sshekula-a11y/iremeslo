@@ -216,7 +216,7 @@ export function JobForm({
         {/* 3. Zaměstnanci */}
         <Section title="3. Zaměstnanci" hint="Nákladová sazba se předvyplní z karty člověka" total={summary ? formatCzk(summary.costs.labor) : "—"}
           onAdd={employees.length ? () => addRow("labor", newLabor()) : undefined}>
-          {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte lidi v sekci <a className="text-accent underline" href="/app/zamestnanci">Lidé</a>.</p>}
+          {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte lidi v sekci <a className="text-accent-ink underline" href="/app/zamestnanci">Lidé</a>.</p>}
           {d.labor.map((l, i) => {
             const emp = employees.find((e) => e.id === l.employeeId);
             return (
@@ -326,7 +326,7 @@ function Section({ title, hint, total, onAdd, children }: { title: string; hint:
       </div>
       <div className="space-y-3">{children}</div>
       {onAdd && (
-        <button type="button" onClick={onAdd} className="btn-ghost mt-3 w-full border-dashed text-accent">
+        <button type="button" onClick={onAdd} className="btn-ghost mt-3 w-full border-dashed text-accent-ink">
           + Přidat
         </button>
       )}

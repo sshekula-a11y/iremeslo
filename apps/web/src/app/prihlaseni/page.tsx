@@ -12,13 +12,13 @@ export default async function LoginPage({ searchParams }: PageProps<"/prihlaseni
   const failed = sp.chyba === "odkaz";
 
   return (
-    <main className="min-h-dvh bg-ink px-5 py-8">
+    <main className="min-h-dvh bg-paper px-5 py-8">
       <div className="mx-auto max-w-md">
         <Link href="/" className="inline-block">
-          <Logo />
+          <Logo variant="full" height={44} priority />
         </Link>
-        <h1 className="mb-6 mt-8 font-display text-[28px] font-extrabold text-white">
-          {mode === "register" ? "Vyzkoušejte iŘemeslo zdarma" : "Vítejte zpět"}
+        <h1 className="mb-6 mt-8 font-display text-[28px] font-extrabold text-ink">
+          {mode === "register" ? "Vyzkoušejte iRemeslo.cz zdarma" : "Vítejte zpět"}
         </h1>
         {failed && (
           <p className="mb-4 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn">

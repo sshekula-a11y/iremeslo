@@ -5,14 +5,14 @@ import "@fontsource-variable/archivo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "iŘemeslo – zakázky, nabídky a faktury pro řemeslníky", template: "%s · iŘemeslo" },
+  title: { default: "iRemeslo.cz – zakázky, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
   description:
     "Cenová nabídka a faktura za pár minut z telefonu. U každé zakázky vidíte náklady, výdělek a marži. Pro řemeslníky a malé firmy v ČR.",
-  applicationName: "iŘemeslo",
+  applicationName: "iRemeslo.cz",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#17191C",
+  themeColor: "#05264C",
   width: "device-width",
   initialScale: 1,
 };

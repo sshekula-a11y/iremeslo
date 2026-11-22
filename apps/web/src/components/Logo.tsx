@@ -1,15 +1,23 @@
-/** Logo iŘemeslo: bílé „i“ v oranžovém čtverci + nápis (stejné jako v návrhu). */
-export function Logo({ size = 28, dark = true }: { size?: number; dark?: boolean }) {
+import Image from "next/image";
+
+/**
+ * Logo iRemeslo.cz (soubory v public/brand vytvořené z dodaného loga, průhledné pozadí).
+ * Logo je tmavomodré, proto patří na světlé pozadí.
+ *  - full: se sloganem „Řemeslná práce pod kontrolou“
+ *  - compact: bez sloganu (hlavička aplikace)
+ *  - mark: jen znak domečku (malé plochy)
+ */
+export function Logo({ variant = "compact", height = 32, priority = false }: { variant?: "full" | "compact" | "mark"; height?: number; priority?: boolean }) {
+  const src = variant === "full" ? "/brand/logo.png" : variant === "mark" ? "/brand/znak.png" : "/brand/logo-bez-sloganu.png";
+  const ratio = variant === "full" ? 1000 / 229 : variant === "mark" ? 1 : 800 / 144;
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <svg width={size} height={size} viewBox="0 0 28 28" aria-hidden="true">
-        <rect width="28" height="28" rx="7" fill="#E8590C" />
-        <circle cx="14" cy="8.4" r="2" fill="#FFFFFF" />
-        <path d="M14 13v8" stroke="#FFFFFF" strokeWidth="3" fill="none" strokeLinecap="round" />
-      </svg>
-      <span className={`font-display text-[19px] font-extrabold tracking-tight ${dark ? "text-white" : "text-ink"}`}>
-        <span className="text-accent-2">i</span>Řemeslo
-      </span>
-    </span>
+    <Image
+      src={src}
+      alt="iRemeslo.cz"
+      height={height}
+      width={Math.round(height * ratio)}
+      priority={priority}
+      style={{ height, width: "auto" }}
+    />
   );
 }

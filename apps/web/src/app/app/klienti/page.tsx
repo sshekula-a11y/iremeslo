@@ -29,8 +29,8 @@ export default async function ClientsPage() {
                   </p>
                 </div>
                 <div className="flex gap-3 text-[14px]">
-                  {c.phone && <a className="text-accent" href={`tel:${c.phone}`}>{c.phone}</a>}
-                  {c.email && <a className="text-accent" href={`mailto:${c.email}`}>{c.email}</a>}
+                  {c.phone && <a className="text-accent-ink" href={`tel:${c.phone}`}>{c.phone}</a>}
+                  {c.email && <a className="text-accent-ink" href={`mailto:${c.email}`}>{c.email}</a>}
                 </div>
               </div>
             ))

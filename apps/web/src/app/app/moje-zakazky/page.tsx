@@ -22,13 +22,13 @@ export default async function WorkerJobsPage() {
               <h2 className="font-display text-[18px] font-bold">{j.title}</h2>
               <p className="mt-1 text-[14px] text-muted">{formatDate(j.date_from)} – {formatDate(j.date_to)}</p>
               {j.site_address && (
-                <a className="mt-2 inline-block text-[15px] text-accent" target="_blank" rel="noreferrer" href={`https://mapy.cz/zakladni?q=${encodeURIComponent(j.site_address)}`}>
+                <a className="mt-2 inline-block text-[15px] text-accent-ink" target="_blank" rel="noreferrer" href={`https://mapy.cz/zakladni?q=${encodeURIComponent(j.site_address)}`}>
                   {j.site_address}
                 </a>
               )}
               {j.client_phone && (
                 <p className="mt-1 text-[14px]">
-                  {j.client_name} · <a className="text-accent" href={`tel:${j.client_phone}`}>{j.client_phone}</a>
+                  {j.client_name} · <a className="text-accent-ink" href={`tel:${j.client_phone}`}>{j.client_phone}</a>
                 </p>
               )}
             </article>

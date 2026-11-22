@@ -10,18 +10,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh pb-20 sm:pb-0">
-      <header className="bg-ink text-white">
+      <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <Link href={isWorker ? "/app/moje-zakazky" : "/app"} aria-label="Přehled">
-            <Logo size={26} />
+            <Logo height={28} priority />
           </Link>
           <div className="hidden flex-1 sm:block">
             <NavLinks worker={isWorker} variant="top" />
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden max-w-48 truncate text-[13px] text-white/60 md:inline">{company.name}</span>
+            <span className="hidden max-w-48 truncate text-[13px] text-muted md:inline">{company.name}</span>
             <form action={signOut}>
-              <button className="rounded-lg px-2 py-1.5 text-[13px] text-white/70 hover:bg-white/10 hover:text-white">Odhlásit</button>
+              <button className="rounded-lg px-2 py-1.5 text-[13px] text-muted hover:bg-paper hover:text-ink">Odhlásit</button>
             </form>
           </div>
         </div>
