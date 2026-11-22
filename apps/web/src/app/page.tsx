@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 const benefits = [
   { title: "Nabídka za pár minut", text: "Práce, materiál, lidé a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
   { title: "Vidíte skutečný zisk", text: "U každé zakázky náklady proti tomu, co fakturujete. Když marže klesne pod vaši hranici, aplikace upozorní." },
-  { title: "Faktura podle zákona", soon: true, text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy a QR platba. Čísla jdou po sobě bez mezer." },
+  { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Čísla jdou po sobě bez mezer." },
 ];
 
 export default function Home() {
@@ -38,7 +38,6 @@ export default function Home() {
           <div key={b.title} className="card p-5">
             <h2 className="font-display text-[18px] font-bold">
               {b.title}
-              {"soon" in b && b.soon && <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 align-middle text-[12px] font-semibold text-accent-ink">Připravujeme</span>}
             </h2>
             <p className="mt-2 text-[15px] leading-relaxed text-muted">{b.text}</p>
           </div>

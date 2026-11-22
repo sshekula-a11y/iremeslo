@@ -207,6 +207,21 @@ insert into documents (company_id, job_id, client_id, type, vat_mode, snapshot)
 select t_fails(format($q$insert into advance_deductions (company_id, invoice_id, advance_id, base, vat, vat_rate) values (%L, %L, %L, 1, 0, 21)$q$,
   :'company_a', :'inv4', :'zf'), 'jednu zálohu nejde odečíst dvakrát');
 
+-- platba a daňový doklad k přijaté platbě (postup aplikace: platba → stav zaplaceno → DDPP k záloze)
+select t_eq(t_affected(format($q$insert into payments (company_id, document_id, paid_on, amount, method) values (%L, %L, '2026-11-20', 9000, 'bank')$q$,
+  :'company_a', :'zf')), 1, 'kancelář zapíše platbu zálohy');
+select t_fails(format($q$insert into documents (company_id, job_id, client_id, type, vat_mode, snapshot) values (%L, %L, %L, 'ddpp', 'standard', '{"kind":"ddpp"}')$q$,
+  :'company_a', :'job_a', :'client_a'), 'DDPP bez vazby na zálohu nejde založit');
+insert into documents (company_id, job_id, client_id, type, vat_mode, total_due, taxable_date, related_document_id, snapshot)
+  values (:'company_a', :'job_a', :'client_a', 'ddpp', 'standard', 9000, '2026-11-20', :'zf', '{"kind":"ddpp"}') returning id as dd1 \gset
+select t_text(issue_document(:'dd1', '2026-11-22'), 'DD-2026-001', 'DDPP má vlastní řadu DD');
+select t_text((select taxable_date::text from documents where id = :'dd1'), '2026-11-20', 'DUZP na DDPP je den přijetí platby');
+select t_eq((select count(*)::int from documents where id = :'dd1' and due_date is null), 1, 'DDPP nemá splatnost');
+insert into documents (company_id, job_id, client_id, type, vat_mode, total_due, taxable_date, snapshot)
+  values (:'company_a', :'job_a', :'client_a', 'invoice_non_payer', 'non_payer', 1000, '2026-11-21', '{"kind":"invoice"}') returning id as np1 \gset
+select t_text(issue_document(:'np1', '2026-11-22'), '2026001', 'faktura neplátce má řadu 2026001');
+select t_text((select taxable_date::text from documents where id = :'np1'), '2026-11-21', 'zvolené DUZP zůstane');
+
 -- ---------- role ve firmě ----------
 select t_fails(format($q$insert into memberships (company_id, user_id, role) values (%L, %L, 'owner')$q$, :'company_a', '00000000-0000-0000-0000-0000000000ff'),
   'kancelář nemůže přidávat uživatele (jen majitel)');

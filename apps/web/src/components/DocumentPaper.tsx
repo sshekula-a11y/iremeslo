@@ -16,7 +16,7 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
             <p className="max-w-80 font-display text-[20px] font-extrabold">{v.supplier.name}</p>
           )}
           <div className="sm:text-right">
-            <p className="font-display text-[20px] font-extrabold uppercase">{v.heading}</p>
+            <p className={`font-display font-extrabold uppercase ${v.heading.length > 20 ? "text-[17px]" : "text-[20px]"}`}>{v.heading}</p>
             <p className="num font-semibold">č. {v.number}</p>
           </div>
         </header>
@@ -74,9 +74,35 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
           </ul>
         </div>
 
-        <div className="ml-auto w-full max-w-72 space-y-1">
+        <div className="flex flex-col-reverse gap-5 sm:flex-row sm:items-start sm:justify-between">
+          {v.recap ? (
+            <div className="w-full max-w-sm">
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted">Rekapitulace DPH</p>
+              <table className="num w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-ink text-left">
+                    <th className="py-1 font-semibold">Sazba</th>
+                    <th className="py-1 text-right font-semibold">Základ</th>
+                    <th className="py-1 text-right font-semibold">DPH</th>
+                    <th className="py-1 text-right font-semibold">Celkem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {v.recap.map((r, i) => (
+                    <tr key={i} className={`border-b border-line ${r.muted ? "text-muted" : ""}`}>
+                      <td className="py-1 pr-2">{r.label}</td>
+                      <td className="py-1 text-right">{r.base}</td>
+                      <td className="py-1 text-right">{r.vat}</td>
+                      <td className="py-1 text-right">{r.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : <div className="hidden sm:block" />}
+        <div className="w-full space-y-1 sm:max-w-72">
           {rest.map((t) => (
-            <p key={t.label} className="num flex justify-between"><span className="text-muted">{t.label}</span><span>{t.value}</span></p>
+            <p key={t.label} className="num flex justify-between gap-3"><span className="text-muted">{t.label}</span><span className="shrink-0 text-right">{t.value}</span></p>
           ))}
           {grand && (
             <p className="num flex items-center justify-between rounded-lg px-3 py-2" style={{ background: v.accent, color: v.accentText }}>
@@ -85,6 +111,32 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
             </p>
           )}
         </div>
+
+        </div>
+
+        {v.payment && (
+          <div className="flex flex-wrap items-center gap-4 rounded-xl border border-line p-3 sm:p-4">
+            <dl className="min-w-52 flex-1 space-y-0.5 text-[13px]">
+              {v.payment.lines.map((l) => (
+                <div key={l.label} className="flex gap-3">
+                  <dt className="w-32 shrink-0 text-muted">{l.label}</dt>
+                  <dd className="num font-semibold">{l.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted">K úhradě</p>
+              <p className="num font-display text-[22px] font-extrabold">{v.payment.amount}</p>
+            </div>
+            {v.payment.qrDataUrl && (
+              <figure className="text-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={v.payment.qrDataUrl} alt="QR Platba – naskenujte v bankovní aplikaci" className="size-28" />
+                <figcaption className="mt-1 text-[11px] text-muted">QR Platba</figcaption>
+              </figure>
+            )}
+          </div>
+        )}
 
         {v.notes.length > 0 && <div className="space-y-1">{v.notes.map((n, i) => <p key={i} className="whitespace-pre-line">{n}</p>)}</div>}
         {(v.stampUrl || v.signatureUrl) && (

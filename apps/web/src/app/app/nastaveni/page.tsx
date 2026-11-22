@@ -45,11 +45,14 @@ export default async function SettingsPage() {
 
       <section className="card p-4">
         <h2 className="font-display text-[17px] font-bold">Logo, razítko a podpis</h2>
-        <p className="text-[13px] text-muted">PNG nebo JPG do 1 MB. Nejlépe na průhledném nebo bílém pozadí.</p>
+        <p className="text-[13px] text-muted">
+          Razítko s podpisem stačí vyfotit telefonem: orazítkujte a podepište bílý papír a vyfoťte ho zblízka, bez stínu.
+          Bílý papír odstraníme, na faktuře bude jen razítko a podpis.
+        </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <ImageSlot companyId={company.id} kind="logo" label="Logo" hint="Vlevo nahoře na dokladech" url={url(c.logo_path)} canEdit={canEdit} />
-          <ImageSlot companyId={company.id} kind="stamp" label="Razítko" hint="Na faktuře u podpisu" url={url(c.stamp_path)} canEdit={canEdit} />
-          <ImageSlot companyId={company.id} kind="signature" label="Podpis" hint="Na faktuře a nabídce" url={url(c.signature_path)} canEdit={canEdit} />
+          <ImageSlot companyId={company.id} kind="stamp" label="Razítko s podpisem" hint="Vyfoťte razítko i s podpisem najednou" url={url(c.stamp_path)} canEdit={canEdit} />
+          <ImageSlot companyId={company.id} kind="signature" label="Jen podpis" hint="Když razítko nepoužíváte" url={url(c.signature_path)} canEdit={canEdit} />
         </div>
       </section>
     </div>

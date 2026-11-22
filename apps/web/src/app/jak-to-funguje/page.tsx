@@ -81,13 +81,14 @@ const STEPS: Step[] = [
 ];
 
 const MORE = [
+  { title: "Faktury a zálohy", text: "Fakturu vystavíte ze zakázky jedním tlačítkem: s QR Platbou, rekapitulací DPH a odečtem zaplacených záloh. Ke každé záloze se po zaplacení sám vystaví daňový doklad." },
+  { title: "Přehled plateb", text: "Kolik vám dluží a co je po splatnosti, vidíte hned na přehledu. Zaplacenou fakturu označíte jedním klepnutím." },
   { title: "Ceník", text: "Uložte si práce a materiál, které děláte nejčastěji. V zakázce začnete psát název a cena s jednotkou se doplní." },
   { title: "Klienti a lidé", text: "Adresář zákazníků a vaši lidé s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
   { title: "Pracovníci v terénu", text: "Pracovník vidí jen zakázky, na kterých dělá: adresu, termín a telefon na zákazníka. Ceny ani zisk ne." },
 ];
 
 const SOON = [
-  "Faktury a zálohové faktury s QR Platbou, daňový doklad k přijaté platbě a odečet záloh",
   "Odeslání nabídky e-mailem a schválení nabídky zákazníkem jedním kliknutím",
   "Pozvánky pro kolegy do kanceláře a pracovníky",
 ];
@@ -155,7 +156,7 @@ export default function HowItWorksPage() {
 
         <section aria-labelledby="dalsi">
           <h2 id="dalsi" className="mb-4 font-display text-[24px] font-extrabold">A k tomu</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {MORE.map((m) => (
               <div key={m.title} className="card p-5">
                 <h3 className="font-display text-[18px] font-bold">{m.title}</h3>

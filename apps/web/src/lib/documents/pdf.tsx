@@ -27,7 +27,7 @@ const LINE = "#dfe4eb";
 const s = StyleSheet.create({
   page: { fontFamily: "Inter", fontSize: 9, color: INK, paddingTop: 0, paddingBottom: 48, paddingHorizontal: 40 },
   bar: { height: 6, marginHorizontal: -40, marginBottom: 28 },
-  head: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 },
+  head: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 22 },
   supplierName: { fontFamily: "Archivo", fontWeight: 800, fontSize: 16, maxWidth: 260 },
   logo: { maxHeight: 48, maxWidth: 180, objectFit: "contain" },
   heading: { fontFamily: "Archivo", fontWeight: 800, fontSize: 20, textAlign: "right", textTransform: "uppercase" },
@@ -50,7 +50,23 @@ const s = StyleSheet.create({
   cUnit: { width: 38, paddingLeft: 6 },
   cPrice: { width: 72, textAlign: "right" },
   cTotal: { width: 80, textAlign: "right" },
-  totals: { alignSelf: "flex-end", width: 240, marginTop: 12 },
+  summary: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 18, marginTop: 12 },
+  totals: { width: 240 },
+  recap: { flex: 1, maxWidth: 260 },
+  recapTitle: { fontSize: 7.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 },
+  recapRow: { flexDirection: "row", paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: LINE },
+  rLabel: { flex: 1 },
+  rNum: { width: 58, textAlign: "right" },
+  pay: { flexDirection: "row", alignItems: "center", gap: 16, marginTop: 18, borderWidth: 1, borderColor: LINE, borderRadius: 6, padding: 12 },
+  payLines: { flex: 1, gap: 2 },
+  payLine: { flexDirection: "row" },
+  payLabel: { width: 92, color: MUTED },
+  payValue: { flex: 1, fontWeight: 600 },
+  payAmountLabel: { fontSize: 7.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4 },
+  payAmount: { fontFamily: "Archivo", fontWeight: 800, fontSize: 16, marginTop: 2 },
+  qr: { width: 84, alignItems: "center" },
+  qrImage: { width: 84, height: 84 },
+  qrCaption: { fontSize: 7, color: MUTED, marginTop: 3 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
   grand: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 6 },
   grandLabel: { fontSize: 10, fontWeight: 700 },
@@ -74,8 +90,8 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
         <View style={s.head}>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
           {v.logoUrl ? <Image src={v.logoUrl} style={s.logo} /> : <Text style={s.supplierName}>{v.supplier.name}</Text>}
-          <View>
-            <Text style={s.heading}>{v.heading}</Text>
+          <View style={{ maxWidth: 270, alignItems: "flex-end" }}>
+            <Text style={[s.heading, v.heading.length > 20 ? { fontSize: 15 } : {}]}>{v.heading}</Text>
             <Text style={s.number}>č. {v.number}</Text>
           </View>
         </View>
@@ -110,11 +126,31 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
           </View>
         ))}
 
-        <View style={s.totals} wrap={false}>
+        <View style={s.summary} wrap={false}>
+          {v.recap ? (
+            <View style={s.recap}>
+              <Text style={s.recapTitle}>Rekapitulace DPH</Text>
+              <View style={[s.recapRow, { borderBottomColor: INK }]}>
+                <Text style={[s.rLabel, { fontWeight: 600 }]}>Sazba</Text>
+                <Text style={[s.rNum, { fontWeight: 600 }]}>Základ</Text>
+                <Text style={[s.rNum, { fontWeight: 600 }]}>DPH</Text>
+                <Text style={[s.rNum, { fontWeight: 600 }]}>Celkem</Text>
+              </View>
+              {v.recap.map((r, i) => (
+                <View key={i} style={s.recapRow}>
+                  <Text style={[s.rLabel, r.muted ? { color: MUTED } : {}]}>{r.label}</Text>
+                  <Text style={s.rNum}>{r.base}</Text>
+                  <Text style={s.rNum}>{r.vat}</Text>
+                  <Text style={s.rNum}>{r.total}</Text>
+                </View>
+              ))}
+            </View>
+          ) : <View />}
+        <View style={s.totals}>
           {rest.map((t) => (
             <View key={t.label} style={s.totalRow}>
-              <Text style={{ color: MUTED }}>{t.label}</Text>
-              <Text>{t.value}</Text>
+              <Text style={{ color: MUTED, flex: 1, paddingRight: 10 }}>{t.label}</Text>
+              <Text style={{ textAlign: "right" }}>{t.value}</Text>
             </View>
           ))}
           {grand && (
@@ -124,6 +160,31 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
             </View>
           )}
         </View>
+        </View>
+
+        {v.payment && (
+          <View style={s.pay} wrap={false}>
+            <View style={s.payLines}>
+              {v.payment.lines.map((l) => (
+                <View key={l.label} style={s.payLine}>
+                  <Text style={s.payLabel}>{l.label}</Text>
+                  <Text style={s.payValue}>{l.value}</Text>
+                </View>
+              ))}
+            </View>
+            <View>
+              <Text style={s.payAmountLabel}>K úhradě</Text>
+              <Text style={s.payAmount}>{v.payment.amount}</Text>
+            </View>
+            {v.payment.qrDataUrl && (
+              <View style={s.qr}>
+                {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+                <Image src={v.payment.qrDataUrl} style={s.qrImage} />
+                <Text style={s.qrCaption}>QR Platba</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {v.notes.length > 0 && (
           <View style={s.notes} wrap={false}>

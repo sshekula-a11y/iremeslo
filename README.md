@@ -20,8 +20,8 @@ Peníze se počítají v celých haléřích (v databázi `numeric`), nikdy ve f
 ## Testy
 
 ```bash
-npm test          # výpočty: 30 testů včetně kontrolního příkladu ze zadání
-npm run test:db   # databáze: 80 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
+npm test          # výpočty: 36 testů včetně kontrolního příkladu ze zadání
+npm run test:db   # databáze: 87 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
 npm run typecheck
 ```
 
@@ -59,7 +59,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 ## Další kroky
 
 1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář (hotovo).
-2. PDF nabídky a nastavení firmy (hotovo); faktury: zálohy, DDPP, faktura s QR Platbou a odečtem záloh.
+2. PDF nabídky, nastavení firmy, faktury se zálohami a DDPP (hotovo); dobropis a částečné platby.
 3. Odesílání e-mailem, pozvánky kolegů, superadmin.
 
 ## Webová aplikace (`apps/web`)
@@ -82,7 +82,9 @@ npm run dev                                     # http://localhost:3000
 | `/app/zakazky` | seznam s hledáním a filtrem stavu, nová zakázka, úprava zakázky |
 | `/app/klienti`, `/app/zamestnanci` | adresář klientů a lidé s nákladovými sazbami |
 | `/app/kalendar` | měsíc se zakázkami podle termínu a barvy stavu, u každé klient a lidé; na mobilu seznam po dnech od dneška |
-| `/app/doklady/[id]` | vystavená cenová nabídka: náhled a **Stáhnout PDF** (vytváří se v prohlížeči) |
+| `/app/doklady/[id]` | vystavený doklad (nabídka, faktura, záloha, DDPP): náhled, **Stáhnout PDF** (vytváří se v prohlížeči), označení zaplaceno, navázané doklady |
+| `/app/doklady/nova?zakazka=…&typ=faktura\|zaloha` | náhled faktury před vystavením (DUZP), zálohová faktura v % nebo Kč |
+| `/app/faktury` | faktury, zálohy a DDPP: čeká na platbu, po splatnosti, zaplacené; součty |
 | `/app/nastaveni` | nastavení firmy (mění jen majitel): údaje na dokladech, plátce DPH, splatnost, účet → IBAN, přirážka a hranice marže, barva dokladů, logo / razítko / podpis (PNG nebo JPG do 1 MB, soukromé úložiště) |
 | `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
@@ -91,6 +93,13 @@ Tlačítko **Vystavit nabídku** v zakázce ji nejdřív uloží a pak z ní vys
 (platnost 30 dní). Obsah se uloží do `documents.snapshot` (`buildQuote` v `packages/core/src/document.ts`) a vystavený doklad
 už nejde změnit; zákazník v něm vidí jen práce a účtovaný materiál, žádné náklady. Náhled i PDF kreslí stejný model
 `apps/web/src/lib/documents/view.ts`. Písma pro PDF (Inter, Archivo, licence OFL) jsou v `apps/web/public/fonts/pdf/`.
+
+**Faktury.** V detailu zakázky „Vystavit zálohu“ a „Vystavit fakturu“. Před vystavením se ukáže náhled; vystavená faktura
+dostane číslo (`FV-RRRR-NNN`, neplátce `RRRRNNN`, zálohy `ZF-…`, DDPP `DD-…`) a už nejde změnit ani smazat.
+Na faktuře je rekapitulace DPH, platební údaje a QR Platba (variabilní symbol = číslice čísla faktury).
+Po zaplacení zálohy se plátci DPH sám vystaví daňový doklad k přijaté platbě (datum plnění = den platby)
+a na konečné faktuře se záloha odečte podle něj. Obsah dokladů skládá `buildInvoice` / `buildAdvance` / `buildDdpp`
+v `packages/core/src/document.ts`. Zatím jen platba celou částkou; dobropis (storno) a e-mail přijdou později.
 
 Formulář zakázky počítá souhrn živě stejným jádrem `@iremeslo/core` jako testy; ukládá se jedním voláním
 databázové funkce `save_job` (hlavička + všech pět sekcí v jedné transakci).

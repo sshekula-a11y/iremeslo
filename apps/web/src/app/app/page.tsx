@@ -4,6 +4,9 @@ import { JOB_STATUSES, type JobStatus } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
+import { formatCzk } from "@iremeslo/core";
+import { toHundredths } from "@/lib/money";
+import { todayInPrague } from "@/lib/calendar";
 
 export default async function Dashboard() {
   const company = await requireStaff();
@@ -13,7 +16,8 @@ export default async function Dashboard() {
   const in7 = new Date(today.getTime() + 7 * 86400000);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [{ data: jobs }, { count: inquiries }] = await Promise.all([
+  const todayIso = todayInPrague();
+  const [{ data: jobs }, { count: inquiries }, { data: open }] = await Promise.all([
     supabase
       .from("jobs")
       .select("id, number, title, status, date_from, date_to, clients(name)")
@@ -27,7 +31,15 @@ export default async function Dashboard() {
       .select("id", { count: "exact", head: true })
       .eq("company_id", company.id)
       .in("status", ["inquiry", "quote_sent"]),
+    supabase
+      .from("documents")
+      .select("total_due, due_date")
+      .eq("company_id", company.id)
+      .in("type", ["invoice", "invoice_non_payer", "advance"])
+      .in("status", ["issued", "sent"]),
   ]);
+  const unpaid = (open ?? []).reduce((sum, d) => sum + toHundredths(d.total_due), 0);
+  const overdue = (open ?? []).filter((d) => d.due_date && d.due_date < todayIso).reduce((sum, d) => sum + toHundredths(d.total_due), 0);
 
   return (
     <div className="space-y-5">
@@ -42,6 +54,8 @@ export default async function Dashboard() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Zakázky tento týden" value={String(jobs?.length ?? 0)} />
         <Stat label="Poptávky a nabídky" value={String(inquiries ?? 0)} />
+        <Stat label="Čeká na platbu" value={formatCzk(unpaid)} href="/app/faktury?f=nezaplacene" />
+        <Stat label="Po splatnosti" value={formatCzk(overdue)} href="/app/faktury?f=po-splatnosti" bad={overdue > 0} />
       </div>
 
       <section className="card">
@@ -74,11 +88,12 @@ export default async function Dashboard() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="card px-4 py-3">
+function Stat({ label, value, href, bad }: { label: string; value: string; href?: string; bad?: boolean }) {
+  const body = (
+    <>
       <p className="text-[13px] text-muted">{label}</p>
-      <p className="num font-display text-[26px] font-extrabold">{value}</p>
-    </div>
+      <p className={`num font-display text-[22px] font-extrabold sm:text-[26px] ${bad ? "text-warn" : ""}`}>{value}</p>
+    </>
   );
+  return href ? <Link href={href} className="card block px-4 py-3 hover:border-ink/30">{body}</Link> : <div className="card px-4 py-3">{body}</div>;
 }

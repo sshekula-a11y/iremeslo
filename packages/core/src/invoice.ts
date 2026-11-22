@@ -1,4 +1,4 @@
-import { lineTotal, mulDivRound, roundToCrowns, type BasisPoints, type Money, type Qty } from "./money.ts";
+import { allocate, lineTotal, mulDivRound, roundToCrowns, type BasisPoints, type Money, type Qty } from "./money.ts";
 import { effectiveRate, vatFromBase, vatFromGross, type VatMode, type VatRate, VAT_RATES, VAT_TEXTS } from "./vat.ts";
 
 /**
@@ -36,6 +36,8 @@ export interface InvoiceInput {
   lines: InvoiceLineInput[];
   /** sleva na celou fakturu v basis points (10 % = 1000) */
   discountBp?: BasisPoints;
+  /** nebo sleva pevnou částkou bez DPH; rozdělí se na sazby v poměru jejich základů */
+  discountAmount?: Money;
   deductions?: AdvanceToDeduct[];
   /** zaokrouhlit „celkem k úhradě“ na celé koruny */
   roundTotal?: boolean;
@@ -87,6 +89,7 @@ export function computeInvoice(input: InvoiceInput): InvoiceTotals {
   const { mode } = input;
   const discountBp = input.discountBp ?? 0;
   if (discountBp < 0 || discountBp > 10_000) throw new InvoiceError("sleva musí být 0–100 %");
+  if (input.discountAmount !== undefined && input.discountBp) throw new InvoiceError("sleva může být buď v %, nebo částkou");
 
   const lines = input.lines.map((l) => ({
     ...l,
@@ -97,12 +100,18 @@ export function computeInvoice(input: InvoiceInput): InvoiceTotals {
 
   // Sleva se uplatní zvlášť v každé sazbě, aby rekapitulace DPH seděla.
   const baseByRate = sumByRate(lines.map((l) => ({ rate: l.effectiveRate, amount: l.base })));
+  const rates = VAT_RATES.filter((r) => (baseByRate.get(r) ?? 0) !== 0);
+  let amountShares: Money[] | null = null;
+  if (input.discountAmount !== undefined) {
+    if (input.discountAmount < 0) throw new InvoiceError("sleva nesmí být záporná");
+    if (input.discountAmount > subtotal) throw new InvoiceError("sleva je vyšší než cena");
+    amountShares = allocate(input.discountAmount, rates.map((r) => baseByRate.get(r) ?? 0));
+  }
   const recap: RecapRow[] = [];
   let discount = 0;
-  for (const rate of VAT_RATES) {
-    const gross = baseByRate.get(rate);
-    if (gross === undefined || gross === 0) continue;
-    const disc = mulDivRound(gross, discountBp, 10_000);
+  for (const [i, rate] of rates.entries()) {
+    const gross = baseByRate.get(rate) ?? 0;
+    const disc = amountShares ? (amountShares[i] ?? 0) : mulDivRound(gross, discountBp, 10_000);
     discount += disc;
     const base = gross - disc;
     const vat = mode === "standard" ? vatFromBase(base, rate) : 0;
