@@ -1,0 +1,10 @@
+{
+  "name": "@iremeslo/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Výpočty zakázek, DPH, faktur a záloh, QR Platba, kontrola IČO a čísla účtu. Bez závislostí.",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
