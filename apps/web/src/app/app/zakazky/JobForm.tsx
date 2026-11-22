@@ -344,8 +344,8 @@ export function JobForm({
           ) : (
             <p className="text-[14px] text-warn">{calcError}</p>
           )}
-          <div className="mt-3 flex items-center gap-3">
-            <button type="button" className="btn-primary flex-1" onClick={onSave} disabled={saving || quoting}>
+          <div className="mt-3 grid grid-cols-[1fr_auto] gap-3 lg:grid-cols-1">
+            <button type="button" className="btn-primary" onClick={onSave} disabled={saving || quoting}>
               {saving ? "Ukládám…" : "Uložit zakázku"}
             </button>
             <button type="button" className="btn-ghost" onClick={onQuote} disabled={saving || quoting} title="Uloží zakázku a vystaví z ní cenovou nabídku s číslem">

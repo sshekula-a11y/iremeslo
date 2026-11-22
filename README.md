@@ -74,7 +74,8 @@ npm run dev                                     # http://localhost:3000
 
 | Stránka | Co dělá |
 | --- | --- |
-| `/` | úvodní stránka |
+| `/` | úvodní stránka s tlačítkem „Jak to funguje“ |
+| `/jak-to-funguje` | čtyři kroky se snímky z aplikace (vymyšlená data, `public/jak-to-funguje/*.webp`), co připravujeme, časté otázky |
 | `/prihlaseni` | přihlášení a registrace účtu (potvrzení e-mailem přes `/auth/confirm`) |
 | `/registrace-firmy` | založení firmy, údaje z ARES podle IČO |
 | `/app` | přehled: zakázky tento týden, poptávky |
