@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { registerCompany, type RegisterState } from "./actions";
+import { checkTrial, registerCompany, type RegisterState, type TrialInfo } from "./actions";
+import { formatDate } from "@/lib/format";
 import type { AresCompany } from "@/lib/types";
 
 export function CompanyForm() {
@@ -9,6 +10,14 @@ export function CompanyForm() {
   const [ico, setIco] = useState("");
   const [values, setValues] = useState({ name: "", dic: "", street: "", city: "", zip: "", vatPayer: false });
   const [lookup, setLookup] = useState<{ loading: boolean; message?: string; ok?: boolean }>({ loading: false });
+  const [trial, setTrial] = useState<{ ico: string; info: TrialInfo } | null>(null);
+
+  // Zkušební období se váže na IČO – ukážeme hned, jestli ho firma ještě má.
+  async function refreshTrial(value: string) {
+    if (value.length !== 8) return setTrial(null);
+    const info = await checkTrial(value);
+    setTrial(info ? { ico: value, info } : null);
+  }
 
   async function loadFromAres() {
     setLookup({ loading: true });
@@ -22,6 +31,7 @@ export function CompanyForm() {
       setValues({ name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip, vatPayer: body.vatPayer });
       setIco(body.ico);
       setLookup({ loading: false, ok: true, message: "Údaje jsme načetli z ARES. Zkontrolujte je." });
+      void refreshTrial(body.ico);
     } catch {
       setLookup({ loading: false, message: "ARES teď neodpovídá. Údaje vyplňte ručně." });
     }
@@ -42,8 +52,14 @@ export function CompanyForm() {
             inputMode="numeric"
             maxLength={8}
             value={ico}
-            onChange={(e) => setIco(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "");
+              setIco(v);
+              void refreshTrial(v);
+            }}
             placeholder="např. 25020137"
+            required
+            aria-describedby="trial-info"
           />
           <button type="button" className="btn-dark shrink-0" onClick={loadFromAres} disabled={ico.length < 6 || lookup.loading}>
             {lookup.loading ? "Hledám…" : "Načíst z ARES"}
@@ -52,6 +68,7 @@ export function CompanyForm() {
         {lookup.message && (
           <p className={`mt-1.5 text-[13px] ${lookup.ok ? "text-ok" : "text-warn"}`} role="status">{lookup.message}</p>
         )}
+        <div id="trial-info" aria-live="polite">{trial && trial.ico === ico && <TrialNotice ico={ico} info={trial.info} />}</div>
       </div>
 
       <div>
@@ -88,7 +105,27 @@ export function CompanyForm() {
       <button className="btn-primary w-full" disabled={pending}>
         {pending ? "Zakládám…" : "Založit firmu"}
       </button>
-      <p className="text-center text-[13px] text-muted">Beta je zdarma, bez karty a bez závazků.</p>
+      <p className="text-center text-[13px] text-muted">30 dní zdarma, bez karty a bez závazků. Jednou na IČO.</p>
     </form>
+  );
+}
+
+function TrialNotice({ ico, info }: { ico: string; info: TrialInfo }) {
+  if (!info.used) {
+    return <p className="mt-2 rounded-xl bg-ok-soft px-3 py-2 text-[14px] text-ok">Pro IČO {ico} máte {info.days} dní zdarma.</p>;
+  }
+  if (info.active) {
+    return (
+      <div className="mt-2 rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
+        <p className="font-semibold">Pro IČO {ico} už zkušební období běží (do {formatDate(info.trialEnd)}).</p>
+        <p className="mt-0.5 text-muted">Nová registrace ho neprodlouží. Pokud vaše firma účet už má, požádejte majitele, ať vás pozve.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-2 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px]" role="alert">
+      <p className="font-semibold text-warn">Pro IČO {ico} už bylo zkušební období vyčerpané (skončilo {formatDate(info.trialEnd)}).</p>
+      <p className="mt-0.5 text-ink">Firmu založit můžete, ale zakázky a doklady půjde vytvářet až s předplatným. Pokud vaše firma účet už má, požádejte majitele o pozvánku.</p>
+    </div>
   );
 }

@@ -17,7 +17,7 @@ export function AuthForm({ initialMode, next, linkFailed }: { initialMode: "logi
   return (
     <>
     <h1 className="mb-6 font-display text-[28px] font-extrabold text-ink">
-      {mode === "register" ? "Vyzkoušejte iRemeslo.cz zdarma" : "Vítejte zpět"}
+      {mode === "register" ? "Vyzkoušejte iRemeslo.cz 30 dní zdarma" : "Vítejte zpět"}
     </h1>
     {linkFailed && (
       <p className="mb-4 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn">

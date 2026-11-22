@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { isValidIco, isValidCzDic } from "@iremeslo/core";
 import { createClient } from "@/lib/supabase/server";
+import { lookupAres } from "@/lib/ares";
 
 export type RegisterState = { error?: string };
 
@@ -13,7 +14,8 @@ const schema = z.object({
   ico: z
     .string()
     .trim()
-    .refine((v) => v === "" || isValidIco(v), "IČO není platné"),
+    .min(1, "Vyplňte IČO – zkušební období se váže na IČO firmy.")
+    .refine((v) => isValidIco(v), "IČO není platné. Zkontrolujte číslice."),
   dic: z
     .string()
     .trim()
@@ -39,18 +41,39 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
   const v = parsed.data;
   if (v.vatPayer && !v.dic) return { error: "Plátce DPH musí mít vyplněné DIČ." };
 
+  const ico = v.ico.padStart(8, "0");
+  // Vymyšlené IČO neprojde. Když ARES zrovna neodpovídá, registraci kvůli tomu neblokujeme.
+  const ares = await lookupAres(ico);
+  if (!ares.ok && ares.reason === "not_found") return { error: "Firmu s tímto IČO jsme v ARES nenašli. Zkontrolujte číslo." };
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("register_company", {
     p_name: v.name,
-    p_ico: v.ico ? v.ico.padStart(8, "0") : "",
+    p_ico: ico,
     p_dic: v.dic,
     p_street: v.street,
     p_city: v.city,
     p_zip: v.zip,
     p_vat_payer: v.vatPayer,
   });
-  if (error) return { error: error.message.includes("5 firem") ? "Můžete mít nejvýš 5 firem." : "Firmu se nepodařilo založit." };
+  if (error) {
+    if (error.message.includes("5 firem")) return { error: "Můžete mít nejvýš 5 firem." };
+    if (error.message.includes("IČO")) return { error: "Vyplňte platné IČO (8 číslic)." };
+    return { error: "Firmu se nepodařilo založit." };
+  }
 
   (await cookies()).set("firma", String(data), { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60 * 60 * 24 * 365 });
   redirect("/app");
+}
+
+export type TrialInfo = { used: false; days: number } | { used: true; trialEnd: string; active: boolean };
+
+/** Zkušební období pro IČO – formulář ho ukáže hned po zadání IČO, ještě před založením firmy. */
+export async function checkTrial(rawIco: string): Promise<TrialInfo | null> {
+  if (!isValidIco(rawIco)) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("trial_for_ico", { p_ico: rawIco.trim().padStart(8, "0") });
+  if (error || !data) return null;
+  const d = data as { used: boolean; days?: number; trial_end?: string; active?: boolean };
+  return d.used ? { used: true, trialEnd: d.trial_end ?? "", active: Boolean(d.active) } : { used: false, days: d.days ?? 30 };
 }

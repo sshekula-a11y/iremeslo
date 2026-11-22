@@ -31,7 +31,7 @@ const STEPS: Step[] = [
     title: "Založte firmu – stačí IČO",
     lead: "Zaregistrujete se e-mailem a zadáte IČO. Název, adresu, DIČ i to, jestli jste plátce DPH, načteme z ARES.",
     points: [
-      "Hotovo za minutu, bez karty a bez závazků",
+      "Hotovo za minutu, 30 dní zdarma, bez karty",
       "Funguje pro OSVČ i s.r.o., plátce i neplátce DPH",
       "Logo, razítko, podpis a účet doplníte v nastavení",
     ],
@@ -94,7 +94,7 @@ const SOON = [
 ];
 
 const FAQ = [
-  { q: "Kolik to stojí?", a: "Během bety je aplikace zdarma. Placené tarify oznámíme s předstihem a data vám zůstanou." },
+  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez karty (jednou na IČO firmy). Potom pokračujete s předplatným; aplikace vás na konec zkušebního období upozorní předem a vaše data zůstanou." },
   { q: "Musím si něco instalovat?", a: "Ne. Aplikace běží v prohlížeči na telefonu i počítači. Na telefonu si ji můžete přidat na plochu a otevírat jako aplikaci." },
   { q: "Hodí se i pro neplátce DPH?", a: "Ano. Při založení firmy zvolíte, jestli jste plátce. Neplátce na dokladech nemá DPH a má text „Nejsem plátce DPH“." },
   { q: "Kdo uvidí moje čísla?", a: "Jen vaše firma. Data každé firmy jsou oddělená a pracovníci nevidí ceny ani zisk. Databáze běží v EU (Frankfurt)." },
@@ -195,7 +195,7 @@ export default function HowItWorksPage() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-5 py-10">
           <div>
             <h2 className="font-display text-[24px] font-extrabold">Vyzkoušejte to na své první zakázce</h2>
-            <p className="mt-1 text-white/75">Během bety zdarma, bez karty.</p>
+            <p className="mt-1 text-white/75">30 dní zdarma, bez karty.</p>
           </div>
           <Link href="/prihlaseni?rezim=registrace" className="btn-primary">Vyzkoušet zdarma</Link>
         </div>

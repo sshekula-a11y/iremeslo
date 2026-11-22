@@ -21,7 +21,7 @@ export default async function RegisterCompanyPage() {
           <span className="num text-muted">Krok 2 z {SIGNUP_STEP_COUNT}</span>
         </p>
         <h1 className="font-display text-[26px] font-extrabold">Zadejte IČO</h1>
-        <p className="mb-6 mt-1 text-[15px] text-muted">Název, adresu i DIČ vaší firmy načteme z ARES. Bez IČO vyplňte jméno a adresu ručně.</p>
+        <p className="mb-6 mt-1 text-[15px] text-muted">Název, adresu i DIČ vaší firmy načteme z ARES. Když ARES zrovna neodpovídá, vyplňte údaje ručně.</p>
         <CompanyForm />
       </div>
     </main>

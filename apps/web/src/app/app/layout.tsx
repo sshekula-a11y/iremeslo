@@ -3,10 +3,15 @@ import { Logo } from "@/components/Logo";
 import { requireCompany } from "@/lib/data";
 import { signOut } from "@/app/prihlaseni/actions";
 import { NavLinks } from "./NavLinks";
+import { createClient } from "@/lib/supabase/server";
+import { todayInPrague } from "@/lib/calendar";
+import { SubscriptionBar, type SubscriptionInfo } from "@/components/SubscriptionBar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const company = await requireCompany();
   const isWorker = company.role === "worker";
+  const supabase = await createClient();
+  const { data: sub } = isWorker ? { data: null } : await supabase.rpc("my_subscription", { p_company: company.id });
 
   return (
     <div className="min-h-dvh pb-20 sm:pb-0">
@@ -31,6 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
+      {!isWorker && <SubscriptionBar sub={(sub as SubscriptionInfo | null) ?? null} today={todayInPrague()} />}
       <main className="mx-auto max-w-6xl px-4 py-5">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white sm:hidden" aria-label="Hlavní menu">
         <NavLinks worker={isWorker} variant="bottom" />

@@ -83,7 +83,7 @@ select t_fails(format($q$insert into jobs (company_id, title, date_from, date_to
 
 -- ---------- firma B ----------
 select t_login('00000000-0000-0000-0000-00000000000b');
-select register_company('Firma B', null, null, null, null, null, false) as company_b \gset
+select register_company('Firma B', '27074358', null, null, null, null, false) as company_b \gset
 insert into clients (company_id, kind, name) values (:'company_b', 'company', 'Klient B') returning id as client_b \gset
 insert into jobs (company_id, title, client_id) values (:'company_b', 'Zakázka B', :'client_b') returning id as job_b \gset
 
@@ -122,7 +122,7 @@ select t_eq((select count(*) from clients), 0, 'nepřihlášený nevidí nic');
 reset role;
 set role anon;
 select t_fails('select * from jobs', 'anonymní role nemá k tabulkám přístup');
-select t_eq((select count(*) from plans where is_public), 1, 'anonymní návštěvník vidí veřejný tarif Beta');
+select t_eq((select count(*) from plans where is_public and id = 'zkusebni'), 1, 'anonymní návštěvník vidí veřejný tarif Zkušební 30 dní');
 reset role;
 set role authenticated;
 
@@ -299,10 +299,10 @@ select t_eq((select count(*)::int from admin_companies('') where id = :'company_
 select t_fails(format($q$select admin_set_read_only(%L, true, '')$q$, :'company_a'), 'zásah bez důvodu nejde');
 
 select t_text((select admin_record_payment(:'company_b', 199, current_date, 'zakladni', 'month', 'faktura 1')::text),
-  (current_date + interval '1 month')::date::text, 'platba prodlouží předplatné o měsíc');
+  (current_date + 30 + interval '1 month')::date::text, 'platba během zkušebního období navazuje na jeho konec');
 select t_text((select admin_record_payment(:'company_b', 199, current_date, 'zakladni', 'month', 'faktura 2')::text),
-  (current_date + interval '2 months')::date::text, 'další platba navazuje na konec období');
-select t_text((select admin_billing() ->> 'mrr'), '398.00', 'měsíční příjem z předplatného (A i B na tarifu Základní)');
+  (current_date + 30 + interval '2 months')::date::text, 'další platba navazuje na konec období');
+select t_text((select admin_billing() ->> 'mrr'), '199.00', 'měsíční příjem jen z placeného předplatného (A je ve zkušebním období)');
 select t_fails(format($q$select admin_record_payment(%L, 100, current_date, 'beta', 'month', 'x')$q$, :'company_b'), 'beta se neplatí');
 
 select t_fails(format($q$select admin_set_user_banned('00000000-0000-0000-0000-0000000000ad', true, 'test')$q$), 'provozovatel nezablokuje sám sebe');
@@ -314,5 +314,34 @@ select t_eq((select count(*)::int from admin_actions_recent(50)), 5, 'každý z�
 
 reset role;
 select t_eq((select count(*)::int from auth.sessions where user_id = '00000000-0000-0000-0000-00000000000b'), 0, 'zablokování ukončí přihlášení');
+-- ---------- zkušební období 30 dní jednou na IČO ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-0000000000ff');
+select t_fails($q$select register_company('Bez IČO', null)$q$, 'firmu bez IČO založit nejde');
+select t_fails($q$select register_company('Krátké IČO', '123')$q$, 'IČO musí mít 8 číslic');
+select t_eq((select (trial_for_ico('12345679') ->> 'used')::boolean::int), 0, 'nové IČO má zkušební období volné');
+select register_company('Nová firma', '12345679') as trial1 \gset
+select t_text((select my_subscription(:'trial1') ->> 'period_end'), (current_date + 30)::text, 'nová firma má 30 dní zdarma');
+select t_eq((select (trial_for_ico('12345679') ->> 'used')::boolean::int), 1, 'po založení je období pro IČO čerpané');
+select t_eq(t_affected(format($q$insert into clients (company_id, kind, name) values (%L, 'person', 'Zkušební klient')$q$, :'trial1')), 1, 've zkušebním období jde zapisovat');
+
+-- stejné IČO znovu (jiný účet nebo e-mail): dostane jen zbytek původního období
+select t_login('00000000-0000-0000-0000-00000000000b');
+select register_company('Stejná firma jiný e-mail', '12345679') as trial2 \gset
+select t_text((select my_subscription(:'trial2') ->> 'period_end'), (current_date + 30)::text, 'druhá registrace IČO nedostane nových 30 dní');
+
+-- po vyčerpání: nová registrace stejného IČO už zdarma nic nedostane a nejde zapisovat
+reset role;
+update app.trial_claims set trial_end = current_date - 5, claimed_at = now() - interval '35 days' where ico = '12345679';
+set role authenticated;
+select t_login('00000000-0000-0000-0000-0000000000a1');
+select register_company('Potřetí stejné IČO', '12345679') as trial3 \gset
+select t_eq((select (my_subscription(:'trial3') ->> 'ok')::boolean::int), 0, 'vyčerpané IČO: bez zkušebního období');
+select t_eq((select (trial_for_ico('12345679') ->> 'active')::boolean::int), 0, 'formulář pozná, že období je vyčerpané');
+select t_fails(format($q$insert into clients (company_id, kind, name) values (%L, 'person', 'x')$q$, :'trial3'), 'po vyčerpání zkušebního období nejde zapisovat');
+select t_eq((select count(*)::int from companies where id = :'trial3'), 1, 'data firmy zůstávají vidět');
+reset role;
+select t_eq((select count(*)::int from app.trial_claims where ico = '12345679'), 1, 'jedno IČO = jeden záznam zkušebního období');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

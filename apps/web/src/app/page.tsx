@@ -14,7 +14,7 @@ export default function Home() {
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-16 pt-12">
           <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[13px] font-semibold text-accent">
-            Beta – zatím úplně zdarma
+            30 dní zdarma, bez karty
           </p>
           <h1 className="max-w-2xl font-display text-[34px] font-extrabold leading-[1.1] tracking-tight sm:text-[46px]">
             Zakázky, nabídky a faktury pro řemeslníky. Z telefonu, přímo na stavbě.

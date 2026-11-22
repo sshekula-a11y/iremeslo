@@ -1,0 +1,29 @@
+<!-- Supabase → Authentication → Emails → Templates → „Confirm signup“
+     Předmět: Potvrďte registraci na iRemeslo.cz -->
+<div style="margin:0;padding:24px 12px;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#05264c">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #dfe4eb;border-radius:16px;overflow:hidden">
+    <div style="height:6px;background:#fe820d"></div>
+    <div style="padding:28px 28px 8px">
+      <p style="margin:0 0 20px;font-size:22px;font-weight:800">iRemeslo<span style="color:#fe820d">.cz</span></p>
+      <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3">Dokončete registraci</h1>
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.5;color:#556273">
+        Děkujeme za registraci na platformě iRemeslo.cz. Potvrďte prosím svůj e-mail – pak zadáte IČO
+        a můžete začít vystavovat nabídky a faktury.
+      </p>
+      <p style="margin:0 0 24px">
+        <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/registrace-firmy"
+           style="display:inline-block;background:#fe820d;color:#05264c;font-size:16px;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:12px">
+          Potvrdit e-mail
+        </a>
+      </p>
+      <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#556273">
+        Tlačítko nefunguje? Zkopírujte tento odkaz do prohlížeče:<br>
+        <span style="word-break:break-all;color:#b4540a">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/registrace-firmy</span>
+      </p>
+    </div>
+    <div style="padding:16px 28px 24px;font-size:13px;line-height:1.5;color:#556273;border-top:1px solid #dfe4eb">
+      Pokud jste se na iRemeslo.cz neregistrovali, tento e-mail ignorujte – účet bez potvrzení nebude aktivní.<br>
+      Dotazy: <a href="mailto:info@iremeslo.cz" style="color:#b4540a">info@iremeslo.cz</a>
+    </div>
+  </div>
+</div>
