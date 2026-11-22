@@ -2,15 +2,28 @@
 
 import { useActionState, useState } from "react";
 import { signIn, signUp, type AuthState } from "./actions";
+import { RegistrationDone } from "./RegistrationDone";
 
-export function AuthForm({ initialMode, next }: { initialMode: "login" | "register"; next: string }) {
+export function AuthForm({ initialMode, next, linkFailed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean }) {
   const [mode, setMode] = useState(initialMode);
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
   const state = mode === "login" ? loginState : regState;
   const pending = mode === "login" ? loginPending : regPending;
 
+  // Po úspěšné registraci zmizí nadpis, přepínač i formulář – zůstane jen gratulace.
+  if (regState.registered) return <RegistrationDone email={regState.registered} />;
+
   return (
+    <>
+    <h1 className="mb-6 font-display text-[28px] font-extrabold text-ink">
+      {mode === "register" ? "Vyzkoušejte iRemeslo.cz zdarma" : "Vítejte zpět"}
+    </h1>
+    {linkFailed && (
+      <p className="mb-4 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn">
+        Odkaz z e-mailu už neplatí. Přihlaste se, nebo se zaregistrujte znovu.
+      </p>
+    )}
     <div className="card p-5 sm:p-6">
       <div className="mb-5 grid grid-cols-2 rounded-xl bg-paper p-1 text-[15px] font-semibold" role="tablist">
         {(["login", "register"] as const).map((m) => (
@@ -61,5 +74,6 @@ export function AuthForm({ initialMode, next }: { initialMode: "login" | "regist
         </button>
       </form>
     </div>
+    </>
   );
 }

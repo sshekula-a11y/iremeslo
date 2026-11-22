@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-export type AuthState = { error?: string; info?: string };
+export type AuthState = { error?: string; info?: string; registered?: string };
 
 const credentials = z.object({
   email: z.string().trim().toLowerCase().email("Zadejte platný e-mail"),
@@ -43,7 +43,27 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     return { error: "Registrace se nepovedla. Zkuste to prosím znovu." };
   }
   if (data.session) redirect("/registrace-firmy");
-  return { info: "Hotovo! Poslali jsme vám e-mail s odkazem pro potvrzení. Po kliknutí na něj založíte firmu." };
+  // Formulář se schová a zůstane jen gratulace s dalšími kroky.
+  return { registered: parsed.data.email };
+}
+
+export type ResendState = { ok?: boolean; error?: string };
+
+/** Znovu pošle potvrzovací e-mail (Supabase sám hlídá, aby to nešlo častěji než jednou za minutu). */
+export async function resendConfirmation(_prev: ResendState, form: FormData): Promise<ResendState> {
+  const email = z.string().trim().toLowerCase().email().safeParse(form.get("email"));
+  if (!email.success) return { error: "Neplatný e-mail." };
+  const supabase = await createClient();
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.data,
+    options: { emailRedirectTo: `${site}/auth/confirm?next=/registrace-firmy` },
+  });
+  if (error) {
+    return { error: error.status === 429 ? "E-mail jsme poslali před chvílí. Zkuste to znovu za minutu." : "E-mail se nepodařilo poslat. Zkuste to za chvíli." };
+  }
+  return { ok: true };
 }
 
 export async function signOut() {
