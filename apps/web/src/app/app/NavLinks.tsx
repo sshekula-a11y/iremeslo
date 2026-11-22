@@ -8,6 +8,7 @@ type Item = { href: string; label: string; exact?: boolean };
 const STAFF: Item[] = [
   { href: "/app", label: "Přehled", exact: true },
   { href: "/app/zakazky", label: "Zakázky" },
+  { href: "/app/kalendar", label: "Kalendář" },
   { href: "/app/klienti", label: "Klienti" },
   { href: "/app/cenik", label: "Ceník" },
   { href: "/app/zamestnanci", label: "Lidé" },
