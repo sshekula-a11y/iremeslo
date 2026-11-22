@@ -269,6 +269,50 @@ select t_eq((select count(*) from jobs), 3, 'v režimu jen pro čtení data zůs
 select t_fails(format($q$insert into clients (company_id, kind, name) values (%L, 'person', 'x')$q$, :'company_a'), 'v režimu jen pro čtení nejde zapisovat');
 select t_eq(t_affected(format($q$update jobs set title = 'x' where id = %L$q$, :'job_a')), 0, 'v režimu jen pro čtení nejde měnit');
 
+-- ---------- administrace provozovatele (/ssh) ----------
 reset role;
+select t_login(null) \g /dev/null
+insert into auth.users (id, email, last_sign_in_at) values ('00000000-0000-0000-0000-0000000000ad', 'provozovatel@test.cz', now());
+insert into app.platform_admins (user_id) values ('00000000-0000-0000-0000-0000000000ad');
+insert into auth.sessions (user_id) values ('00000000-0000-0000-0000-00000000000b');
+set role authenticated;
+
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_eq((select admin_whoami()::int), 0, 'majitel firmy není provozovatel');
+select t_fails('select admin_overview()', 'majitel firmy nevidí analytiku provozovatele');
+select t_fails('select * from admin_users()', 'majitel firmy nevidí seznam uživatelů');
+select t_fails(format($q$select admin_record_payment(%L, 199, current_date, 'zakladni', 'month', 'x')$q$, :'company_a'), 'majitel si nemůže sám zapsat platbu');
+select t_fails('select * from app.admin_actions', 'záznam zásahů není přímo čitelný');
+select t_fails('select * from app.billing_payments', 'platby předplatného nejsou přímo čitelné');
+
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq((select admin_whoami()::int), 1, 'provozovatel je poznaný');
+select t_eq((select (admin_overview() ->> 'companies')::int), 2, 'analytika: počet firem');
+select t_eq((select jsonb_array_length(admin_overview() -> 'weekly')), 12, 'analytika: registrace za 12 týdnů');
+select t_eq((select count(*)::int from admin_companies('')), 2, 'seznam firem');
+select t_eq((select count(*)::int from admin_companies('majitel-b')), 1, 'hledání firmy podle e-mailu majitele');
+select t_eq((select jsonb_array_length(admin_company(:'company_a') -> 'members')), 5, 'detail firmy: členové');
+select t_eq((select count(*)::int from jobs), 0, 'provozovatel nevidí zakázky firem přímo');
+
+select admin_set_read_only(:'company_a', false, 'zaplaceno převodem') \g /dev/null
+select t_eq((select count(*)::int from admin_companies('') where id = :'company_a' and not read_only), 1, 'provozovatel vypne režim jen pro čtení');
+select t_fails(format($q$select admin_set_read_only(%L, true, '')$q$, :'company_a'), 'zásah bez důvodu nejde');
+
+select t_text((select admin_record_payment(:'company_b', 199, current_date, 'zakladni', 'month', 'faktura 1')::text),
+  (current_date + interval '1 month')::date::text, 'platba prodlouží předplatné o měsíc');
+select t_text((select admin_record_payment(:'company_b', 199, current_date, 'zakladni', 'month', 'faktura 2')::text),
+  (current_date + interval '2 months')::date::text, 'další platba navazuje na konec období');
+select t_text((select admin_billing() ->> 'mrr'), '398.00', 'měsíční příjem z předplatného (A i B na tarifu Základní)');
+select t_fails(format($q$select admin_record_payment(%L, 100, current_date, 'beta', 'month', 'x')$q$, :'company_b'), 'beta se neplatí');
+
+select t_fails(format($q$select admin_set_user_banned('00000000-0000-0000-0000-0000000000ad', true, 'test')$q$), 'provozovatel nezablokuje sám sebe');
+select admin_set_user_banned('00000000-0000-0000-0000-00000000000b', true, 'zneužití') \g /dev/null
+select t_eq((select count(*)::int from admin_users('majitel-b') where banned), 1, 'uživatel je zablokovaný');
+select admin_set_user_banned('00000000-0000-0000-0000-00000000000b', false, 'omyl') \g /dev/null
+select t_eq((select count(*)::int from admin_users('majitel-b') where banned), 0, 'uživatel je odblokovaný');
+select t_eq((select count(*)::int from admin_actions_recent(50)), 5, 'každý zásah je v záznamu (režim, 2 platby, blokace, odblokování)');
+
+reset role;
+select t_eq((select count(*)::int from auth.sessions where user_id = '00000000-0000-0000-0000-00000000000b'), 0, 'zablokování ukončí přihlášení');
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

@@ -12,7 +12,17 @@ create schema if not exists auth;
 
 create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
-  email text unique not null
+  email text unique not null,
+  -- stejné sloupce jako v Supabase (používá je administrace provozovatele)
+  created_at timestamptz default now(),
+  last_sign_in_at timestamptz,
+  email_confirmed_at timestamptz,
+  banned_until timestamptz
+);
+-- Přihlášení (v Supabase je tabulka i s dalšími sloupci); smazáním se uživatel odhlásí.
+create table if not exists auth.sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade
 );
 
 -- Stejné chování jako v Supabase: ID přihlášeného uživatele z JWT.

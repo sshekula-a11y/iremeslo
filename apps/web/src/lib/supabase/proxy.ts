@@ -28,7 +28,7 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   const path = request.nextUrl.pathname;
-  if (!user && (path.startsWith("/app") || path.startsWith("/registrace-firmy"))) {
+  if (!user && (path.startsWith("/app") || path.startsWith("/registrace-firmy") || path === "/ssh" || path.startsWith("/ssh/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/prihlaseni";
     url.searchParams.set("next", path);

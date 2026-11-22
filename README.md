@@ -21,7 +21,7 @@ Peníze se počítají v celých haléřích (v databázi `numeric`), nikdy ve f
 
 ```bash
 npm test          # výpočty: 36 testů včetně kontrolního příkladu ze zadání
-npm run test:db   # databáze: 87 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
+npm run test:db   # databáze: 111 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
 npm run typecheck
 ```
 
@@ -45,7 +45,9 @@ Všichni noví zákazníci dostanou tarif **Beta zdarma** (`plans.beta`). Placen
 ## Nasazení databáze do Supabase
 
 1. Založit projekt v Supabase (region Frankfurt, `eu-central-1`).
-2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql`, `002_security.sql`, `003_functions.sql`, potom `db/supabase/storage.sql`.
+2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `006_admin.sql`, potom `db/supabase/storage.sql`.
+4. Provozovatel (přístup do administrace `/ssh`): po registraci svého účtu jednou spustit
+   `insert into app.platform_admins (user_id) select id from auth.users where email = 'vas@email.cz';`
 3. Soubor `db/local/000_supabase_stub.sql` se v Supabase **nespouští**, je jen pro lokální testy.
 
 Nové tabulky přidané později musí dostat `enable row level security` a vlastní politiky, jinak k nim aplikace nebude mít přístup.
@@ -60,7 +62,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 
 1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář (hotovo).
 2. PDF nabídky, nastavení firmy, faktury se zálohami a DDPP (hotovo); dobropis a částečné platby.
-3. Odesílání e-mailem, pozvánky kolegů, superadmin.
+3. Odesílání e-mailem, pozvánky kolegů (administrace provozovatele `/ssh` hotová).
 
 ## Webová aplikace (`apps/web`)
 
@@ -86,6 +88,7 @@ npm run dev                                     # http://localhost:3000
 | `/app/doklady/nova?zakazka=…&typ=faktura\|zaloha` | náhled faktury před vystavením (DUZP), zálohová faktura v % nebo Kč |
 | `/app/faktury` | faktury, zálohy a DDPP: čeká na platbu, po splatnosti, zaplacené; součty |
 | `/app/nastaveni` | nastavení firmy (mění jen majitel): údaje na dokladech, plátce DPH, splatnost, účet → IBAN, přirážka a hranice marže, barva dokladů, logo / razítko / podpis (PNG nebo JPG do 1 MB, soukromé úložiště) |
+| `/ssh` | administrace provozovatele (jen `app.platform_admins`, ostatní 404): analytika, firmy, uživatelé (blokace), tarify a ruční platby předplatného, záznam zásahů |
 | `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
 
