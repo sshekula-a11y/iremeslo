@@ -7,11 +7,11 @@ export const metadata: Metadata = { title: "Nová zakázka" };
 
 export default async function NewJobPage() {
   const company = await requireStaff();
-  const { clients, employees } = await loadOptions(company.id);
+  const { clients, employees, catalog } = await loadOptions(company.id);
   return (
     <>
       <h1 className="mb-4 font-display text-[26px] font-extrabold">Nová zakázka</h1>
-      <JobForm initial={emptyDraft(company)} clients={clients} employees={employees} markupPct={company.materialMarkupPct} minMarginPct={company.minMarginPct} />
+      <JobForm initial={emptyDraft(company)} clients={clients} employees={employees} catalog={catalog} markupPct={company.materialMarkupPct} minMarginPct={company.minMarginPct} />
     </>
   );
 }

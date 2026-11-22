@@ -58,7 +58,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 
 ## Další kroky
 
-1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník, kalendář.
+1. Webová aplikace Next.js nad touto databází: registrace s IČO (ARES), zakázka s pěti sekcemi a živým souhrnem, klienti, ceník (hotovo), kalendář.
 2. PDF nabídky a faktury podle návrhu (barevné varianty, logo, razítko, podpis, QR Platba).
 3. Odesílání e-mailem, pozvánky kolegů, superadmin.
 
@@ -80,6 +80,7 @@ npm run dev                                     # http://localhost:3000
 | `/app` | přehled: zakázky tento týden, poptávky |
 | `/app/zakazky` | seznam s hledáním a filtrem stavu, nová zakázka, úprava zakázky |
 | `/app/klienti`, `/app/zamestnanci` | adresář klientů a lidé s nákladovými sazbami |
+| `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
 
 Formulář zakázky počítá souhrn živě stejným jádrem `@iremeslo/core` jako testy; ukládá se jedním voláním

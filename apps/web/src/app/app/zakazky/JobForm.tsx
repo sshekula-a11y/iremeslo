@@ -7,7 +7,7 @@ import { JOB_STATUSES, VAT_MODE_LABELS, type JobStatus } from "@/lib/labels";
 import { parseInput, toInput } from "@/lib/money";
 import { saveJob } from "./actions";
 import { safeSummary } from "./summary";
-import type { ClientOption, EmployeeOption, ExpenseRow, JobDraft, LaborRow, MaterialRow, WorkRow } from "./types";
+import type { CatalogOption, ClientOption, EmployeeOption, ExpenseRow, JobDraft, LaborRow, MaterialRow, WorkRow } from "./types";
 
 let seq = 0;
 const key = () => `r${Date.now().toString(36)}${(seq++).toString(36)}`;
@@ -22,12 +22,14 @@ export function JobForm({
   initial,
   clients,
   employees,
+  catalog,
   markupPct,
   minMarginPct,
 }: {
   initial: JobDraft;
   clients: ClientOption[];
   employees: EmployeeOption[];
+  catalog: CatalogOption[];
   markupPct: string;
   minMarginPct: string;
 }) {
@@ -67,6 +69,24 @@ export function JobForm({
       return { ...x, [section]: rows };
     });
   }
+
+  // Položka z ceníku: když popis přesně odpovídá názvu, doplní se jednotka a ceny.
+  const fromCatalog = (kind: CatalogOption["kind"], name: string) =>
+    catalog.find((c) => c.kind === kind && c.name.toLocaleLowerCase("cs") === name.trim().toLocaleLowerCase("cs"));
+
+  function onWorkDescription(row: WorkRow, value: string) {
+    const c = fromCatalog("work", value);
+    updateRow("work", row.key, c ? { description: c.name, unit: c.unit, unitPrice: toInput(parseInput(c.salePrice)) } : { description: value });
+  }
+  function onMaterialDescription(row: MaterialRow, value: string) {
+    const c = fromCatalog("material", value);
+    if (!c) return updateRow("materials", row.key, { description: value });
+    const buy = parseInput(c.purchasePrice);
+    const sell = parseInput(c.salePrice) || salePriceFromMarkup(buy, parseInput(markupPct));
+    updateRow("materials", row.key, { description: c.name, unit: c.unit, purchasePrice: toInput(buy), salePrice: toInput(sell) });
+  }
+  const hasWorkCatalog = catalog.some((c) => c.kind === "work");
+  const hasMaterialCatalog = catalog.some((c) => c.kind === "material");
 
   function newLabor(): LaborRow {
     const e = employees[0];
@@ -180,7 +200,8 @@ export function JobForm({
           onAdd={() => addRow("work", emptyWork())}>
           {d.work.map((w, i) => (
             <Row key={w.key} tools={rowTools("work", w.key, i, d.work.length)}>
-              <input className="field col-span-2 sm:col-span-6" aria-label="Popis práce" placeholder="Popis práce" value={w.description} onChange={(e) => updateRow("work", w.key, { description: e.target.value })} />
+              <input className="field col-span-2 sm:col-span-6" aria-label="Popis práce" placeholder={hasWorkCatalog ? "Popis práce nebo položka z ceníku" : "Popis práce"}
+                list={hasWorkCatalog ? "catalog-work" : undefined} value={w.description} onChange={(e) => onWorkDescription(w, e.target.value)} />
               <NumField label="Množství" value={w.qty} onChange={(v) => updateRow("work", w.key, { qty: v })} className="sm:col-span-2" />
               <UnitSelect value={w.unit} onChange={(v) => updateRow("work", w.key, { unit: v })} />
               <NumField label="Kč/j bez DPH" value={w.unitPrice} onChange={(v) => updateRow("work", w.key, { unitPrice: v })} className="sm:col-span-2" />
@@ -194,7 +215,8 @@ export function JobForm({
           onAdd={() => addRow("materials", emptyMaterial())}>
           {d.materials.map((m, i) => (
             <Row key={m.key} tools={rowTools("materials", m.key, i, d.materials.length)}>
-              <input className="field col-span-2 sm:col-span-6" aria-label="Popis materiálu" placeholder="Materiál" value={m.description} onChange={(e) => updateRow("materials", m.key, { description: e.target.value })} />
+              <input className="field col-span-2 sm:col-span-6" aria-label="Popis materiálu" placeholder={hasMaterialCatalog ? "Materiál nebo položka z ceníku" : "Materiál"}
+                list={hasMaterialCatalog ? "catalog-material" : undefined} value={m.description} onChange={(e) => onMaterialDescription(m, e.target.value)} />
               <NumField label="Množství" value={m.qty} onChange={(v) => updateRow("materials", m.key, { qty: v })} className="sm:col-span-2" />
               <UnitSelect value={m.unit} onChange={(v) => updateRow("materials", m.key, { unit: v })} />
               <NumField label="Nákup Kč/j" value={m.purchasePrice} className="sm:col-span-2"
@@ -310,6 +332,12 @@ export function JobForm({
         </div>
       </aside>
       <div className="h-48 lg:hidden" aria-hidden="true" />
+      <datalist id="catalog-work">
+        {catalog.filter((c) => c.kind === "work").map((c) => <option key={c.name} value={c.name} />)}
+      </datalist>
+      <datalist id="catalog-material">
+        {catalog.filter((c) => c.kind === "material").map((c) => <option key={c.name} value={c.name} />)}
+      </datalist>
     </div>
   );
 }

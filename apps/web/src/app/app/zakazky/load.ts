@@ -3,21 +3,27 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { toHundredths, toInput } from "@/lib/money";
 import type { ActiveCompany } from "@/lib/data";
-import type { ClientOption, EmployeeOption, JobDraft } from "./types";
+import type { CatalogOption, ClientOption, EmployeeOption, JobDraft } from "./types";
 import type { JobStatus } from "@/lib/labels";
 
 const t = (v: string | number | null | undefined) => toInput(toHundredths(v));
 const tOpt = (v: string | number | null | undefined) => (v === null || v === undefined ? "" : toInput(toHundredths(v)) || "0");
 
-export async function loadOptions(companyId: string): Promise<{ clients: ClientOption[]; employees: EmployeeOption[] }> {
+export interface JobOptions { clients: ClientOption[]; employees: EmployeeOption[]; catalog: CatalogOption[] }
+
+export async function loadOptions(companyId: string): Promise<JobOptions> {
   const supabase = await createClient();
-  const [{ data: clients }, { data: employees }] = await Promise.all([
+  const [{ data: clients }, { data: employees }, { data: catalog }] = await Promise.all([
     supabase.from("clients").select("id, name").eq("company_id", companyId).order("name"),
     supabase.from("employees").select("id, name, rate_hour, rate_day").eq("company_id", companyId).eq("active", true).order("name"),
+    supabase.from("catalog_items").select("kind, name, unit, purchase_price, sale_price").eq("company_id", companyId).eq("active", true).order("name"),
   ]);
   return {
     clients: (clients ?? []).map((c) => ({ id: c.id, name: c.name })),
     employees: (employees ?? []).map((e) => ({ id: e.id, name: e.name, rateHour: String(e.rate_hour), rateDay: String(e.rate_day) })),
+    catalog: (catalog ?? []).map((c) => ({
+      kind: c.kind as CatalogOption["kind"], name: c.name, unit: c.unit, purchasePrice: String(c.purchase_price), salePrice: String(c.sale_price),
+    })),
   };
 }
 

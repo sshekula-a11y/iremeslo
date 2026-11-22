@@ -33,3 +33,4 @@ export interface JobDraft {
 
 export interface EmployeeOption { id: string; name: string; rateHour: string; rateDay: string }
 export interface ClientOption { id: string; name: string }
+export interface CatalogOption { kind: "work" | "material"; name: string; unit: string; purchasePrice: string; salePrice: string }
