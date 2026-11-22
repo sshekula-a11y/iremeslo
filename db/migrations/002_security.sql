@@ -157,7 +157,7 @@ create policy support_log_owner_read on public.support_access_log for select usi
 -- (pohled běží s právy vlastníka, filtr na přihlášeného uživatele je přímo v něm)
 -- ---------------------------------------------------------------------------
 
-create view public.worker_jobs as
+create view public.worker_jobs with (security_barrier = true) as
   select j.id, j.company_id, j.number, j.title, j.status, j.site_address, j.map_url,
          j.date_from, j.date_to, j.time_from, j.time_to, j.note,
          c.name as client_name, c.phone as client_phone
@@ -165,12 +165,12 @@ create view public.worker_jobs as
   left join public.clients c on c.company_id = j.company_id and c.id = j.client_id
   where app.is_assigned(j.company_id, j.id);
 
-create view public.worker_job_work as
+create view public.worker_job_work with (security_barrier = true) as
   select w.id, w.company_id, w.job_id, w.position, w.description, w.qty, w.unit
   from public.job_work_items w
   where app.is_assigned(w.company_id, w.job_id);
 
-create view public.worker_job_materials as
+create view public.worker_job_materials with (security_barrier = true) as
   select m.id, m.company_id, m.job_id, m.position, m.description, m.qty_planned, m.qty_actual, m.unit
   from public.job_materials m
   where app.is_assigned(m.company_id, m.job_id);

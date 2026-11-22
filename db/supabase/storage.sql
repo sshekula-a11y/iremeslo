@@ -13,7 +13,8 @@ create policy files_staff_write on storage.objects for insert to authenticated
   with check (bucket_id = 'files' and app.can_write(((storage.foldername(name))[1])::uuid));
 
 create policy files_staff_update on storage.objects for update to authenticated
-  using (bucket_id = 'files' and app.can_write(((storage.foldername(name))[1])::uuid));
+  using (bucket_id = 'files' and app.can_write(((storage.foldername(name))[1])::uuid))
+  with check (bucket_id = 'files' and app.can_write(((storage.foldername(name))[1])::uuid));
 
 create policy files_staff_delete on storage.objects for delete to authenticated
   using (bucket_id = 'files' and app.can_write(((storage.foldername(name))[1])::uuid));

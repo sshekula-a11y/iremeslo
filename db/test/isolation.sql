@@ -96,7 +96,7 @@ select t_eq((select count(*) from employees), 0, 'B nevidí zaměstnance A');
 select t_eq((select count(*) from job_work_items), 0, 'B nevidí položky prací A');
 select t_eq((select count(*) from job_materials), 0, 'B nevidí materiály A');
 select t_eq((select count(*) from memberships where company_id = :'company_a'), 0, 'B nevidí uživatele A');
-select t_eq((select count(*) from worker_jobs), 0, 'B nevidí zakázky A ani přes pohled pracovníka');
+select t_eq((select count(*) from worker_jobs()), 0, 'B nevidí zakázky A ani přes pohled pracovníka');
 select t_eq((select count(*) from jobs), 1, 'B vidí jen svou jednu zakázku');
 
 select t_eq(t_affected(format('update jobs set title = %L where id = %L', 'hack', :'job_a')), 0, 'B nemůže přepsat zakázku A');
@@ -124,14 +124,14 @@ set role authenticated;
 
 -- ---------- pracovník A: jen přiřazené zakázky, bez cen ----------
 select t_login('00000000-0000-0000-0000-0000000000a2');
-select t_eq((select count(*) from worker_jobs), 1, 'pracovník vidí jen zakázku, na kterou je přiřazený');
-select t_eq((select count(*) from worker_job_materials), 1, 'pracovník vidí materiál své zakázky (bez cen)');
+select t_eq((select count(*) from worker_jobs()), 1, 'pracovník vidí jen zakázku, na kterou je přiřazený');
+select t_eq((select count(*) from worker_job_materials(:'job_a')), 1, 'pracovník vidí materiál své zakázky (bez cen)');
 select t_eq((select count(*) from jobs), 0, 'pracovník nemá přístup k tabulce zakázek s cenami');
 select t_eq((select count(*) from job_materials), 0, 'pracovník nevidí nákupní a prodejní ceny');
 select t_eq((select count(*) from employees), 0, 'pracovník nevidí sazby zaměstnanců');
 select t_eq((select count(*) from clients), 0, 'pracovník nevidí adresář klientů');
 select record_material_usage(:'mat_a', 55);
-select t_eq((select qty_actual::bigint from worker_job_materials where id = :'mat_a'), 55, 'pracovník zapsal skutečnou spotřebu');
+select t_eq((select qty_actual::bigint from worker_job_materials(:'job_a') where id = :'mat_a'), 55, 'pracovník zapsal skutečnou spotřebu');
 insert into time_entries (company_id, job_id, employee_id, work_date, hours, created_by)
   values (:'company_a', :'job_a', :'emp_a', current_date, 8, '00000000-0000-0000-0000-0000000000a2');
 select t_eq((select count(*) from time_entries), 1, 'pracovník zapsal a vidí své hodiny');

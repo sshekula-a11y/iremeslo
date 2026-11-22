@@ -233,3 +233,12 @@ begin
 end $$;
 create trigger memberships_limit before insert on public.memberships
   for each row execute function app.memberships_limit();
+
+-- ---------------------------------------------------------------------------
+-- Supabase dává rolím anon/authenticated práva na nové objekty automaticky.
+-- Anonymní návštěvník nesmí volat žádnou funkci ani číst pohledy pracovníka.
+-- ---------------------------------------------------------------------------
+
+revoke all on public.worker_jobs, public.worker_job_work, public.worker_job_materials from anon;
+revoke execute on all functions in schema public from anon;
+revoke execute on all functions in schema app from anon;
