@@ -1,13 +1,30 @@
 import { createServerClient } from "@supabase/ssr";
+import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Obnoví přihlášení a nepřihlášené pošle z /app na přihlášení. */
 export async function updateSession(request: NextRequest) {
+  // Odkaz z potvrzovacího e-mailu: když Supabase vrátí člověka na hlavní stránku (adresa webu
+  // v nastavení Supabase) místo na /auth/confirm, předáme kód dál, ať potvrzení nepropadne.
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/" && (searchParams.has("code") || searchParams.has("token_hash"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/confirm";
+    if (!url.searchParams.has("next")) url.searchParams.set("next", "/registrace-firmy");
+    return NextResponse.redirect(url);
+  }
+  if (pathname === "/" && (searchParams.has("error_code") || searchParams.has("error_description"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/prihlaseni";
+    url.search = "?chyba=odkaz";
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    SUPABASE_URL,
+    SUPABASE_KEY,
     {
       cookies: {
         getAll() {

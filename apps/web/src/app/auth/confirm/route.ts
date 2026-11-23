@@ -20,5 +20,9 @@ export async function GET(request: NextRequest) {
     ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
   }
 
-  return NextResponse.redirect(ok ? `${origin}${safeNext}` : `${origin}/prihlaseni?chyba=odkaz`);
+  if (ok) return NextResponse.redirect(`${origin}${safeNext}`);
+  // Kód z odkazu dostane člověk až po potvrzení e-mailu. Když se přihlášení nepodaří dokončit
+  // (odkaz otevřený v jiném prohlížeči či telefonu než registrace), e-mail už potvrzený je – stačí se přihlásit.
+  if (code) return NextResponse.redirect(`${origin}/prihlaseni?potvrzeno=1&next=${encodeURIComponent(safeNext)}`);
+  return NextResponse.redirect(`${origin}/prihlaseni?chyba=odkaz`);
 }

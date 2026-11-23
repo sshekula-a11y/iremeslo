@@ -74,7 +74,7 @@ Nové tabulky přidané později musí dostat `enable row level security` a vlas
 Next.js 16 + Supabase (přihlášení e-mailem a heslem, data přes RLS). Spuštění:
 
 ```bash
-cp apps/web/.env.example apps/web/.env.local   # doplnit URL a publishable key ze Supabase
+# Bez nastavování: adresa a publishable key databáze jsou v apps/web/src/lib/supabase/config.ts
 npm install
 npm run dev                                     # http://localhost:3000
 ```

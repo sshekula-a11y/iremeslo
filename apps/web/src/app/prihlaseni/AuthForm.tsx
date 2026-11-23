@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { signIn, signUp, type AuthState } from "./actions";
 import { RegistrationDone } from "./RegistrationDone";
 
-export function AuthForm({ initialMode, next, linkFailed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean }) {
+export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean; confirmed?: boolean }) {
   const [mode, setMode] = useState(initialMode);
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
@@ -19,6 +19,11 @@ export function AuthForm({ initialMode, next, linkFailed }: { initialMode: "logi
     <h1 className="mb-6 font-display text-[28px] font-extrabold text-ink">
       {mode === "register" ? "Vyzkoušejte iRemeslo.cz 30 dní zdarma" : "Vítejte zpět"}
     </h1>
+    {confirmed && (
+      <p className="mb-4 rounded-xl bg-ok-soft px-3 py-2.5 text-[14px] text-ok" role="status">
+        E-mail je potvrzený. Přihlaste se a pokračujte zadáním IČO.
+      </p>
+    )}
     {linkFailed && (
       <p className="mb-4 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn">
         Odkaz z e-mailu už neplatí. Přihlaste se, nebo se zaregistrujte znovu.

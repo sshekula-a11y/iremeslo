@@ -10,6 +10,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/prihlaseni
   const mode = sp.rezim === "registrace" ? "register" : "login";
   const next = typeof sp.next === "string" && sp.next.startsWith("/") ? sp.next : "/app";
   const failed = sp.chyba === "odkaz";
+  const confirmed = sp.potvrzeno === "1";
 
   return (
     <main className="min-h-dvh bg-paper px-5 py-8">
@@ -18,7 +19,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/prihlaseni
           <Logo variant="full" height={44} priority />
         </Link>
         <div className="mt-8">
-          <AuthForm initialMode={mode} next={next} linkFailed={failed} />
+          <AuthForm initialMode={mode} next={next} linkFailed={failed} confirmed={confirmed} />
         </div>
       </div>
     </main>

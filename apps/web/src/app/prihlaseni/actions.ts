@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { siteOrigin } from "@/lib/site";
 
 export type AuthState = { error?: string; info?: string; registered?: string };
 
@@ -33,7 +34,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   if (form.get("terms") !== "on") return { error: "Pro registraci je potřeba souhlasit s podmínkami." };
   const supabase = await createClient();
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = await siteOrigin();
   const { data, error } = await supabase.auth.signUp({
     ...parsed.data,
     options: { emailRedirectTo: `${site}/auth/confirm?next=/registrace-firmy` },
@@ -54,7 +55,7 @@ export async function resendConfirmation(_prev: ResendState, form: FormData): Pr
   const email = z.string().trim().toLowerCase().email().safeParse(form.get("email"));
   if (!email.success) return { error: "Neplatný e-mail." };
   const supabase = await createClient();
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = await siteOrigin();
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: email.data,
