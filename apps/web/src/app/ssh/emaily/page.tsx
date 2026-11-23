@@ -33,7 +33,7 @@ export default async function AdminEmails() {
       <div className={`rounded-2xl px-4 py-3 text-[14px] ${s.has_key ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`} role="status">
         {s.has_key
           ? <>Odesílání je zapnuté (klíč <span className="num">{s.key_hint}</span>).</>
-          : <><strong>Odesílání je vypnuté</strong> – chybí klíč Resend. Lidé se registrovat můžou, ale potvrzovací e-mail jim nepřijde.</>}
+          : <><strong>Odesílání je vypnuté</strong> – chybí klíč Resend. Registrace funguje, ale potvrzovací e-maily se neodesílají.</>}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

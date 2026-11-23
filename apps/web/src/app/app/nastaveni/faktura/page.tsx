@@ -75,7 +75,7 @@ export default async function InvoiceLookPage() {
           <h2 id="obrazky" className="font-display text-[17px] font-bold">Logo, razítko a podpis</h2>
           <p className="text-[13px] text-muted">
             Razítko s podpisem stačí vyfotit telefonem: orazítkujte a podepište bílý papír a vyfoťte ho zblízka.
-            Bílý papír odstraníme.
+            Bílé pozadí automaticky odstraníme.
           </p>
           <ImageSlot companyId={company.id} kind="logo" label="Logo" hint="Vlevo nahoře na dokladech" url={url(c.logo_path)} canEdit={canEdit} />
           <ImageSlot companyId={company.id} kind="stamp" label="Razítko s podpisem" hint="Vyfoťte razítko i s podpisem najednou" url={url(c.stamp_path)} canEdit={canEdit} />

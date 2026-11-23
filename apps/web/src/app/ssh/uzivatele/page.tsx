@@ -28,7 +28,7 @@ export default async function AdminUsers({ searchParams }: PageProps<"/ssh/uziva
           <button className="btn-dark">Hledat</button>
         </form>
       </div>
-      <p className="text-[13px] text-muted">Zablokovaný uživatel se nepřihlásí a jeho přihlášení se ukončí (už otevřená stránka mu dobíhá nejvýš hodinu).</p>
+      <p className="text-[13px] text-muted">Zablokovaný uživatel se nepřihlásí a jeho aktivní přihlášení se ukončí (již otevřená stránka mu může fungovat nejvýše hodinu).</p>
       <ul className="card divide-y divide-line">
         {rows.map((r) => (
           <li key={r.id} className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">

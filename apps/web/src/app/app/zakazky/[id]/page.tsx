@@ -49,7 +49,7 @@ export default async function JobPage({ params }: PageProps<"/app/zakazky/[id]">
             ))}
           </ul>
         ) : (
-          <p className="px-4 py-3 text-[14px] text-muted">Zatím žádné doklady. Nabídku vystavíte tlačítkem u souhrnu, fakturu a zálohu tady nahoře. Fakturuje se uložený stav zakázky.</p>
+          <p className="px-4 py-3 text-[14px] text-muted">Zatím zde nejsou žádné doklady. Nabídku vystavíte tlačítkem u souhrnu, fakturu a zálohu tlačítky výše. Do dokladu se převezme uložený stav zakázky.</p>
         )}
       </section>
 

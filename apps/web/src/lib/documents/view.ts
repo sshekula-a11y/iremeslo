@@ -92,7 +92,7 @@ export function quoteView(s: QuoteSnapshot, m: DocumentMeta): DocumentView {
       ...(term ? [{ label: "Termín realizace", value: term }] : []),
       ...(s.siteAddress ? [{ label: "Místo realizace", value: s.siteAddress }] : []),
     ],
-    columns: { description: "Položka", qty: "Množství", unit: "J.", unitPrice: payer ? "Cena/j bez DPH" : "Cena/j", total: payer ? "Celkem bez DPH" : "Celkem" },
+    columns: { description: "Položka", qty: "Množství", unit: "MJ", unitPrice: payer ? "Cena/j bez DPH" : "Cena/j", total: payer ? "Celkem bez DPH" : "Celkem" },
     rows: s.lines.map((l) => ({ description: l.description, qty: qty(l.qty), unit: l.unit, unitPrice: money(l.unitPrice), total: money(l.total) })),
     totals,
     recap: null,
@@ -196,7 +196,7 @@ export function invoiceView(s: InvoiceSnapshot, m: DocumentMeta): DocumentView {
     columns: {
       description: s.kind === "advance" ? "Předmět zálohy" : "Položka",
       qty: "Množství",
-      unit: "J.",
+      unit: "MJ",
       unitPrice: priced ? "Cena/j bez DPH" : "Cena/j",
       total: priced ? "Celkem bez DPH" : "Celkem",
     },

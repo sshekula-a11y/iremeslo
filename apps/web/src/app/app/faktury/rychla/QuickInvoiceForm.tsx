@@ -53,7 +53,7 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
     try {
       const res = await fetch(`/api/ares/${encodeURIComponent(client.ico.trim())}`);
       const body = (await res.json()) as AresCompany | { error: string };
-      if (!res.ok || "error" in body) return setAres({ loading: false, message: "error" in body ? body.error : "Nepovedlo se načíst." });
+      if (!res.ok || "error" in body) return setAres({ loading: false, message: "error" in body ? body.error : "Údaje se nepodařilo načíst." });
       setClient((c) => ({ ...c, kind: "company", ico: body.ico, name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip }));
       setAres({ loading: false, ok: true, message: "Načteno z ARES." });
     } catch {
@@ -191,7 +191,7 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
               </label>
             </div>
           ) : (
-            <p className="text-[14px] text-muted">Nejste plátce DPH – na faktuře bude „Nejsem plátce DPH“.</p>
+            <p className="text-[14px] text-muted">Nejste plátce DPH, faktura proto bude obsahovat text „Nejsem plátce DPH“.</p>
           )}
           {vatPayer && (
             <div>
@@ -220,13 +220,13 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
               </div>
             </dl>
           ) : (
-            <p className="text-[14px] text-muted">Doplňte položky a uvidíte částku.</p>
+            <p className="text-[14px] text-muted">Po doplnění položek se zobrazí celková částka.</p>
           )}
           <button type="button" className="btn-primary w-full" onClick={submit} disabled={pending || !totals}>
             {pending ? "Vystavuji…" : "Vystavit fakturu"}
           </button>
           {error && <p className="text-[13px] font-medium text-warn" role="alert">{error}</p>}
-          <p className="text-[12px] text-muted">Faktura dostane číslo a už nepůjde změnit. Odběratel se uloží do adresáře zákazníků.</p>
+          <p className="text-[12px] text-muted">Faktura dostane číslo a poté ji již nebude možné změnit. Odběratel se uloží do adresáře zákazníků.</p>
         </div>
       </aside>
     </div>

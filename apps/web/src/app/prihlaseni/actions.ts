@@ -8,7 +8,7 @@ export type AuthState = { error?: string; info?: string; noAccount?: boolean };
 
 const credentials = z.object({
   email: z.string().trim().toLowerCase().email("Zadejte platný e-mail"),
-  password: z.string().min(8, "Heslo musí mít aspoň 8 znaků"),
+  password: z.string().min(8, "Heslo musí mít alespoň 8 znaků"),
 });
 
 function safeNext(value: FormDataEntryValue | null): string {
@@ -22,11 +22,11 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    if (error.code === "email_not_confirmed") return { error: "Nejdřív potvrďte e-mail – odkaz jsme vám poslali." };
+    if (error.code === "email_not_confirmed") return { error: "Nejprve potvrďte e-mail – odkaz jsme vám poslali." };
     // E-mail bez účtu: formulář se sám přepne na registraci (migrace 009).
     const { data: registered } = await supabase.rpc("email_registered", { p_email: parsed.data.email });
     if (registered === false) return { noAccount: true };
-    return { error: "Špatné heslo. Zkuste ho zadat znovu." };
+    return { error: "Nesprávné heslo. Zkuste ho prosím zadat znovu." };
   }
   redirect(safeNext(form.get("next")));
 }
@@ -38,20 +38,20 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
 export async function signUp(_prev: AuthState, form: FormData): Promise<AuthState> {
   const parsed = credentials.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
-  if (parsed.data.password.length > 72) return { error: "Heslo může mít nejvýš 72 znaků." };
+  if (parsed.data.password.length > 72) return { error: "Heslo může mít nejvýše 72 znaků." };
   if (form.get("terms") !== "on") return { error: "Pro registraci je potřeba souhlasit s podmínkami." };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("signup_with_password", { p_email: parsed.data.email, p_password: parsed.data.password });
   if (error) {
     if (error.message.includes("už je registrovaný")) return { error: "Tento e-mail už je registrovaný. Přihlaste se." };
-    if (error.message.includes("příliš mnoho")) return { error: "Právě se registruje hodně lidí. Zkuste to prosím za pár minut." };
+    if (error.message.includes("příliš mnoho")) return { error: "Právě je o registraci velký zájem. Zkuste to prosím za několik minut." };
     if (error.message.includes("e-mail")) return { error: "Zadejte platný e-mail." };
-    return { error: "Registrace se nepovedla. Zkuste to prosím znovu." };
+    return { error: "Registrace se nezdařila. Zkuste to prosím znovu." };
   }
 
   const { error: loginError } = await supabase.auth.signInWithPassword(parsed.data);
-  if (loginError) return { error: "Účet je založený, ale přihlášení se nepovedlo. Přihlaste se prosím." };
+  if (loginError) return { error: "Účet byl vytvořen, ale přihlášení se nezdařilo. Přihlaste se prosím." };
   // Gratulace a další kroky jsou na stránce zadání IČO.
   redirect("/registrace-firmy?vitejte=1");
 }

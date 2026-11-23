@@ -32,7 +32,7 @@ const STEPS: Step[] = [
     title: "Založte firmu – stačí IČO",
     lead: "Zaregistrujete se e-mailem a zadáte IČO. Název, adresu, DIČ i to, jestli jste plátce DPH, načteme z ARES.",
     points: [
-      "Hotovo za minutu, 30 dní zdarma, bez karty",
+      "Hotovo za minutu, 30 dní zdarma, bez platební karty",
       "Funguje pro OSVČ i s.r.o., plátce i neplátce DPH",
       "Logo, razítko, podpis a účet doplníte v nastavení",
     ],
@@ -41,12 +41,12 @@ const STEPS: Step[] = [
   {
     id: "zakazka",
     title: "Spočítejte zakázku přímo na stavbě",
-    lead: "Zakázka má pět částí: práce, materiál, zaměstnanci, výdaje a souhrn. Souhrn se přepočítává při každém čísle, které napíšete.",
+    lead: "Zakázka má pět částí: práce, materiál, zaměstnanci, výdaje a souhrn. Souhrn se přepočítá s každým zadaným číslem.",
     points: [
       "Práce za m², bm, kus, hodinu nebo paušál",
       "Materiál s nákupní a prodejní cenou – prodejní se dopočítá z vaší přirážky",
       "Zaměstnanci a výdaje (plošina, doprava, skládka) jako náklad",
-      "Hned vidíte výdělek a marži; když klesne pod vaši hranici, zčervená",
+      "Hned vidíte výdělek a marži; když marže klesne pod vaši hranici, souhrn se zbarví červeně",
     ],
     shots: [
       { src: "/jak-to-funguje/zakazka-telefon.webp", alt: "Zakázka na telefonu: materiál a souhrn s náklady, výdělkem a marží", width: 780, height: 1688, phone: true, caption: "Na telefonu je souhrn přilepený dole." },
@@ -68,7 +68,7 @@ const STEPS: Step[] = [
   {
     id: "kalendar",
     title: "Naplánujte práci v kalendáři",
-    lead: "Každá zakázka s termínem se ukáže v kalendáři. Barva říká, v jakém je stavu, a u zakázky vidíte, kdo na ní dělá.",
+    lead: "Každá zakázka s termínem se ukáže v kalendáři. Barva ukazuje stav zakázky a u každé vidíte, kdo na ní pracuje.",
     points: [
       "Na počítači celý měsíc, na telefonu seznam dní od dneška",
       "Poptávka, nabídka, schváleno, probíhá, dokončeno – na první pohled",
@@ -86,7 +86,7 @@ const MORE = [
   { title: "Přehled plateb", text: "Kolik vám dluží a co je po splatnosti, vidíte hned na přehledu. Zaplacenou fakturu označíte jedním klepnutím." },
   { title: "Ceník", text: "Uložte si práce a materiál, které děláte nejčastěji. V zakázce začnete psát název a cena s jednotkou se doplní." },
   { title: "Zákazníci a zaměstnanci", text: "Adresář zákazníků a vaši zaměstnanci s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
-  { title: "Pracovníci v terénu", text: "Pracovník vidí jen zakázky, na kterých dělá: adresu, termín a telefon na zákazníka. Ceny ani zisk ne." },
+  { title: "Pracovníci v terénu", text: "Pracovník vidí jen zakázky, na kterých pracuje: adresu, termín a telefon na zákazníka. Ceny ani zisk ne." },
 ];
 
 const SOON = [
@@ -95,9 +95,9 @@ const SOON = [
 ];
 
 const FAQ = [
-  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez karty (jednou na IČO firmy). Potom pokračujete s předplatným; aplikace vás na konec zkušebního období upozorní předem a vaše data zůstanou." },
+  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez platební karty (jednou pro každé IČO). Poté pokračujete s předplatným. Na konec zkušebního období vás aplikace upozorní předem a vaše data zůstanou zachována." },
   { q: "Musím si něco instalovat?", a: "Ne. Aplikace běží v prohlížeči na telefonu i počítači. Na telefonu si ji můžete přidat na plochu a otevírat jako aplikaci." },
-  { q: "Hodí se i pro neplátce DPH?", a: "Ano. Při založení firmy zvolíte, jestli jste plátce. Neplátce na dokladech nemá DPH a má text „Nejsem plátce DPH“." },
+  { q: "Hodí se i pro neplátce DPH?", a: "Ano. Při založení firmy zvolíte, jestli jste plátce. Doklady neplátce jsou bez DPH a obsahují text „Nejsem plátce DPH“." },
   { q: "Kdo uvidí moje čísla?", a: "Jen vaše firma. Data každé firmy jsou oddělená a pracovníci nevidí ceny ani zisk. Databáze běží v EU (Frankfurt)." },
 ];
 
@@ -112,7 +112,7 @@ export default function HowItWorksPage() {
             Od poptávky po nabídku ve čtyřech krocích
           </h1>
           <p className="mt-3 max-w-xl text-[17px] text-white/75">
-            Ukázky jsou přímo z aplikace, s vymyšlenou zakázkou na nátěr střechy.
+            Ukázky pocházejí přímo z aplikace, s vymyšlenou zakázkou na nátěr střechy.
           </p>
           <ol className="mt-6 flex flex-wrap gap-2">
             {STEPS.map((s, i) => (
@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
         })}
 
         <section aria-labelledby="dalsi">
-          <h2 id="dalsi" className="mb-4 font-display text-[24px] font-extrabold">A k tomu</h2>
+          <h2 id="dalsi" className="mb-4 font-display text-[24px] font-extrabold">A navíc</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {MORE.map((m) => (
               <div key={m.title} className="card p-5">
@@ -196,7 +196,7 @@ export default function HowItWorksPage() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-5 py-10">
           <div>
             <h2 className="font-display text-[24px] font-extrabold">Vyzkoušejte to na své první zakázce</h2>
-            <p className="mt-1 text-white/75">30 dní zdarma, bez karty.</p>
+            <p className="mt-1 text-white/75">30 dní zdarma, bez platební karty.</p>
           </div>
           <Link href="/prihlaseni?rezim=registrace" className="btn-primary">Vyzkoušet zdarma</Link>
         </div>

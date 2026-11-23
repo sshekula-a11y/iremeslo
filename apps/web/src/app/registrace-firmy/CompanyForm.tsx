@@ -25,7 +25,7 @@ export function CompanyForm() {
       const res = await fetch(`/api/ares/${encodeURIComponent(value.trim())}`);
       const body = (await res.json()) as AresCompany | { error: string };
       if (!res.ok || "error" in body) {
-        setLookup({ loading: false, message: "error" in body ? body.error : "Nepovedlo se načíst." });
+        setLookup({ loading: false, message: "error" in body ? body.error : "Údaje se nepodařilo načíst." });
         return;
       }
       setValues({ name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip, vatPayer: body.vatPayer });
@@ -105,7 +105,7 @@ export function CompanyForm() {
       <button className="btn-primary w-full" disabled={pending}>
         {pending ? "Zakládám…" : "Založit firmu"}
       </button>
-      <p className="text-center text-[13px] text-muted">30 dní zdarma, bez karty a bez závazků. Jednou na IČO.</p>
+      <p className="text-center text-[13px] text-muted">30 dní zdarma, bez platební karty a bez závazků. Zkušební období platí jednou pro každé IČO.</p>
     </form>
   );
 }
@@ -118,14 +118,14 @@ function TrialNotice({ ico, info }: { ico: string; info: TrialInfo }) {
     return (
       <div className="mt-2 rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
         <p className="font-semibold">Pro IČO {ico} už zkušební období běží (do {formatDate(info.trialEnd)}).</p>
-        <p className="mt-0.5 text-muted">Nová registrace ho neprodlouží. Pokud vaše firma účet už má, požádejte majitele, ať vás pozve.</p>
+        <p className="mt-0.5 text-muted">Nová registrace ho neprodlouží. Pokud vaše firma již účet má, požádejte jeho majitele o pozvánku.</p>
       </div>
     );
   }
   return (
     <div className="mt-2 rounded-xl bg-warn-soft px-3 py-2.5 text-[14px]" role="alert">
       <p className="font-semibold text-warn">Pro IČO {ico} už bylo zkušební období vyčerpané (skončilo {formatDate(info.trialEnd)}).</p>
-      <p className="mt-0.5 text-ink">Firmu založit můžete, ale zakázky a doklady půjde vytvářet až s předplatným. Pokud vaše firma účet už má, požádejte majitele o pozvánku.</p>
+      <p className="mt-0.5 text-ink">Firmu založit můžete, ale zakázky a doklady půjde vytvářet až s předplatným. Pokud vaše firma již účet má, požádejte jeho majitele o pozvánku.</p>
     </div>
   );
 }

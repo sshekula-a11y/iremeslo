@@ -50,7 +50,7 @@ export async function quickInvoice(input: QuickInvoiceInput): Promise<CreateResu
   }
 
   const items = v.items.filter((i) => i.description || parseInput(i.qty) || parseInput(i.unitPrice));
-  if (items.length === 0) return { ok: false, error: "Přidejte aspoň jednu položku." };
+  if (items.length === 0) return { ok: false, error: "Přidejte alespoň jednu položku." };
   if (items.some((i) => !i.description)) return { ok: false, error: "Každá položka musí mít popis." };
   if (items.some((i) => parseInput(i.qty) <= 0)) return { ok: false, error: "Množství musí být větší než nula." };
   if (items.some((i) => parseInput(i.unitPrice) < 0)) return { ok: false, error: "Cena nesmí být záporná." };

@@ -28,7 +28,7 @@ const schema = z.object({
   bic: text(11).toUpperCase().refine((v) => v === "" || /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(v), "BIC/SWIFT má 8 nebo 11 znaků"),
   vat_payer: z.boolean(),
   default_vat_rate: z.enum(["21", "12"]),
-  payment_terms_days: z.coerce.number().int("Splatnost je celý počet dní").min(0).max(365, "Splatnost nejvýš 365 dní"),
+  payment_terms_days: z.coerce.number().int("Splatnost musí být celý počet dní").min(0).max(365, "Splatnost může být nejvýše 365 dní"),
   material_markup_pct: z.string(),
   min_margin_pct: z.string(),
 });
@@ -91,7 +91,7 @@ export async function saveCompany(_prev: SettingsState, form: FormData): Promise
       min_margin_pct: fromHundredths(margin),
     })
     .eq("id", company.id);
-  if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nepovedlo." };
+  if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nezdařilo." };
 
   revalidatePath("/app", "layout");
   return { ok: true };
@@ -105,7 +105,7 @@ export async function saveInvoiceTheme(theme: string): Promise<SettingsState> {
   if (!t.success) return { error: "Neznámá barva." };
   const supabase = await createClient();
   const { error } = await supabase.from("companies").update({ invoice_theme: t.data }).eq("id", company.id);
-  if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nepovedlo." };
+  if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nezdařilo." };
   revalidatePath("/app", "layout");
   return { ok: true };
 }
@@ -127,7 +127,7 @@ export async function setBrandImage(kind: BrandImage, path: string | null): Prom
   const column = IMAGE_COLUMNS[kind];
   const { data: before } = await supabase.from("companies").select(column).eq("id", company.id).single();
   const { error } = await supabase.from("companies").update({ [column]: path }).eq("id", company.id);
-  if (error) return { error: "Uložení se nepovedlo." };
+  if (error) return { error: "Uložení se nezdařilo." };
 
   // Starý soubor smažeme, ať v úložišti nezůstávají nepoužité obrázky.
   const old = (before as Record<string, string | null> | null)?.[column];

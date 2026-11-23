@@ -19,7 +19,7 @@ export default async function EmployeesPage() {
     <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
       <section>
         <h1 className="mb-1 font-display text-[26px] font-extrabold">Zaměstnanci</h1>
-        <p className="mb-4 text-[14px] text-muted">Nákladové sazby se předvyplní v zakázce a jdou tam přepsat.</p>
+        <p className="mb-4 text-[14px] text-muted">Nákladové sazby se v zakázce předvyplní a můžete je tam upravit.</p>
         <div className="card divide-y divide-line">
           {employees && employees.length > 0 ? (
             employees.map((e) => (
@@ -34,7 +34,7 @@ export default async function EmployeesPage() {
               </div>
             ))
           ) : (
-            <p className="px-4 py-8 text-center text-muted">Přidejte sebe i kolegy – bez nich nejde spočítat náklady na zaměstnance.</p>
+            <p className="px-4 py-8 text-center text-muted">Přidejte sebe i své kolegy – bez nich nelze spočítat náklady na práci.</p>
           )}
         </div>
       </section>

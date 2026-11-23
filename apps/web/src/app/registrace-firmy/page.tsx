@@ -34,7 +34,7 @@ export default async function RegisterCompanyPage({ searchParams }: PageProps<"/
                 <span aria-hidden="true" className="text-[18px] leading-5">✉</span>
                 <span>
                   Na <strong className="break-all">{user.email}</strong> jsme poslali odkaz k potvrzení e-mailu.
-                  Klikněte na něj, až budete chtít vystavit první fakturu – mezitím můžete pokračovat.
+                  Potvrdit ho stačí před vystavením první faktury, zatím můžete pokračovat.
                 </span>
               </p>
               <SignupSteps current={0} />

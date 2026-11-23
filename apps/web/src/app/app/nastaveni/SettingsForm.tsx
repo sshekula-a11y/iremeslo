@@ -34,7 +34,7 @@ export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; c
       startTransition(() => action(data));
     }}>
       <fieldset disabled={!canEdit || pending} className="space-y-5">
-        <Section title="Údaje na dokladech" hint="Tisknou se na nabídky a faktury jako dodavatel.">
+        <Section title="Údaje na dokladech" hint="Zobrazí se na nabídkách a fakturách jako údaje dodavatele.">
           <Field id="name" label="Název firmy nebo jméno" defaultValue={initial.name} required className="sm:col-span-2" />
           <Field id="ico" label="IČO" defaultValue={initial.ico} inputMode="numeric" maxLength={8} num />
           <Field id="dic" label={vatPayer ? "DIČ (povinné)" : "DIČ"} defaultValue={initial.dic} placeholder="CZ12345678" />
@@ -80,9 +80,9 @@ export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; c
 
         <Section title="Výpočty zakázek">
           <Field id="material_markup_pct" label="Přirážka na materiál (%)" defaultValue={initial.markupPct} inputMode="decimal" num
-            hint="Z nákupní ceny se dopočítá prodejní." />
-          <Field id="min_margin_pct" label="Upozornit při marži pod (%)" defaultValue={initial.minMarginPct} inputMode="decimal" num
-            hint="Souhrn zakázky zčervená." />
+            hint="Prodejní cena se dopočítá z nákupní." />
+          <Field id="min_margin_pct" label="Upozornit, když marže klesne pod (%)" defaultValue={initial.minMarginPct} inputMode="decimal" num
+            hint="Souhrn zakázky se zbarví červeně." />
         </Section>
       </fieldset>
 

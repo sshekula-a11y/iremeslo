@@ -1,8 +1,8 @@
 /** Kroky po registraci (gratulace na stránce zadání IČO), ať je vidět, co ještě zbývá. */
 const STEPS = [
   { title: "Zadejte IČO", text: "Název, adresu i DIČ vaší firmy načteme z ARES." },
-  { title: "Doplňte účet a logo", text: "V nastavení, aby faktury měly QR Platbu a vaše logo." },
-  { title: "Vystavte první nabídku", text: "Zakázku spočítáte i na stavbě z telefonu." },
+  { title: "Doplňte účet a logo", text: "V nastavení doplníte bankovní účet a logo, faktury pak budou mít QR Platbu." },
+  { title: "Vystavte první nabídku", text: "Zakázku spočítáte i přímo na stavbě z telefonu." },
 ];
 
 export const SIGNUP_STEP_COUNT = STEPS.length;

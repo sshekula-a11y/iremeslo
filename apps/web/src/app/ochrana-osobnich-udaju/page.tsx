@@ -60,6 +60,7 @@ export default function PrivacyPage() {
           <ul className="list-disc space-y-1.5 pl-5">
             <li><strong>Supabase</strong> – databáze, přihlašování a úložiště souborů; data jsou uložena v EU (Frankfurt).</li>
             <li><strong>Vercel</strong> – provoz webu a aplikace.</li>
+            <li><strong>Resend</strong> – odesílání e-mailů z platformy (např. potvrzení e-mailu); servery v EU (Irsko).</li>
             <li><strong>ARES</strong> (Ministerstvo financí) – při zadání IČO se z veřejného rejstříku načtou údaje o firmě.</li>
           </ul>
           <p>
@@ -85,9 +86,9 @@ export default function PrivacyPage() {
 
         <Part title="Zabezpečení">
           <ul className="list-disc space-y-1.5 pl-5">
-            <li>Spojení s webem je vždy šifrované (HTTPS), hesla ukládáme jen zašifrovaná.</li>
+            <li>Spojení s webem je vždy šifrované (HTTPS) a hesla ukládáme pouze v zašifrované podobě.</li>
             <li>Data jednotlivých firem odděluje přímo databáze; pracovník firmy nevidí ceny ani zisk.</li>
-            <li>Provozovatel do vašich zakázek a dokladů nenahlíží; podpora jen na vaši žádost a se záznamem.</li>
+            <li>Do vašich zakázek a dokladů provozovatel nenahlíží. Podporu poskytujeme jen na vaši žádost a každý zásah zaznamenáváme.</li>
           </ul>
         </Part>
 

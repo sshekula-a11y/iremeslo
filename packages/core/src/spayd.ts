@@ -34,7 +34,7 @@ function clean(value: string, max: number): string {
 }
 
 function digits(value: string, max: number, what: string): string {
-  if (!/^\d+$/.test(value) || value.length > max) throw new RangeError(`${what} může mít jen číslice, nejvýš ${max}`);
+  if (!/^\d+$/.test(value) || value.length > max) throw new RangeError(`${what} může obsahovat jen číslice, nejvýše ${max}`);
   return value;
 }
 

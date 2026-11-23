@@ -43,6 +43,6 @@ export function formatDocumentNumber(format: string, year: number, seq: number):
 export function variableSymbolFromNumber(documentNumber: string): string {
   const digits = documentNumber.replace(/\D/g, "");
   if (digits.length === 0) throw new RangeError("číslo dokladu neobsahuje číslice");
-  if (digits.length > 10) throw new RangeError("variabilní symbol může mít nejvýš 10 číslic");
+  if (digits.length > 10) throw new RangeError("variabilní symbol může mít nejvýše 10 číslic");
   return digits;
 }

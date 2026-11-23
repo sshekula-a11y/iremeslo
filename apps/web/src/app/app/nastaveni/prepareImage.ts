@@ -90,7 +90,7 @@ function whiteToTransparent(c: HTMLCanvasElement): HTMLCanvasElement {
     }
   }
   ctx.putImageData(img, 0, 0);
-  if (maxX < 0) throw new Error("Na fotce nevidím žádné razítko ani podpis. Vyfoťte je zblízka na bílém papíře.");
+  if (maxX < 0) throw new Error("Na fotografii jsme nenašli razítko ani podpis. Vyfoťte je zblízka na bílém papíře.");
 
   const pad = 8;
   const x = Math.max(0, minX - pad), y = Math.max(0, minY - pad);

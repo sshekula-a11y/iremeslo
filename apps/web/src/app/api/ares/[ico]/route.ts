@@ -6,7 +6,7 @@ import { lookupAres } from "@/lib/ares";
 export async function GET(_req: Request, ctx: RouteContext<"/api/ares/[ico]">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) return NextResponse.json({ error: "Nejste přihlášený." }, { status: 401 });
+  if (!data?.claims) return NextResponse.json({ error: "Nejste přihlášeni." }, { status: 401 });
 
   const { ico } = await ctx.params;
   const r = await lookupAres(ico);

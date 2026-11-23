@@ -94,7 +94,7 @@ export default async function AdminCompany({ params }: PageProps<"/ssh/firmy/[id
 
       <section className="card space-y-3 p-4" aria-labelledby="ro">
         <h2 id="ro" className="font-display text-[17px] font-bold">Režim jen pro čtení</h2>
-        <p className="text-[14px] text-muted">Firma uvidí svá data, ale nebude moct nic měnit ani vystavovat. Použijte při neplacení.</p>
+        <p className="text-[14px] text-muted">Firma uvidí svá data, ale nebude moci nic měnit ani vystavovat doklady. Použijte při neuhrazeném předplatném.</p>
         <ActionForm action={setReadOnly} submit={c.read_only ? "Vypnout režim jen pro čtení" : "Zapnout režim jen pro čtení"} tone={c.read_only ? "dark" : "danger"}>
           <input type="hidden" name="company" value={c.id} />
           <input type="hidden" name="value" value={c.read_only ? "false" : "true"} />

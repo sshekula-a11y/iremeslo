@@ -65,7 +65,7 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
     p_vat_payer: v.vatPayer,
   });
   if (error) {
-    if (error.message.includes("5 firem")) return { error: "Můžete mít nejvýš 5 firem." };
+    if (error.message.includes("5 firem")) return { error: "Můžete mít nejvýše 5 firem." };
     if (error.message.includes("IČO")) return { error: "Vyplňte platné IČO (8 číslic)." };
     return { error: "Firmu se nepodařilo založit." };
   }

@@ -39,13 +39,13 @@ export default async function VerifyEmailPage({ searchParams }: PageProps<"/over
             </h1>
             <p className="mt-2 text-[15px] text-muted">
               {result.reason === "expired"
-                ? "Odkaz platí 48 hodin. Pošlete si nový – po přihlášení je nahoře v aplikaci tlačítko „Poslat znovu“."
-                : "Odkaz je neúplný nebo už neplatí. Zkuste ho zkopírovat z e-mailu celý, nebo si po přihlášení pošlete nový."}
+                ? "Odkaz je platný 48 hodin. Nový si po přihlášení pošlete tlačítkem „Poslat znovu“ v horní části aplikace."
+                : "Odkaz je neúplný nebo již neplatí. Zkopírujte ho z e-mailu celý, nebo si po přihlášení pošlete nový."}
             </p>
             <Link href={loggedIn ? "/app" : "/prihlaseni?next=/app"} className="btn-primary mt-6 w-full">
               {loggedIn ? "Do aplikace" : "Přihlásit se"}
             </Link>
-            <p className="mt-4 text-[13px] text-muted">Nejde to? Napište na <a className="font-semibold text-accent-ink underline" href="mailto:info@iremeslo.cz">info@iremeslo.cz</a>.</p>
+            <p className="mt-4 text-[13px] text-muted">Potřebujete pomoc? Napište nám na <a className="font-semibold text-accent-ink underline" href="mailto:info@iremeslo.cz">info@iremeslo.cz</a>.</p>
           </section>
         )}
       </div>

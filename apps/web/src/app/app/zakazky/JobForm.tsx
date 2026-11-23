@@ -201,7 +201,7 @@ export function JobForm({
               <input className="field" id="to" type="date" min={d.dateFrom || undefined} value={d.dateTo} onChange={(e) => set("dateTo", e.target.value)} />
             </div>
           </div>
-          {d.dateFrom && d.dateTo && d.dateTo < d.dateFrom && <p className="text-[13px] text-warn">Termín „do“ je před „od“.</p>}
+          {d.dateFrom && d.dateTo && d.dateTo < d.dateFrom && <p className="text-[13px] text-warn">Datum „do“ je dřívější než „od“.</p>}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label" htmlFor="vatmode">DPH</label>
@@ -266,7 +266,7 @@ export function JobForm({
         </Section>}
 
         {/* Zaměstnanci */}
-        {open.labor && <Section title="Zaměstnanci" hint="Nákladová sazba se předvyplní z karty člověka" total={summary ? formatCzk(summary.costs.labor) : "—"}
+        {open.labor && <Section title="Zaměstnanci" hint="Nákladová sazba se předvyplní z karty zaměstnance" total={summary ? formatCzk(summary.costs.labor) : "—"}
           onAdd={employees.length ? () => addRow("labor", newLabor()) : undefined}>
           {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte zaměstnance v sekci <a className="text-accent-ink underline" href="/app/zamestnanci">Zaměstnanci</a>.</p>}
           {d.labor.map((l, i) => {

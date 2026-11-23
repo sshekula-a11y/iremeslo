@@ -88,7 +88,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
               <EyeIcon crossed={showPassword} />
             </button>
           </div>
-          {mode === "register" && <p className="mt-1 text-[13px] text-muted">Aspoň 8 znaků.</p>}
+          {mode === "register" && <p className="mt-1 text-[13px] text-muted">Alespoň 8 znaků.</p>}
         </div>
         {mode === "register" && (
           <label className="flex items-start gap-2.5 text-[14px] text-muted">
@@ -99,7 +99,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
 
         {autoSwitched && (
           <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]" role="status">
-            E-mail <strong>{email}</strong> u nás ještě nemá účet. Stačí zaškrtnout souhlas a vytvořit ho – zabere to pár vteřin.
+            E-mail <strong>{email}</strong> u nás zatím nemá účet. Zaškrtněte souhlas s podmínkami a účet vytvoříte během několika sekund.
           </p>
         )}
         {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}

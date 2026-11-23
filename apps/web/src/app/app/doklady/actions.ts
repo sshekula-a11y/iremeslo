@@ -122,7 +122,7 @@ export async function createInvoice(jobId: string, taxableDate: string): Promise
   if (!isoDate.safeParse(taxableDate).success) return { ok: false, error: "Vyplňte datum zdanitelného plnění." };
   const today = todayInPrague();
   if (taxableDate < addDays(today, -366) || taxableDate > addDays(today, 31)) {
-    return { ok: false, error: "Datum zdanitelného plnění musí být v posledním roce (nebo nejvýš měsíc dopředu)." };
+    return { ok: false, error: "Datum zdanitelného plnění může být nejvýše rok zpětně a měsíc dopředu." };
   }
 
   const p = await prepareInvoice(company, jobId);
@@ -220,7 +220,7 @@ export async function issueDdpp(advanceId: string): Promise<CreateResult> {
     .eq("company_id", company.id)
     .eq("id", advanceId)
     .single();
-  if (!d || d.type !== "advance" || d.status !== "paid") return { ok: false, error: "DDPP jde vystavit jen k zaplacené záloze." };
+  if (!d || d.type !== "advance" || d.status !== "paid") return { ok: false, error: "Daňový doklad k přijaté platbě lze vystavit jen k zaplacené záloze." };
   const paidOn = ((d as unknown as { payments: { paid_on: string }[] }).payments ?? []).map((p) => p.paid_on).sort().at(-1) ?? todayInPrague();
   const res = await issueDdppFor(company, { ...d, total_due: String(d.total_due) }, paidOn);
   revalidateMoney(d.job_id);
@@ -239,7 +239,7 @@ async function issueDdppFor(
   try {
     snapshot = buildDdpp(adv.snapshot as InvoiceSnapshot, adv.number ?? "", toHundredths(adv.total_due));
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "DDPP nejde spočítat." };
+    return { ok: false, error: e instanceof Error ? e.message : "Daňový doklad k přijaté platbě se nepodařilo spočítat." };
   }
   return insertAndIssue(company, {
     job_id: adv.job_id,

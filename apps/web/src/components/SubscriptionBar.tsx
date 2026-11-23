@@ -42,7 +42,7 @@ export function SubscriptionBar({ sub, today }: { sub: SubscriptionInfo | null; 
         <p className="mx-auto max-w-6xl px-4 py-2 text-[13px]">
           Zkušební období do <strong>{formatDate(sub.period_end)}</strong>
           {" "}({left <= 0 ? "dnes je poslední den" : left === 1 ? "zbývá 1 den" : left < 5 ? `zbývají ${left} dny` : `zbývá ${left} dní`}).
-          {soon && <> Pro další používání nám napište na {mail}.</>}
+          {soon && <> Pro pokračování nám napište na {mail}.</>}
         </p>
       </div>
     );

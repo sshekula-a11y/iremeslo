@@ -21,10 +21,10 @@ export function IssueInvoiceForm({ jobId, defaultTaxableDate, minDate, maxDate, 
         <div>
           <label className="label" htmlFor="duzp">Datum zdanitelného plnění (DUZP)</label>
           <input id="duzp" type="date" className="field max-w-56" value={taxable} min={minDate} max={maxDate} onChange={(e) => setTaxable(e.target.value)} />
-          <p className="mt-1 text-[13px] text-muted">Den dokončení práce. Předvyplněný je konec termínu zakázky.</p>
+          <p className="mt-1 text-[13px] text-muted">Obvykle den dokončení práce. Předvyplnili jsme konec termínu zakázky.</p>
         </div>
       )}
-      <p className="text-[13px] text-muted">Po vystavení dostane faktura číslo a už ji nepůjde změnit ani smazat.</p>
+      <p className="text-[13px] text-muted">Po vystavení dostane faktura číslo a poté ji již nebude možné změnit ani smazat.</p>
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className="btn-primary" disabled={pending} onClick={() => {
           setError(null);

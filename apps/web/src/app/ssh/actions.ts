@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/admin";
 export type AdminState = { ok?: boolean; error?: string; message?: string };
 
 const uuid = z.string().uuid();
-const reason = z.string().trim().min(3, "Uveďte důvod (aspoň 3 znaky).").max(300);
+const reason = z.string().trim().min(3, "Uveďte důvod (alespoň 3 znaky).").max(300);
 
 function fail(e: { message?: string } | null, fallback: string): AdminState {
   const m = e?.message ?? "";
@@ -112,7 +112,7 @@ export async function sendTestEmail(_: AdminState, form: FormData): Promise<Admi
   if (error) return fail(error, "E-mail se nepodařilo odeslat.");
   revalidatePath("/ssh/emaily");
   if (data !== true) return { error: "Nejdřív uložte klíč Resend." };
-  return { ok: true, message: "Odesláno. Za pár vteřin obnovte stránku – v logu uvidíte odpověď Resend." };
+  return { ok: true, message: "Odesláno. Za několik sekund obnovte stránku, v přehledu uvidíte odpověď Resendu." };
 }
 
 export async function verifyUserEmail(_: AdminState, form: FormData): Promise<AdminState> {

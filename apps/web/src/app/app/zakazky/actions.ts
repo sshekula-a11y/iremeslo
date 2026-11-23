@@ -45,7 +45,7 @@ export async function saveJob(draft: JobDraft): Promise<SaveResult> {
   const parsed = draftSchema.safeParse(draft);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Neplatná data" };
   const d = parsed.data;
-  if (d.dateFrom && d.dateTo && d.dateTo < d.dateFrom) return { ok: false, error: "Termín „do“ nesmí být před „od“." };
+  if (d.dateFrom && d.dateTo && d.dateTo < d.dateFrom) return { ok: false, error: "Datum „do“ nesmí být dřívější než „od“." };
 
   const payload = {
     id: d.id ?? "",

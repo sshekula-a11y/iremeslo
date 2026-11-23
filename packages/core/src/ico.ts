@@ -5,7 +5,7 @@
 
 export function normalizeIco(input: string): string {
   const digits = input.replace(/\s/g, "");
-  if (!/^\d{1,8}$/.test(digits)) throw new RangeError("IČO musí mít nejvýš 8 číslic");
+  if (!/^\d{1,8}$/.test(digits)) throw new RangeError("IČO může mít nejvýše 8 číslic");
   return digits.padStart(8, "0");
 }
 

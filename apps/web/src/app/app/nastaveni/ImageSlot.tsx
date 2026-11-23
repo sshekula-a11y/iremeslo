@@ -33,7 +33,7 @@ export function ImageSlot({ companyId, kind, label, hint, url, canEdit }: {
       const path = `${companyId}/brand/${kind}-${Date.now().toString(36)}.${prepared.ext}`;
       const contentType = prepared.ext === "png" ? "image/png" : "image/jpeg";
       const { error: upErr } = await createClient().storage.from("files").upload(path, prepared.blob, { contentType, upsert: false });
-      if (upErr) return setError("Nahrání se nepovedlo.");
+      if (upErr) return setError("Nahrání se nezdařilo.");
       const res = await setBrandImage(kind, path);
       if (res.error) return setError(res.error);
       router.refresh();

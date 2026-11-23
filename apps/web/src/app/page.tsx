@@ -11,8 +11,8 @@ const GDPR = [
 
 const benefits = [
   { title: "Nabídka za pár minut", text: "Práce, materiál, zaměstnanci a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
-  { title: "Vidíte skutečný zisk", text: "U každé zakázky náklady proti tomu, co fakturujete. Když marže klesne pod vaši hranici, aplikace upozorní." },
-  { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Čísla jdou po sobě bez mezer." },
+  { title: "Vidíte skutečný zisk", text: "U každé zakázky porovnáte náklady s tím, co fakturujete. Když marže klesne pod vaši hranici, aplikace vás upozorní." },
+  { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Doklady jsou číslované bez mezer." },
 ];
 
 export default function Home() {
@@ -22,7 +22,7 @@ export default function Home() {
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-16 pt-12">
           <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[13px] font-semibold text-accent">
-            30 dní zdarma, bez karty
+            30 dní zdarma, bez platební karty
           </p>
           <h1 className="max-w-2xl font-display text-[34px] font-extrabold leading-[1.1] tracking-tight sm:text-[46px]">
             Zakázky, nabídky a faktury pro řemeslníky. Z telefonu, přímo na stavbě.
