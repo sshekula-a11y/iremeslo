@@ -5,6 +5,8 @@ import { signIn, signUp, type AuthState } from "./actions";
 
 export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean; confirmed?: boolean }) {
   const [mode, setMode] = useState(initialMode);
+  // E-mail zůstane vyplněný i po chybě a po přepnutí na registraci.
+  const [email, setEmail] = useState("");
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
   const state = mode === "login" ? loginState : regState;
@@ -45,7 +47,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
         <input type="hidden" name="next" value={next} />
         <div>
           <label className="label" htmlFor="email">E-mail</label>
-          <input className="field" id="email" name="email" type="email" autoComplete="email" required />
+          <input className="field" id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
           <label className="label" htmlFor="password">Heslo</label>
@@ -67,7 +69,17 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
           </label>
         )}
 
-        {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}
+        {state.error && (
+          <div className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px]" role="alert">
+            <p className="text-warn">{state.error}</p>
+            {mode === "login" && (
+              <p className="mt-1 text-ink">
+                Nemáte ještě účet?{" "}
+                <button type="button" className="font-semibold text-accent-ink underline" onClick={() => setMode("register")}>Zaregistrujte se</button>
+              </p>
+            )}
+          </div>
+        )}
         {state.info && <p className="rounded-xl bg-ok-soft px-3 py-2.5 text-[14px] text-ok" role="status">{state.info}</p>}
 
         <button className="btn-primary w-full" disabled={pending}>
