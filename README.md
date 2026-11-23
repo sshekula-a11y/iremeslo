@@ -45,7 +45,7 @@ Všichni noví zákazníci dostanou tarif **Beta zdarma** (`plans.beta`). Placen
 ## Nasazení databáze do Supabase
 
 1. Založit projekt v Supabase (region Frankfurt, `eu-central-1`).
-2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `008_signup.sql`, potom `db/supabase/storage.sql`.
+2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `009_email_registered.sql`, potom `db/supabase/storage.sql`.
 3. Soubor `db/local/000_supabase_stub.sql` se v Supabase **nespouští**, je jen pro lokální testy.
 4. Provozovatel (přístup do administrace `/ssh`): po registraci svého účtu jednou spustit
    `insert into app.platform_admins (user_id) select id from auth.users where email = 'vas@email.cz';`

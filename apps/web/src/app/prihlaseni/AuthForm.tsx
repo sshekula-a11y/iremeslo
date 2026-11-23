@@ -9,8 +9,17 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
   const [email, setEmail] = useState("");
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
+  const [password, setPassword] = useState("");
   const state = mode === "login" ? loginState : regState;
   const pending = mode === "login" ? loginPending : regPending;
+
+  // E-mail bez účtu: z přihlášení rovnou přepneme na registraci (e-mail i heslo zůstanou vyplněné).
+  const [switchedFrom, setSwitchedFrom] = useState<AuthState | null>(null);
+  if (loginState.noAccount && switchedFrom !== loginState) {
+    setSwitchedFrom(loginState);
+    setMode("register");
+  }
+  const autoSwitched = mode === "register" && switchedFrom !== null && !regState.error;
 
   return (
     <>
@@ -59,6 +68,8 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
             minLength={8}
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           {mode === "register" && <p className="mt-1 text-[13px] text-muted">Aspoň 8 znaků.</p>}
         </div>
@@ -69,17 +80,12 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
           </label>
         )}
 
-        {state.error && (
-          <div className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px]" role="alert">
-            <p className="text-warn">{state.error}</p>
-            {mode === "login" && (
-              <p className="mt-1 text-ink">
-                Nemáte ještě účet?{" "}
-                <button type="button" className="font-semibold text-accent-ink underline" onClick={() => setMode("register")}>Zaregistrujte se</button>
-              </p>
-            )}
-          </div>
+        {autoSwitched && (
+          <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]" role="status">
+            E-mail <strong>{email}</strong> u nás ještě nemá účet. Stačí zaškrtnout souhlas a vytvořit ho – zabere to pár vteřin.
+          </p>
         )}
+        {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}
         {state.info && <p className="rounded-xl bg-ok-soft px-3 py-2.5 text-[14px] text-ok" role="status">{state.info}</p>}
 
         <button className="btn-primary w-full" disabled={pending}>

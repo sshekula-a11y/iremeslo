@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-export type AuthState = { error?: string; info?: string };
+export type AuthState = { error?: string; info?: string; noAccount?: boolean };
 
 const credentials = z.object({
   email: z.string().trim().toLowerCase().email("Zadejte platný e-mail"),
@@ -23,7 +23,10 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     if (error.code === "email_not_confirmed") return { error: "Nejdřív potvrďte e-mail – odkaz jsme vám poslali." };
-    return { error: "Špatný e-mail nebo heslo." };
+    // E-mail bez účtu: formulář se sám přepne na registraci (migrace 009).
+    const { data: registered } = await supabase.rpc("email_registered", { p_email: parsed.data.email });
+    if (registered === false) return { noAccount: true };
+    return { error: "Špatné heslo. Zkuste ho zadat znovu." };
   }
   redirect(safeNext(form.get("next")));
 }

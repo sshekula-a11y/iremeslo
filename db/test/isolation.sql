@@ -360,6 +360,8 @@ select t_fails($q$select signup_with_password('NOVY.remeslnik@example.cz', 'jine
 select t_fails($q$select signup_with_password('neplatny-email', 'tajneheslo123')$q$, 'neplatný e-mail neprojde');
 select t_fails($q$select signup_with_password('kratke@example.cz', 'kratke')$q$, 'krátké heslo neprojde');
 select t_fails('select * from auth.users', 'anonym nevidí uživatele');
+select t_eq((select email_registered(' NOVY.remeslnik@example.cz ')::int), 1, 'existující e-mail: má účet (bez ohledu na velikost písmen)');
+select t_eq((select email_registered('nikdo@example.cz')::int), 0, 'neznámý e-mail: nemá účet');
 reset role;
 
 \echo
