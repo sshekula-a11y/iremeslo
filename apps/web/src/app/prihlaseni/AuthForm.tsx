@@ -63,7 +63,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
         {mode === "register" && (
           <label className="flex items-start gap-2.5 text-[14px] text-muted">
             <input type="checkbox" name="terms" className="mt-0.5 size-5 accent-accent" required />
-            <span>Souhlasím s obchodními podmínkami a zpracováním osobních údajů.</span>
+            <span>Souhlasím s obchodními podmínkami a se <a href="/ochrana-osobnich-udaju" target="_blank" rel="noreferrer" className="font-semibold text-accent-ink underline">zpracováním osobních údajů</a>.</span>
           </label>
         )}
 

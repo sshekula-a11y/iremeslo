@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+
+const GDPR = [
+  "Databáze běží v EU (Frankfurt), spojení je vždy šifrované.",
+  "Data každé firmy jsou oddělená – nikdo cizí je nevidí.",
+  "Žádné reklamní ani sledovací cookies, údaje neprodáváme.",
+  "Na požádání vám data předáme nebo je smažeme.",
+];
 
 const benefits = [
   { title: "Nabídka za pár minut", text: "Práce, materiál, zaměstnanci a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
@@ -44,11 +52,29 @@ export default function Home() {
         ))}
       </section>
 
-      <p className="mx-auto max-w-5xl px-5 pb-12 pt-5">
+      <p className="mx-auto max-w-5xl px-5 pt-5">
         <Link href="/jak-to-funguje" className="font-semibold text-accent-ink hover:underline">Podívejte se, jak to funguje krok za krokem →</Link>
       </p>
 
-      <footer className="mx-auto max-w-5xl px-5 pb-10 text-[13px] text-muted">© 2026 iRemeslo.cz · Řemeslná práce pod kontrolou</footer>
+      <section className="mx-auto max-w-5xl px-5 py-12" aria-labelledby="gdpr">
+        <div className="card p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-ok-soft px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide text-ok">GDPR</span>
+            <h2 id="gdpr" className="font-display text-[22px] font-extrabold">Vaše data jsou v bezpečí</h2>
+          </div>
+          <ul className="mt-4 grid gap-3 text-[15px] sm:grid-cols-2">
+            {GDPR.map((g) => (
+              <li key={g} className="flex gap-2.5">
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-ok-soft text-[12px] font-bold text-ok" aria-hidden="true">✓</span>
+                {g}
+              </li>
+            ))}
+          </ul>
+          <Link href="/ochrana-osobnich-udaju" className="mt-4 inline-block font-semibold text-accent-ink hover:underline">Zásady ochrany osobních údajů →</Link>
+        </div>
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }

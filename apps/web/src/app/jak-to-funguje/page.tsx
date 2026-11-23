@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Jak to funguje",
@@ -201,7 +202,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-5xl px-5 py-8 text-[13px] text-muted">© 2026 iRemeslo.cz · Řemeslná práce pod kontrolou</footer>
+      <SiteFooter />
     </main>
   );
 }
