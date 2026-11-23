@@ -40,11 +40,11 @@ const STEPS: Step[] = [
   {
     id: "zakazka",
     title: "Spočítejte zakázku přímo na stavbě",
-    lead: "Zakázka má pět částí: práce, materiál, lidé, výdaje a souhrn. Souhrn se přepočítává při každém čísle, které napíšete.",
+    lead: "Zakázka má pět částí: práce, materiál, zaměstnanci, výdaje a souhrn. Souhrn se přepočítává při každém čísle, které napíšete.",
     points: [
       "Práce za m², bm, kus, hodinu nebo paušál",
       "Materiál s nákupní a prodejní cenou – prodejní se dopočítá z vaší přirážky",
-      "Lidé a výdaje (plošina, doprava, skládka) jako náklad",
+      "Zaměstnanci a výdaje (plošina, doprava, skládka) jako náklad",
       "Hned vidíte výdělek a marži; když klesne pod vaši hranici, zčervená",
     ],
     shots: [
@@ -84,7 +84,7 @@ const MORE = [
   { title: "Faktury a zálohy", text: "Fakturu vystavíte ze zakázky jedním tlačítkem: s QR Platbou, rekapitulací DPH a odečtem zaplacených záloh. Ke každé záloze se po zaplacení sám vystaví daňový doklad." },
   { title: "Přehled plateb", text: "Kolik vám dluží a co je po splatnosti, vidíte hned na přehledu. Zaplacenou fakturu označíte jedním klepnutím." },
   { title: "Ceník", text: "Uložte si práce a materiál, které děláte nejčastěji. V zakázce začnete psát název a cena s jednotkou se doplní." },
-  { title: "Klienti a lidé", text: "Adresář zákazníků a vaši lidé s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
+  { title: "Klienti a zaměstnanci", text: "Adresář zákazníků a vaši zaměstnanci s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
   { title: "Pracovníci v terénu", text: "Pracovník vidí jen zakázky, na kterých dělá: adresu, termín a telefon na zákazníka. Ceny ani zisk ne." },
 ];
 

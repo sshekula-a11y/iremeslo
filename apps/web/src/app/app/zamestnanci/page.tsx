@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { czk } from "@/lib/format";
 import { addEmployee } from "./actions";
 
-export const metadata: Metadata = { title: "Lidé" };
+export const metadata: Metadata = { title: "Zaměstnanci" };
 
 export default async function EmployeesPage() {
   const company = await requireStaff();
@@ -18,7 +18,7 @@ export default async function EmployeesPage() {
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
       <section>
-        <h1 className="mb-1 font-display text-[26px] font-extrabold">Lidé</h1>
+        <h1 className="mb-1 font-display text-[26px] font-extrabold">Zaměstnanci</h1>
         <p className="mb-4 text-[14px] text-muted">Nákladové sazby se předvyplní v zakázce a jdou tam přepsat.</p>
         <div className="card divide-y divide-line">
           {employees && employees.length > 0 ? (
@@ -34,13 +34,13 @@ export default async function EmployeesPage() {
               </div>
             ))
           ) : (
-            <p className="px-4 py-8 text-center text-muted">Přidejte sebe i kolegy – bez nich nejde spočítat náklady na lidi.</p>
+            <p className="px-4 py-8 text-center text-muted">Přidejte sebe i kolegy – bez nich nejde spočítat náklady na zaměstnance.</p>
           )}
         </div>
       </section>
       <aside>
         <form action={addEmployee} className="card space-y-3 p-4">
-          <h2 className="font-display text-[17px] font-bold">Nový člověk</h2>
+          <h2 className="font-display text-[17px] font-bold">Přidat zaměstnance</h2>
           <div>
             <label className="label" htmlFor="e-name">Jméno</label>
             <input className="field" id="e-name" name="name" required />
@@ -59,7 +59,7 @@ export default async function EmployeesPage() {
               <input className="field num" id="e-day" name="rate_day" inputMode="decimal" />
             </div>
           </div>
-          <button className="btn-primary w-full">Uložit</button>
+          <button className="btn-primary w-full">Přidat zaměstnance</button>
         </form>
       </aside>
     </div>

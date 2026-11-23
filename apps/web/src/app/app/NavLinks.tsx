@@ -14,7 +14,7 @@ const STAFF: Item[] = [
   { href: "/app/faktury", label: "Faktury" },
   { href: "/app/klienti", label: "Klienti", more: true },
   { href: "/app/cenik", label: "Ceník", more: true },
-  { href: "/app/zamestnanci", label: "Lidé", more: true },
+  { href: "/app/zamestnanci", label: "Zaměstnanci", more: true },
   { href: "/app/nastaveni", label: "Nastavení", more: true },
 ];
 const WORKER: Item[] = [{ href: "/app/moje-zakazky", label: "Moje zakázky" }];

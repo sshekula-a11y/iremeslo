@@ -259,7 +259,7 @@ export function JobForm({
         {/* 3. Zaměstnanci */}
         <Section title="3. Zaměstnanci" hint="Nákladová sazba se předvyplní z karty člověka" total={summary ? formatCzk(summary.costs.labor) : "—"}
           onAdd={employees.length ? () => addRow("labor", newLabor()) : undefined}>
-          {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte lidi v sekci <a className="text-accent-ink underline" href="/app/zamestnanci">Lidé</a>.</p>}
+          {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte zaměstnance v sekci <a className="text-accent-ink underline" href="/app/zamestnanci">Zaměstnanci</a>.</p>}
           {d.labor.map((l, i) => {
             const emp = employees.find((e) => e.id === l.employeeId);
             return (
@@ -337,7 +337,7 @@ export function JobForm({
               {summary.lowMargin && <p className="mt-1 text-[13px] font-medium text-warn">Marže je pod vaší hranicí {minMarginPct.replace(".", ",")} %.</p>}
               <details className="mt-2 hidden text-[13px] text-muted lg:block">
                 <summary className="cursor-pointer">Rozpad nákladů</summary>
-                <p className="num mt-1">Materiál {formatCzk(summary.costs.materials)} · Lidé {formatCzk(summary.costs.labor)} · Výdaje {formatCzk(summary.costs.expenses)}</p>
+                <p className="num mt-1">Materiál {formatCzk(summary.costs.materials)} · Zaměstnanci {formatCzk(summary.costs.labor)} · Výdaje {formatCzk(summary.costs.expenses)}</p>
                 {summary.revenue.discount > 0 && <p className="num">Sleva −{formatCzk(summary.revenue.discount)}</p>}
               </details>
             </>
