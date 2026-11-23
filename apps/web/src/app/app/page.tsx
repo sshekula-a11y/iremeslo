@@ -48,7 +48,10 @@ export default async function Dashboard() {
           <p className="text-[13px] text-muted">{company.name}</p>
           <h1 className="font-display text-[26px] font-extrabold">Přehled</h1>
         </div>
-        <Link href="/app/zakazky/nova" className="btn-primary">+ Nová zakázka</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/app/zakazky/nova" className="btn-ghost">+ Nová zakázka</Link>
+          <Link href="/app/faktury/rychla" className="btn-primary">+ Vystavit fakturu</Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

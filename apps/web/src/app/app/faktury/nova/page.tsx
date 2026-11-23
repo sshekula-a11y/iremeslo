@@ -54,7 +54,7 @@ export default async function NewInvoicePicker({ searchParams }: PageProps<"/app
           <input name="q" defaultValue={search} className="field w-64" placeholder="Hledat zakázku" aria-label="Hledat zakázku" />
           <button className="btn-ghost">Hledat</button>
         </form>
-        <Link href="/app/zakazky/nova" className="btn-ghost">+ Nová zakázka</Link>
+        <Link href="/app/faktury/rychla" className="btn-ghost">Faktura bez zakázky</Link>
       </div>
 
       <ul className="card divide-y divide-line">
@@ -83,8 +83,8 @@ export default async function NewInvoicePicker({ searchParams }: PageProps<"/app
         {rows.length === 0 && (
           <li className="px-4 py-10 text-center">
             <p className="text-muted">{search ? "Žádná zakázka k fakturaci neodpovídá hledání." : "Nemáte žádnou zakázku k fakturaci."}</p>
-            <p className="mt-1 text-[14px] text-muted">Založte zakázku s položkami a klientem, uložte ji a fakturu vystavíte tady.</p>
-            <Link href="/app/zakazky/nova" className="btn-primary mt-4">+ Nová zakázka</Link>
+            <p className="mt-1 text-[14px] text-muted">Fakturu ale vystavíte i bez zakázky – stačí odběratel a položky.</p>
+            <Link href="/app/faktury/rychla" className="btn-primary mt-4">+ Vystavit fakturu</Link>
           </li>
         )}
       </ul>

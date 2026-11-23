@@ -17,8 +17,9 @@ const FILE_PREFIX: Record<string, string> = {
 };
 const METHOD_LABELS: Record<string, string> = { bank: "převodem", cash: "hotově", card: "kartou", other: "jinak" };
 
-export default async function DocumentPage({ params }: PageProps<"/app/doklady/[id]">) {
+export default async function DocumentPage({ params, searchParams }: PageProps<"/app/doklady/[id]">) {
   const { id } = await params;
+  const justIssued = (await searchParams).rychla === "1";
   const company = await requireStaff();
   const doc = await loadDocument(company.id, id);
   const today = todayInPrague();
@@ -41,6 +42,22 @@ export default async function DocumentPage({ params }: PageProps<"/app/doklady/[
         </div>
         <PdfDownload view={doc.view} fileName={`${FILE_PREFIX[doc.type] ?? "Doklad"}-${doc.number}.pdf`} />
       </div>
+
+      {justIssued && (
+        // Po rychlé faktuře: hlavní je PDF pro zákazníka; další funkce jen nabídneme.
+        <section className="card overflow-hidden" aria-label="Faktura vystavena">
+          <div className="flex flex-wrap items-center gap-3 bg-ok-soft px-4 py-3">
+            <span className="flex size-8 items-center justify-center rounded-full bg-ok font-bold text-white" aria-hidden="true">✓</span>
+            <p className="font-semibold text-ok">Faktura {doc.number} je vystavená. Stáhněte PDF a pošlete ji zákazníkovi.</p>
+          </div>
+          {doc.jobId && (
+            <p className="px-4 py-3 text-[14px] text-muted">
+              Tip: faktura je uložená i jako zakázka. Když k ní doplníte materiál a čas, uvidíte, kolik jste na ní vydělali.{" "}
+              <Link href={`/app/zakazky/${doc.jobId}`} className="font-semibold text-accent-ink hover:underline">Zobrazit zakázku →</Link>
+            </p>
+          )}
+        </section>
+      )}
 
       {payable && (
         <section className="card space-y-3 p-4" aria-label="Platba">
