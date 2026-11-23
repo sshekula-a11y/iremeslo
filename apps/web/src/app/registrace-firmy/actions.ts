@@ -39,12 +39,20 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const v = parsed.data;
-  if (v.vatPayer && !v.dic) return { error: "Plátce DPH musí mít vyplněné DIČ." };
 
   const ico = v.ico.padStart(8, "0");
   // Vymyšlené IČO neprojde. Když ARES zrovna neodpovídá, registraci kvůli tomu neblokujeme.
   const ares = await lookupAres(ico);
   if (!ares.ok && ares.reason === "not_found") return { error: "Firmu s tímto IČO jsme v ARES nenašli. Zkontrolujte číslo." };
+  // Co člověk nevyplnil, doplníme z ARES (hlavně DIČ, když údaje nenačetl tlačítkem).
+  if (ares.ok) {
+    const a = ares.company;
+    if (!v.dic && a.dic) v.dic = a.dic.toUpperCase();
+    if (!v.street) v.street = a.street;
+    if (!v.city) v.city = a.city;
+    if (!v.zip) v.zip = a.zip;
+  }
+  if (v.vatPayer && !v.dic) return { error: "Plátce DPH musí mít vyplněné DIČ." };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("register_company", {

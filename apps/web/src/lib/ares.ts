@@ -32,7 +32,10 @@ export async function lookupAres(raw: string): Promise<AresResult> {
   if (res.status === 404) return { ok: false, reason: "not_found" };
   if (!res.ok) return { ok: false, reason: "unavailable" };
 
-  const j = (await res.json()) as { ico: string; obchodniJmeno: string; dic?: string; sidlo?: AresSidlo };
+  const j = (await res.json()) as {
+    ico: string; obchodniJmeno: string; dic?: string; sidlo?: AresSidlo;
+    seznamRegistraci?: { stavZdrojeDph?: string };
+  };
   const s = j.sidlo ?? {};
   const number = [s.cisloDomovni, s.cisloOrientacni ? `${s.cisloOrientacni}${s.cisloOrientacniPismeno ?? ""}` : null]
     .filter(Boolean)
@@ -47,7 +50,8 @@ export async function lookupAres(raw: string): Promise<AresResult> {
       street: [streetName, number].filter(Boolean).join(" "),
       city: s.nazevObce ?? "",
       zip: s.psc ? String(s.psc).replace(/^(\d{3})(\d{2})$/, "$1 $2") : "",
-      vatPayer: Boolean(j.dic),
+      // Plátce DPH podle registru DPH; DIČ mají i neplátci (identifikované osoby), proto nestačí samotné DIČ.
+      vatPayer: j.seznamRegistraci?.stavZdrojeDph ? j.seznamRegistraci.stavZdrojeDph === "AKTIVNI" : Boolean(j.dic),
     },
   };
 }

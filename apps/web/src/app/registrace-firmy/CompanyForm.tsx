@@ -19,10 +19,10 @@ export function CompanyForm() {
     setTrial(info ? { ico: value, info } : null);
   }
 
-  async function loadFromAres() {
+  async function loadFromAres(value = ico) {
     setLookup({ loading: true });
     try {
-      const res = await fetch(`/api/ares/${encodeURIComponent(ico.trim())}`);
+      const res = await fetch(`/api/ares/${encodeURIComponent(value.trim())}`);
       const body = (await res.json()) as AresCompany | { error: string };
       if (!res.ok || "error" in body) {
         setLookup({ loading: false, message: "error" in body ? body.error : "Nepovedlo se načíst." });
@@ -56,12 +56,14 @@ export function CompanyForm() {
               const v = e.target.value.replace(/\D/g, "");
               setIco(v);
               void refreshTrial(v);
+              // Po 8. číslici načteme název, adresu i DIČ z ARES sami – bez klikání.
+              if (v.length === 8 && v !== ico) void loadFromAres(v);
             }}
             placeholder="např. 25020137"
             required
             aria-describedby="trial-info"
           />
-          <button type="button" className="btn-dark shrink-0" onClick={loadFromAres} disabled={ico.length < 6 || lookup.loading}>
+          <button type="button" className="btn-dark shrink-0" onClick={() => loadFromAres()} disabled={ico.length < 6 || lookup.loading}>
             {lookup.loading ? "Hledám…" : "Načíst z ARES"}
           </button>
         </div>
@@ -90,16 +92,14 @@ export function CompanyForm() {
         </div>
       </div>
 
+      <div>
+        <label className="label" htmlFor="dic">DIČ {values.vatPayer ? "(povinné)" : "(pokud máte)"}</label>
+        <input className="field num" id="dic" name="dic" value={values.dic} onChange={set("dic")} placeholder="CZ12345678" />
+      </div>
       <label className="flex items-center gap-2.5 text-[15px] font-medium">
         <input type="checkbox" name="vatPayer" className="size-5 accent-accent" checked={values.vatPayer} onChange={set("vatPayer")} />
         Jsem plátce DPH
       </label>
-      {values.vatPayer && (
-        <div>
-          <label className="label" htmlFor="dic">DIČ</label>
-          <input className="field num" id="dic" name="dic" value={values.dic} onChange={set("dic")} placeholder="CZ12345678" />
-        </div>
-      )}
 
       {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}
       <button className="btn-primary w-full" disabled={pending}>
