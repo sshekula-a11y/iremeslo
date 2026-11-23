@@ -6,7 +6,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-line">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-6 text-[13px] text-muted">
-        <p>© 2026 iRemeslo.cz · {OPERATOR.name}</p>
+        <p>© 2026 iRemeslo.cz · Provozovatel: {OPERATOR.name}, IČO {OPERATOR.ico}, {OPERATOR.address}</p>
         <nav className="flex flex-wrap gap-x-5 gap-y-1" aria-label="Patička">
           <Link href="/jak-to-funguje" className="hover:text-ink">Jak to funguje</Link>
           <Link href="/obchodni-podminky" className="hover:text-ink">Obchodní podmínky</Link>

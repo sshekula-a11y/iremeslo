@@ -3,20 +3,22 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { OPERATOR } from "@/lib/operator";
+import { TERMS_VALID_FROM, TERMS_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Obchodní podmínky",
   description: "Všeobecné obchodní podmínky platformy iRemeslo.cz: registrace, zkušební období, předplatné, odpovědnost, data a ukončení smlouvy.",
 };
 
-const VALID_FROM = "24. 11. 2026";
-const VERSION = "1.0";
+const VALID_FROM = TERMS_VALID_FROM;
+const VERSION = TERMS_VERSION;
 
 /**
  * Všeobecné obchodní podmínky (VOP) podle § 1751 a násl. zákona č. 89/2012 Sb., občanský zákoník.
  * Smlouva se uzavírá jen s podnikateli (registrace vyžaduje IČO), proto se neuplatní ustanovení o spotřebitelských smlouvách.
  * Text odpovídá tomu, jak platforma funguje: zkušební období 30 dní jednou na IČO, po skončení předplatného
  * režim jen pro čtení (migrace 007), zpracování údajů zákazníků uživatele (čl. 28 GDPR).
+ * Ověřeno proti znění OZ § 435, 1751–1753, 1826, 2898 (zakonyprolidi.cz) a GDPR čl. 28 (eur-lex.europa.eu), 11/2026.
  */
 export default function TermsPage() {
   return (
@@ -57,6 +59,16 @@ export default function TermsPage() {
             <li>
               Smlouva o užívání služby (dále jen „<strong>smlouva</strong>“) vzniká dokončením registrace, tedy
               vytvořením uživatelského účtu a vyjádřením souhlasu s těmito podmínkami. Smlouva se uzavírá na dobu neurčitou.
+            </li>
+            <li>
+              Smlouva se uzavírá elektronicky v <strong>českém jazyce</strong>. Registrace probíhá v těchto krocích: zadání
+              e-mailu a hesla, zaškrtnutí souhlasu s těmito podmínkami, potvrzení tlačítkem „Vytvořit účet zdarma“ a zadání
+              IČO firmy. Před odesláním může uživatel zadané údaje zkontrolovat a opravit; údaje firmy může kdykoli změnit
+              v nastavení aplikace.
+            </li>
+            <li>
+              Provozovatel smlouvu archivuje: ukládá znění těchto podmínek a údaj o tom, kdy a s jakou verzí uživatel vyjádřil
+              souhlas. Aktuální znění podmínek je trvale dostupné na této stránce; dřívější znění provozovatel na žádost zašle.
             </li>
             <li>
               Uživatel je povinen uvádět pravdivé, úplné a aktuální údaje, zejména e-mail, IČO, DIČ a další údaje
@@ -171,19 +183,61 @@ export default function TermsPage() {
               <Link href="/ochrana-osobnich-udaju" className="font-semibold text-accent-ink underline">Zásady ochrany osobních údajů</Link>.
             </li>
             <li>
-              Ve vztahu k osobním údajům zákazníků a zaměstnanců uživatele je uživatel <strong>správcem</strong>
-              a provozovatel <strong>zpracovatelem</strong> podle čl. 28 nařízení (EU) 2016/679 (GDPR). Tento článek
-              představuje smlouvu o zpracování osobních údajů. Provozovatel se zavazuje:
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                <li>zpracovávat osobní údaje pouze za účelem poskytování služby a podle pokynů uživatele daných nastavením a užíváním služby,</li>
-                <li>zajistit mlčenlivost osob, které mají k údajům přístup,</li>
-                <li>přijmout vhodná technická a organizační opatření k jejich zabezpečení (šifrované spojení, oddělení dat jednotlivých firem, řízení přístupů),</li>
-                <li>zapojit další zpracovatele (poskytovatele hostingu, databáze a e-mailů uvedené v Zásadách ochrany osobních údajů) jen se stejnými povinnostmi; o jejich změně uživatele informuje,</li>
-                <li>poskytnout uživateli součinnost při vyřizování žádostí subjektů údajů a při ohlašování porušení zabezpečení,</li>
-                <li>bez zbytečného odkladu oznámit uživateli zjištěné porušení zabezpečení osobních údajů,</li>
-                <li>po skončení smlouvy údaje vymazat podle čl. 9 odst. 4, nestanoví-li právní předpis jinak,</li>
-                <li>poskytnout uživateli informace potřebné k doložení splnění těchto povinností.</li>
-              </ul>
+              Ve vztahu k osobním údajům, které uživatel do služby vloží, je uživatel <strong>správcem</strong> a provozovatel
+              <strong>zpracovatelem</strong> podle čl. 28 nařízení Evropského parlamentu a Rady (EU) 2016/679 (GDPR).
+              Odstavce 4 až 6 tohoto článku tvoří <strong>smlouvu o zpracování osobních údajů</strong>.
+            </li>
+            <li>
+              <strong>Předmět, doba, povaha a účel zpracování:</strong> provozovatel osobní údaje ukládá, zobrazuje,
+              zálohuje a zpracovává do podoby dokladů výhradně za účelem poskytování služby, a to po dobu trvání smlouvy
+              a lhůty podle čl. 9 odst. 4. <strong>Kategorie subjektů údajů:</strong> zákazníci (odběratelé) uživatele
+              a jejich kontaktní osoby, zaměstnanci a spolupracovníci uživatele. <strong>Typy osobních údajů:</strong>
+              jméno a příjmení, adresa, IČO a DIČ, telefon, e-mail, údaje o zakázkách a dokladech, u zaměstnanců
+              nákladové sazby a přiřazení k zakázkám. Uživatel do služby nevkládá zvláštní kategorie osobních údajů
+              (čl. 9 GDPR).
+            </li>
+            <li>
+              Provozovatel jako zpracovatel:
+              <ol className="mt-2 list-[lower-alpha] space-y-1 pl-5">
+                <li>
+                  zpracovává osobní údaje pouze na základě doložených pokynů uživatele, kterými jsou tato smlouva a nastavení
+                  a používání služby uživatelem, včetně předávání do třetích zemí; ukládá-li mu zpracování právní předpis,
+                  informuje o tom uživatele předem, ledaže to předpis zakazuje;
+                </li>
+                <li>zajistí, aby se osoby oprávněné zpracovávat osobní údaje zavázaly k mlčenlivosti nebo aby se na ně vztahovala zákonná povinnost mlčenlivosti;</li>
+                <li>
+                  přijme opatření podle čl. 32 GDPR, zejména šifrované spojení, oddělení dat jednotlivých firem na úrovni
+                  databáze, řízení přístupových oprávnění, zálohování a záznam zásahů do dat;
+                </li>
+                <li>
+                  zapojuje další zpracovatele na základě <strong>obecného písemného povolení</strong>, které mu uživatel
+                  uzavřením smlouvy uděluje; jejich aktuální seznam je uveden v{" "}
+                  <Link href="/ochrana-osobnich-udaju" className="text-accent-ink underline">Zásadách ochrany osobních údajů</Link>.
+                  O zamýšlené změně dalších zpracovatelů informuje uživatele e-mailem nejméně 30 dní předem; uživatel může
+                  proti změně vznést námitku a v takovém případě smlouvu vypovědět ke dni účinnosti změny. Dalším zpracovatelům
+                  ukládá stejné povinnosti na ochranu údajů, jaké má sám podle této smlouvy, a za jejich plnění odpovídá;
+                </li>
+                <li>je uživateli nápomocen vhodnými technickými a organizačními opatřeními při vyřizování žádostí subjektů údajů o výkon jejich práv;</li>
+                <li>
+                  je uživateli nápomocen při plnění povinností podle čl. 32 až 36 GDPR a porušení zabezpečení osobních údajů
+                  mu oznámí bez zbytečného odkladu, nejpozději do 48 hodin od jeho zjištění;
+                </li>
+                <li>
+                  po skončení smlouvy osobní údaje podle rozhodnutí uživatele <strong>vrátí</strong> (export dat) nebo
+                  <strong> vymaže</strong>, a to včetně existujících kopií, nejpozději ve lhůtě podle čl. 9 odst. 4,
+                  ledaže právní předpis vyžaduje jejich uložení;
+                </li>
+                <li>
+                  poskytne uživateli informace potřebné k doložení splnění těchto povinností a umožní audity, včetně inspekcí,
+                  prováděné uživatelem nebo auditorem, kterého uživatel pověří, po předchozím oznámení nejméně 14 dní předem
+                  a tak, aby nebyla ohrožena bezpečnost ani data jiných uživatelů.
+                </li>
+              </ol>
+            </li>
+            <li>
+              Provozovatel uživatele neprodleně upozorní, pokud by podle jeho názoru určitý pokyn porušoval GDPR nebo jiné
+              předpisy o ochraně osobních údajů. Uživatel odpovídá za to, že má k předání osobních údajů provozovateli
+              právní titul a že subjekty údajů řádně informoval.
             </li>
             <li>
               Provozovatel do dat uživatele nenahlíží. Výjimkou je technická podpora na žádost uživatele, řešení
@@ -194,6 +248,9 @@ export default function TermsPage() {
 
         <Part n={8} title="Odpovědnost a její omezení">
           <ol className="list-decimal space-y-2 pl-5">
+            <li>
+              Uživatel registrací <strong>výslovně přijímá</strong> ustanovení tohoto článku (§ 1753 občanského zákoníku).
+            </li>
             <li>
               Provozovatel neodpovídá za škodu vzniklou nesprávným nebo neúplným zadáním údajů uživatelem, nesprávným
               použitím služby, za obsah dokladů vystavených uživatelem ani za jejich daňové a účetní důsledky.
@@ -208,8 +265,8 @@ export default function TermsPage() {
               před vznikem škody. Provozovatel neodpovídá za ušlý zisk ani za nepřímé škody.
             </li>
             <li>
-              Omezení podle tohoto článku se nevztahuje na škodu způsobenou úmyslně nebo z hrubé nedbalosti ani na újmu
-              na přirozených právech člověka (§ 2898 občanského zákoníku).
+              Omezení podle tohoto článku se neuplatní v rozsahu, v jakém je vylučuje § 2898 občanského zákoníku, zejména
+              u újmy způsobené člověku na jeho přirozených právech a u újmy způsobené úmyslně nebo z hrubé nedbalosti.
             </li>
           </ol>
         </Part>

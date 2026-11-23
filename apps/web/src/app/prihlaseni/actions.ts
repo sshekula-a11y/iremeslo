@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { TERMS_VERSION } from "@/lib/legal";
 
 export type AuthState = { error?: string; info?: string; noAccount?: boolean };
 
@@ -52,6 +53,8 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
 
   const { error: loginError } = await supabase.auth.signInWithPassword(parsed.data);
   if (loginError) return { error: "Účet byl vytvořen, ale přihlášení se nezdařilo. Přihlaste se prosím." };
+  // Doklad o souhlasu s obchodními podmínkami (verze a čas) – § 1753 OZ, archivace smlouvy (VOP čl. 2).
+  await supabase.auth.updateUser({ data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString() } });
   // Gratulace a další kroky jsou na stránce zadání IČO.
   redirect("/registrace-firmy?vitejte=1");
 }
