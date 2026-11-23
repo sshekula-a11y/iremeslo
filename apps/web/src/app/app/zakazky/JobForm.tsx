@@ -163,16 +163,16 @@ export function JobForm({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="label" htmlFor="client">Klient</label>
+              <label className="label" htmlFor="client">Zákazník</label>
               <select className="field" id="client" value={d.clientId} onChange={(e) => set("clientId", e.target.value)}>
-                <option value="">+ Nový klient</option>
+                <option value="">+ Nový zákazník</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             {!d.clientId && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="label" htmlFor="nc-name">Jméno klienta</label>
+                  <label className="label" htmlFor="nc-name">Jméno zákazníka</label>
                   <input className="field" id="nc-name" value={d.newClientName} onChange={(e) => set("newClientName", e.target.value)} />
                 </div>
                 <div>

@@ -226,7 +226,7 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
             {pending ? "Vystavuji…" : "Vystavit fakturu"}
           </button>
           {error && <p className="text-[13px] font-medium text-warn" role="alert">{error}</p>}
-          <p className="text-[12px] text-muted">Faktura dostane číslo a už nepůjde změnit. Odběratel se uloží do adresáře klientů.</p>
+          <p className="text-[12px] text-muted">Faktura dostane číslo a už nepůjde změnit. Odběratel se uloží do adresáře zákazníků.</p>
         </div>
       </aside>
     </div>

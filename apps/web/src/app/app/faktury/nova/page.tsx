@@ -16,7 +16,7 @@ interface JobRow {
   clients: { name: string } | null;
 }
 
-/** Výběr zakázky k fakturaci: faktura se skládá z položek, klienta a DPH uložené zakázky. */
+/** Výběr zakázky k fakturaci: faktura se skládá z položek, zákazníka a DPH uložené zakázky. */
 export default async function NewInvoicePicker({ searchParams }: PageProps<"/app/faktury/nova">) {
   const company = await requireStaff();
   const { q } = await searchParams;
@@ -46,7 +46,7 @@ export default async function NewInvoicePicker({ searchParams }: PageProps<"/app
       <div>
         <Link href="/app/faktury" className="text-[14px] text-muted hover:text-ink">← Faktury</Link>
         <h1 className="font-display text-[26px] font-extrabold">Vystavit fakturu</h1>
-        <p className="text-[14px] text-muted">Vyberte zakázku. Položky, klient i DPH se na fakturu převezmou ze zakázky a před vystavením uvidíte náhled.</p>
+        <p className="text-[14px] text-muted">Vyberte zakázku. Položky, zákazník i DPH se na fakturu převezmou ze zakázky a před vystavením uvidíte náhled.</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -63,7 +63,7 @@ export default async function NewInvoicePicker({ searchParams }: PageProps<"/app
             <div className="min-w-0">
               <Link href={`/app/zakazky/${j.id}`} className="block truncate font-semibold hover:text-accent-ink">{j.title}</Link>
               <p className="truncate text-[13px] text-muted">
-                <span className="num">{j.number}</span> · {j.clients?.name ?? "Bez klienta"}
+                <span className="num">{j.number}</span> · {j.clients?.name ?? "Bez zákazníka"}
                 {j.date_to ? ` · do ${formatDate(j.date_to)}` : ""}
               </p>
             </div>
@@ -75,7 +75,7 @@ export default async function NewInvoicePicker({ searchParams }: PageProps<"/app
                   <Link href={`/app/doklady/nova?zakazka=${j.id}&typ=faktura`} className="btn-primary min-h-9 px-3 text-[14px]">Vystavit fakturu</Link>
                 </>
               ) : (
-                <Link href={`/app/zakazky/${j.id}`} className="btn-ghost min-h-9 px-3 text-[14px]" title="Faktura musí mít odběratele">Doplnit klienta</Link>
+                <Link href={`/app/zakazky/${j.id}`} className="btn-ghost min-h-9 px-3 text-[14px]" title="Faktura musí mít odběratele">Doplnit zákazníka</Link>
               )}
             </div>
           </li>

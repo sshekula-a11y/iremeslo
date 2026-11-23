@@ -12,7 +12,7 @@ const STAFF: Item[] = [
   { href: "/app/zakazky", label: "Zakázky" },
   { href: "/app/kalendar", label: "Kalendář" },
   { href: "/app/faktury", label: "Faktury" },
-  { href: "/app/klienti", label: "Klienti", more: true },
+  { href: "/app/zakaznici", label: "Zákazníci", more: true },
   { href: "/app/cenik", label: "Ceník", more: true },
   { href: "/app/zamestnanci", label: "Zaměstnanci", more: true },
   { href: "/app/nastaveni", label: "Nastavení", more: true },

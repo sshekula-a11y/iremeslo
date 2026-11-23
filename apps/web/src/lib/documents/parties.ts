@@ -10,7 +10,7 @@ export interface Parties {
   paymentTermsDays: number;
 }
 
-/** Dodavatel (firma), odběratel (klient) a účet – tak, jak se zamrazí do vystaveného dokladu. */
+/** Dodavatel (firma), odběratel (zákazník) a účet – tak, jak se zamrazí do vystaveného dokladu. */
 export async function loadParties(companyId: string, clientId: string | null): Promise<Parties> {
   const supabase = await createClient();
   const [{ data: firm }, { data: client }] = await Promise.all([

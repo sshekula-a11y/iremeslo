@@ -34,7 +34,7 @@ export type QuickInvoiceInput = z.infer<typeof schema>;
 
 /**
  * Rychlá faktura: odběratel + položky → vystavená faktura.
- * Na pozadí se uloží klient i zakázka (stav Dokončeno), takže faktura má stejná pravidla jako ze zakázky
+ * Na pozadí se uloží zákazník i zakázka (stav Dokončeno), takže faktura má stejná pravidla jako ze zakázky
  * a uživatel může později doplnit náklady a sledovat zisk.
  */
 export async function quickInvoice(input: QuickInvoiceInput): Promise<CreateResult & { jobId?: string }> {
@@ -61,9 +61,9 @@ export async function quickInvoice(input: QuickInvoiceInput): Promise<CreateResu
   let clientId = v.clientId;
   let clientName = "";
   if (clientId) {
-    if (!z.string().uuid().safeParse(clientId).success) return { ok: false, error: "Neplatný klient." };
+    if (!z.string().uuid().safeParse(clientId).success) return { ok: false, error: "Neplatný zákazník." };
     const { data } = await supabase.from("clients").select("name").eq("company_id", company.id).eq("id", clientId).single();
-    if (!data) return { ok: false, error: "Klient nenalezen." };
+    if (!data) return { ok: false, error: "Zákazník nenalezen." };
     clientName = data.name;
   } else {
     const c = v.client;

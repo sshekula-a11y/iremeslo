@@ -5,7 +5,7 @@ import { advanceAmount, computeInvoice, ddppFromPayment, type AdvanceToDeduct, t
 
 /**
  * Obsah dokladu tak, jak se v okamžiku vystavení uloží do documents.snapshot.
- * Z něj se kreslí náhled i PDF; pozdější změny firmy, klienta nebo zakázky už vystavený doklad nezmění.
+ * Z něj se kreslí náhled i PDF; pozdější změny firmy, zákazníka nebo zakázky už vystavený doklad nezmění.
  * Peníze jsou v haléřích, množství v setinách jednotky (celá čísla).
  */
 
@@ -179,7 +179,7 @@ interface Common {
 }
 
 function requireCustomer(c: Party | null): Party {
-  if (!c || !c.name.trim()) throw new DocumentError("Faktura musí mít odběratele – vyberte u zakázky klienta.");
+  if (!c || !c.name.trim()) throw new DocumentError("Faktura musí mít odběratele – vyberte u zakázky zákazníka.");
   return c;
 }
 
@@ -200,7 +200,7 @@ export function buildInvoice(input: Common & { job: Job; deductions?: AdvanceToD
   const customer = requireCustomer(input.customer);
   const mode = modeOf(input.job, input.vatPayer);
   if (mode === "reverse_charge" && !customer.dic) {
-    throw new DocumentError("U přenesené daňové povinnosti musí mít odběratel DIČ – doplňte ho u klienta.");
+    throw new DocumentError("U přenesené daňové povinnosti musí mít odběratel DIČ – doplňte ho u zákazníka.");
   }
   const lines = jobLines(input.job);
   const d = input.job.discount;

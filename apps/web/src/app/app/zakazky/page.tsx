@@ -48,7 +48,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/app/zakazky
               <div className="min-w-0">
                 <p className="truncate font-semibold">{j.title}</p>
                 <p className="truncate text-[13px] text-muted">
-                  <span className="num">{j.number}</span> · {(j.clients as unknown as { name: string } | null)?.name ?? "Bez klienta"}
+                  <span className="num">{j.number}</span> · {(j.clients as unknown as { name: string } | null)?.name ?? "Bez zákazníka"}
                   {j.date_from ? ` · ${formatDate(j.date_from)}` : ""}
                 </p>
               </div>

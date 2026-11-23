@@ -45,7 +45,7 @@ export default async function AdminCompany({ params }: PageProps<"/ssh/firmy/[id
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {([["Zakázky", d.counts.jobs], ["Klienti", d.counts.clients], ["Nabídky", d.counts.quotes], ["Faktury", d.counts.invoices]] as const).map(([l, n]) => (
+        {([["Zakázky", d.counts.jobs], ["Zákazníci", d.counts.clients], ["Nabídky", d.counts.quotes], ["Faktury", d.counts.invoices]] as const).map(([l, n]) => (
           <div key={l} className="card px-4 py-3"><p className="text-[13px] text-muted">{l}</p><p className="num font-display text-[22px] font-extrabold">{n}</p></div>
         ))}
       </div>

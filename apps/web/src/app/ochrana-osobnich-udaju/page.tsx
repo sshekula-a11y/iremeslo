@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           <ul className="list-disc space-y-1.5 pl-5">
             <li><strong>Účet:</strong> e-mail a heslo (ukládáme jen jeho zašifrovanou podobu, samotné heslo neznáme).</li>
             <li><strong>Firma:</strong> název, IČO, DIČ, adresa, kontakty, bankovní účet, logo, razítko a podpis.</li>
-            <li><strong>Data, která do aplikace zadáte:</strong> zakázky, klienti, zaměstnanci a jejich sazby, ceník, nabídky a faktury.</li>
+            <li><strong>Data, která do aplikace zadáte:</strong> zakázky, zákazníci, zaměstnanci a jejich sazby, ceník, nabídky a faktury.</li>
             <li><strong>Technické údaje:</strong> přihlašovací cookie, čas posledního přihlášení a záznamy o změnách dokladů.</li>
           </ul>
         </Part>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
 
         <Part title="Údaje vašich zákazníků a zaměstnanců">
           <p>
-            Údaje o vašich klientech a zaměstnancích, které do aplikace zadáte, spravujete vy – vaše firma je jejich správcem.
+            Údaje o vašich zákaznících a zaměstnancích, které do aplikace zadáte, spravujete vy – vaše firma je jejich správcem.
             My je pro vás pouze zpracováváme (jako zpracovatel podle čl. 28 GDPR): ukládáme je, zobrazujeme vám a vašim kolegům
             a použijeme je jen k provozu aplikace. Data každé firmy jsou v databázi oddělená a jiná firma k nim nemá přístup.
           </p>

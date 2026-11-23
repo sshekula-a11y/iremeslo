@@ -45,6 +45,6 @@ export async function addClient(form: FormData) {
     marketing_consent: v.consent,
     marketing_consent_at: v.consent ? new Date().toISOString() : null,
   });
-  if (error) throw new Error("Klienta se nepodařilo uložit.");
-  revalidatePath("/app/klienti");
+  if (error) throw new Error("Zákazníka se nepodařilo uložit.");
+  revalidatePath("/app/zakaznici");
 }

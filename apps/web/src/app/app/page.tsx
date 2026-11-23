@@ -71,7 +71,7 @@ export default async function Dashboard() {
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{j.title}</p>
                     <p className="text-[13px] text-muted">
-                      {(j.clients as unknown as { name: string } | null)?.name ?? "Bez klienta"} · {formatDate(j.date_from)} – {formatDate(j.date_to)}
+                      {(j.clients as unknown as { name: string } | null)?.name ?? "Bez zákazníka"} · {formatDate(j.date_from)} – {formatDate(j.date_to)}
                     </p>
                   </div>
                   <StatusBadge status={j.status as JobStatus} />

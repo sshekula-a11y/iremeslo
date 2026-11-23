@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     },
   },
   poweredByHeader: false,
+  // „Klienti“ se přejmenovali na „Zákazníci“ – staré odkazy a záložky dál fungují.
+  async redirects() {
+    return [{ source: "/app/klienti", destination: "/app/zakaznici", permanent: true }];
+  },
 };
 
 export default nextConfig;
