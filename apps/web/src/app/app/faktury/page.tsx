@@ -58,9 +58,9 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-[26px] font-extrabold">Faktury</h1>
-        <p className="text-[14px] text-muted">Fakturu nebo zálohu vystavíte v detailu zakázky.</p>
+        <Link href="/app/faktury/nova" className="btn-primary">+ Vystavit fakturu</Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:max-w-xl">
@@ -84,7 +84,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
       </nav>
 
       <div className="card divide-y divide-line">
-        {rows.length === 0 && <p className="px-4 py-10 text-center text-muted">{filter ? "Žádné doklady v tomto filtru." : "Zatím žádné faktury. Vystavíte je v detailu zakázky."}</p>}
+        {rows.length === 0 && <p className="px-4 py-10 text-center text-muted">{filter ? "Žádné doklady v tomto filtru." : "Zatím žádné faktury. Vystavíte je tlačítkem „Vystavit fakturu“."}</p>}
         {rows.map((r) => (
           <Link key={r.id} href={`/app/doklady/${r.id}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-paper">
             <div className="min-w-0">
