@@ -10,6 +10,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const state = mode === "login" ? loginState : regState;
   const pending = mode === "login" ? loginPending : regPending;
 
@@ -60,17 +61,33 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
         </div>
         <div>
           <label className="label" htmlFor="password">Heslo</label>
-          <input
-            className="field"
-            id="password"
-            name="password"
-            type="password"
-            minLength={8}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              className="field pr-12"
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              minLength={8}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? "Skrýt heslo" : "Zobrazit heslo"}
+              aria-pressed={showPassword}
+              aria-controls="password"
+              title={showPassword ? "Skrýt heslo" : "Zobrazit heslo"}
+              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-muted hover:text-ink"
+            >
+              <EyeIcon crossed={showPassword} />
+            </button>
+          </div>
           {mode === "register" && <p className="mt-1 text-[13px] text-muted">Aspoň 8 znaků.</p>}
         </div>
         {mode === "register" && (
@@ -94,5 +111,16 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
       </form>
     </div>
     </>
+  );
+}
+
+/** Oko (zobrazit heslo) / přeškrtnuté oko (skrýt heslo). */
+function EyeIcon({ crossed }: { crossed: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {crossed && <path d="M3 3l18 18" />}
+    </svg>
   );
 }
