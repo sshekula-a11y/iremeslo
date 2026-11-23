@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { OPERATOR } from "@/lib/operator";
 
-/** Patička veřejného webu: provozovatel, GDPR a kontakt. */
+/** Patička veřejného webu: provozovatel, obchodní podmínky, GDPR a kontakt. */
 export function SiteFooter() {
   return (
     <footer className="border-t border-line">
@@ -9,6 +9,7 @@ export function SiteFooter() {
         <p>© 2026 iRemeslo.cz · {OPERATOR.name}</p>
         <nav className="flex flex-wrap gap-x-5 gap-y-1" aria-label="Patička">
           <Link href="/jak-to-funguje" className="hover:text-ink">Jak to funguje</Link>
+          <Link href="/obchodni-podminky" className="hover:text-ink">Obchodní podmínky</Link>
           <Link href="/ochrana-osobnich-udaju" className="hover:text-ink">Ochrana osobních údajů (GDPR)</Link>
           <a href={`mailto:${OPERATOR.email}`} className="hover:text-ink">{OPERATOR.email}</a>
         </nav>

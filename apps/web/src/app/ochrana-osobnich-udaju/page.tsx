@@ -108,6 +108,8 @@ export default function PrivacyPage() {
         </Part>
 
         <p className="border-t border-line pt-6 text-[14px] text-muted">
+          <Link href="/obchodni-podminky" className="text-accent-ink underline">Obchodní podmínky</Link>
+          {" · "}
           <Link href="/" className="text-accent-ink underline">Zpět na úvod</Link>
         </p>
       </article>
