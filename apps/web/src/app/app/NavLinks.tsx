@@ -56,7 +56,7 @@ export function NavLinks({ worker, variant }: { worker: boolean; variant: "top" 
       {main.map((i) => (
         <li key={i.href}>
           <Link href={i.href} aria-current={active(i.href, i.exact) ? "page" : undefined}
-            className={`flex min-h-14 items-center justify-center text-[13px] font-semibold ${active(i.href, i.exact) ? "text-accent-ink" : "text-muted"}`}>
+            className={`flex min-h-12 items-center justify-center text-[12px] font-semibold ${active(i.href, i.exact) ? "text-accent-ink" : "text-muted"}`}>
             {i.label}
           </Link>
         </li>
@@ -93,7 +93,7 @@ function MoreMenu({ items, active, highlighted, placement }: {
     <div ref={ref} className="relative">
       <button type="button" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((o) => !o)}
         className={bottom
-          ? `flex min-h-14 w-full items-center justify-center text-[13px] font-semibold ${highlighted || open ? "text-accent-ink" : "text-muted"}`
+          ? `flex min-h-12 w-full items-center justify-center text-[12px] font-semibold ${highlighted || open ? "text-accent-ink" : "text-muted"}`
           : `rounded-lg px-3 py-2 text-[14px] font-medium ${highlighted ? "bg-accent-soft text-ink" : "text-muted hover:text-ink"}`}>
         Více
       </button>

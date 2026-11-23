@@ -38,6 +38,7 @@ export function JobForm({
   const [d, setD] = useState<JobDraft>(initial);
   const [saving, startSaving] = useTransition();
   const [quoting, startQuoting] = useTransition();
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   // Jednodušší formulář: vidět je jen to, co zakázka opravdu má. Ostatní části se otevřou tlačítkem.
   const [open, setOpen] = useState({
@@ -338,9 +339,9 @@ export function JobForm({
         )}
       </div>
 
-      {/* 5. Souhrn – na mobilu přilepený dole, na počítači vpravo */}
-      <aside className="lg:sticky lg:top-4 lg:self-start">
-        <div className="fixed inset-x-0 bottom-14 z-10 border-t border-line bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] sm:bottom-0 lg:static lg:rounded-2xl lg:border lg:shadow-none">
+      {/* Souhrn – na počítači vpravo (plný), na mobilu jeden řádek přilepený dole (níže) */}
+      <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
+        <div className="rounded-2xl border border-line bg-white px-4 py-3">
           {summary ? (
             <>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -376,7 +377,48 @@ export function JobForm({
           {message && <p className={`mt-2 text-[13px] font-medium ${message.ok ? "text-ok" : "text-warn"}`} role="status">{message.text}</p>}
         </div>
       </aside>
-      <div className="h-48 lg:hidden" aria-hidden="true" />
+
+      {/* Mobil: jeden řádek nad spodním menu. Klepnutím se rozbalí plný souhrn; při psaní zůstane jen cena. */}
+      <div className="fixed inset-x-0 bottom-[calc(3rem+env(safe-area-inset-bottom))] z-10 border-t border-line bg-white shadow-[0_-6px_18px_rgba(0,0,0,0.06)] sm:bottom-0 lg:hidden kb:bottom-0">
+        {summaryOpen && summary && (
+          <div id="souhrn-detail" className="border-b border-line px-4 pb-3 pt-3 kb:hidden">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <Figure label="Náklady" value={formatCzk(summary.costs.total)} />
+              <Figure label="Cena bez DPH" value={formatCzk(summary.revenue.net)} strong />
+              <Figure label="Výdělek" value={formatCzk(summary.profit)} tone={summary.profit < 0 ? "bad" : "good"} />
+              <Figure label="Marže" value={summary.marginBp === null ? "—" : formatPercent(summary.marginBp)} tone={summary.lowMargin ? "bad" : "good"} />
+            </div>
+            <p className="mt-1 text-[13px] text-muted">{d.vatMode === "standard" ? `DPH ${summary.vatRate} % ${formatCzk(summary.vat)}` : VAT_MODE_LABELS[d.vatMode]}</p>
+            {summary.lowMargin && <p className="text-[13px] font-medium text-warn">Marže je pod vaší hranicí {minMarginPct.replace(".", ",")} %.</p>}
+            <button type="button" className="btn-ghost mt-2 min-h-10 w-full" onClick={onQuote} disabled={saving || quoting}>
+              {quoting ? "Vystavuji…" : "Vystavit nabídku"}
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3 px-4 py-2 kb:py-1.5">
+          <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSummaryOpen((o) => !o)}
+            aria-expanded={summaryOpen} aria-controls="souhrn-detail">
+            {summary ? (
+              <>
+                <span className="flex items-baseline gap-1.5">
+                  <span className="num font-display text-[18px] font-extrabold kb:text-[15px]">{formatCzk(summary.gross)}</span>
+                  <span className="text-[12px] text-muted kb:hidden">{summaryOpen ? "▾" : "▴"}</span>
+                </span>
+                <span className={`num block truncate text-[12px] kb:hidden ${summary.profit < 0 || summary.lowMargin ? "text-warn" : "text-ok"}`}>
+                  výdělek {formatCzk(summary.profit)}{summary.marginBp !== null && ` · ${formatPercent(summary.marginBp)}`}
+                </span>
+              </>
+            ) : (
+              <span className="block truncate text-[13px] text-warn">{calcError}</span>
+            )}
+          </button>
+          <button type="button" className="btn-primary min-h-10 shrink-0 px-4 kb:hidden" onClick={onSave} disabled={saving || quoting}>
+            {saving ? "Ukládám…" : "Uložit"}
+          </button>
+        </div>
+        {message && <p className={`px-4 pb-2 text-[13px] font-medium kb:hidden ${message.ok ? "text-ok" : "text-warn"}`} role="status">{message.text}</p>}
+      </div>
+      <div className="h-20 lg:hidden" aria-hidden="true" />
       <datalist id="catalog-work">
         {catalog.filter((c) => c.kind === "work").map((c) => <option key={c.name} value={c.name} />)}
       </datalist>

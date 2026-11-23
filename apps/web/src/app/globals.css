@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Telefon s vysunutou klávesnicí (nastavuje KeyboardWatcher): kb:hidden schová přilepené lišty. */
+@custom-variant kb (&:where(html[data-kb="1"], html[data-kb="1"] *));
+
 /* Barvy a písma z návrhu iŘemeslo (design canvas) */
 @theme {
   --color-paper: #f4f6f9;

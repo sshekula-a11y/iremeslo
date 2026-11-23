@@ -87,7 +87,7 @@ export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; c
       </fieldset>
 
       {canEdit ? (
-        <div className="sticky bottom-16 z-10 flex items-center gap-3 rounded-2xl border border-line bg-white p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] sm:bottom-4">
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 flex items-center gap-3 rounded-2xl border border-line bg-white p-2.5 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] sm:bottom-4 kb:hidden">
           <button className="btn-primary" disabled={pending}>{pending ? "Ukládám…" : "Uložit nastavení"}</button>
           {state.error && <p className="text-[13px] font-medium text-warn" role="alert">{state.error}</p>}
           {state.ok && !pending && <p className="text-[13px] font-medium text-ok" role="status">Uloženo</p>}
