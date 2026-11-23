@@ -6,7 +6,7 @@ Potvrzovací e-maily **neposílá Supabase Auth**, ale přímo databáze přes [
 ## Jak to funguje
 
 1. Registrace (`signup_with_password`) založí účet, člověka hned přihlásí a zapíše ho do `app.unverified_users`.
-2. Databáze pošle český e-mail s logem a odkazem `https://iremeslo.cz/overeni?t=…` (platí 48 hodin).
+2. Databáze pošle český e-mail s logem a odkazem `https://www.iremeslo.cz/overeni?t=…` (adresa z /ssh → E-maily) (platí 48 hodin).
    Ukládá se jen sha256 tokenu.
 3. Dokud e-mail není potvrzený, v aplikaci svítí pruh „Potvrďte svůj e-mail“ s tlačítkem „Poslat znovu“
    (nejdřív za 2 minuty, nejvýš 5× denně). Nabídky jdou, **faktury a zálohy ne**.

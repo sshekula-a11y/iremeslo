@@ -379,8 +379,8 @@ select t_text((select headers ->> 'Authorization' from net._test_requests order 
 select t_text((select body -> 'to' ->> 0 from net._test_requests order by id desc limit 1), 'overit@example.cz', 'e-mail jde na registrovanou adresu');
 select t_text((select body ->> 'from' from net._test_requests order by id desc limit 1), 'iRemeslo.cz <info@iremeslo.cz>', 'odesílatel info@iremeslo.cz');
 select t_eq((select count(*)::int from net._test_requests where body ->> 'html' like '%logo-bez-sloganu.png%' and body ->> 'subject' like 'Potvrďte%'), 1, 'český e-mail s logem');
-select substring((select body ->> 'html' from net._test_requests order by id desc limit 1) from 'https://iremeslo\.cz/overeni\?t=([0-9a-f]{64})') as ver_token \gset
-select t_eq(length(:'ver_token'), 64, 'odkaz vede na iremeslo.cz/overeni s tokenem');
+select substring((select body ->> 'html' from net._test_requests order by id desc limit 1) from 'https://www\.iremeslo\.cz/overeni\?t=([0-9a-f]{64})') as ver_token \gset
+select t_eq(length(:'ver_token'), 64, 'odkaz vede na www.iremeslo.cz/overeni s tokenem');
 select t_eq((select count(*)::int from app.email_verifications where token_hash = :'ver_token'), 0, 'token se neukládá v čitelné podobě');
 
 set role authenticated;
