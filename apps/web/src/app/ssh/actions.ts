@@ -84,3 +84,43 @@ export async function recordPayment(_: AdminState, form: FormData): Promise<Admi
   const [y, m, d] = String(data).split("-");
   return { ok: true, message: `Platba zapsána, předplatné do ${Number(d)}. ${Number(m)}. ${y}.` };
 }
+
+// ---------------------------------------------------------------------------
+// E-maily (Resend). Klíč jde rovnou do trezoru Supabase Vault, zpátky se nikdy nezobrazí.
+// ---------------------------------------------------------------------------
+
+export async function saveEmailSettings(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const key = String(form.get("api_key") ?? "").trim();
+  const siteUrl = String(form.get("site_url") ?? "").trim();
+  const mailFrom = String(form.get("mail_from") ?? "").trim();
+  const { error } = await supabase.rpc("admin_set_email_settings", {
+    p_api_key: key || null,
+    p_site_url: siteUrl || null,
+    p_mail_from: mailFrom || null,
+  });
+  if (error) return fail(error, "Nastavení se nepodařilo uložit.");
+  revalidatePath("/ssh/emaily");
+  return { ok: true, message: key ? "Uloženo, klíč je v trezoru." : "Uloženo." };
+}
+
+export async function sendTestEmail(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const to = z.string().trim().email("Zadejte platný e-mail.").safeParse(form.get("to"));
+  if (!to.success) return { error: to.error.issues[0]?.message };
+  const { data, error } = await supabase.rpc("admin_send_test_email", { p_to: to.data });
+  if (error) return fail(error, "E-mail se nepodařilo odeslat.");
+  revalidatePath("/ssh/emaily");
+  if (data !== true) return { error: "Nejdřív uložte klíč Resend." };
+  return { ok: true, message: "Odesláno. Za pár vteřin obnovte stránku – v logu uvidíte odpověď Resend." };
+}
+
+export async function verifyUserEmail(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const user = uuid.safeParse(form.get("user"));
+  if (!user.success) return { error: "Neplatný uživatel." };
+  const { error } = await supabase.rpc("admin_verify_user", { p_user: user.data });
+  if (error) return fail(error, "Nepodařilo se uložit.");
+  revalidatePath("/ssh/emaily");
+  return { ok: true, message: "Potvrzeno." };
+}

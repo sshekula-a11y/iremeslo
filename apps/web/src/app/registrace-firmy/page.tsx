@@ -7,7 +7,7 @@ import { SIGNUP_STEP_COUNT, SignupSteps } from "@/components/SignupSteps";
 export const metadata: Metadata = { title: "Registrace firmy" };
 
 export default async function RegisterCompanyPage({ searchParams }: PageProps<"/registrace-firmy">) {
-  await requireUser();
+  const user = await requireUser();
   const { vitejte } = await searchParams;
   const justRegistered = vitejte === "1";
 
@@ -29,7 +29,14 @@ export default async function RegisterCompanyPage({ searchParams }: PageProps<"/
               </h1>
               <p className="mt-2 text-[15px] text-white/75">Zbývá ještě pár kroků a můžete vystavit první nabídku.</p>
             </div>
-            <div className="p-5">
+            <div className="space-y-4 p-5">
+              <p className="flex gap-3 rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
+                <span aria-hidden="true" className="text-[18px] leading-5">✉</span>
+                <span>
+                  Na <strong className="break-all">{user.email}</strong> jsme poslali odkaz k potvrzení e-mailu.
+                  Klikněte na něj, až budete chtít vystavit první fakturu – mezitím můžete pokračovat.
+                </span>
+              </p>
               <SignupSteps current={0} />
             </div>
           </section>

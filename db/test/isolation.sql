@@ -364,5 +364,93 @@ select t_eq((select email_registered(' NOVY.remeslnik@example.cz ')::int), 1, 'e
 select t_eq((select email_registered('nikdo@example.cz')::int), 0, 'neznámý e-mail: nemá účet');
 reset role;
 
+-- ---------- potvrzení e-mailu (010) ----------
+select t_eq((select count(*)::int from app.unverified_users where user_id = :'new_user'), 1, 'nový účet čeká na potvrzení e-mailu');
+select t_eq((select count(*)::int from app.unverified_users where user_id = '00000000-0000-0000-0000-00000000000a'), 0, 'účty založené dřív platí jako potvrzené');
+select t_eq((select count(*)::int from app.email_log where to_email = 'novy.remeslnik@example.cz' and error like 'chybí klíč%'), 1, 'bez klíče Resend se e-mail jen zapíše do logu');
+select t_eq((select count(*)::int from net._test_requests), 0, 'bez klíče se nic neodeslalo');
+
+insert into vault.secrets (name, secret) values ('resend_api_key', 're_test_1234567890');
+set role anon;
+select signup_with_password('overit@example.cz', 'tajneheslo123') as ver_user \gset
+reset role;
+select t_text((select url from net._test_requests order by id desc limit 1), 'https://api.resend.com/emails', 'e-mail jde přes Resend');
+select t_text((select headers ->> 'Authorization' from net._test_requests order by id desc limit 1), 'Bearer re_test_1234567890', 'klíč z trezoru v hlavičce');
+select t_text((select body -> 'to' ->> 0 from net._test_requests order by id desc limit 1), 'overit@example.cz', 'e-mail jde na registrovanou adresu');
+select t_text((select body ->> 'from' from net._test_requests order by id desc limit 1), 'iRemeslo.cz <info@iremeslo.cz>', 'odesílatel info@iremeslo.cz');
+select t_eq((select count(*)::int from net._test_requests where body ->> 'html' like '%logo-bez-sloganu.png%' and body ->> 'subject' like 'Potvrďte%'), 1, 'český e-mail s logem');
+select substring((select body ->> 'html' from net._test_requests order by id desc limit 1) from 'https://iremeslo\.cz/overeni\?t=([0-9a-f]{64})') as ver_token \gset
+select t_eq(length(:'ver_token'), 64, 'odkaz vede na iremeslo.cz/overeni s tokenem');
+select t_eq((select count(*)::int from app.email_verifications where token_hash = :'ver_token'), 0, 'token se neukládá v čitelné podobě');
+
+set role authenticated;
+select t_login(:'ver_user');
+select t_eq((select (my_email_status() ->> 'verified')::boolean::int), 0, 'stav: e-mail nepotvrzený');
+select t_fails('select resend_verification()', 'znovu poslat jde až za 2 minuty');
+reset role;
+update app.email_verifications set created_at = now() - interval '3 minutes' where user_id = :'ver_user';
+set role authenticated;
+select t_text((select resend_verification() ->> 'sent'), 'true', 'po 2 minutách jde e-mail poslat znovu');
+select t_fails('select * from app.email_verifications', 'tokeny nejsou přímo čitelné');
+select t_fails('delete from app.unverified_users', 'potvrzení nejde obejít smazáním záznamu');
+
+-- nepotvrzený majitel: nabídku vystaví, fakturu ne
+select t_login('00000000-0000-0000-0000-00000000000b');
+reset role;
+insert into app.unverified_users (user_id, email) values ('00000000-0000-0000-0000-00000000000b', 'majitel-b@test.cz');
+set role authenticated;
+insert into clients (company_id, kind, name) values (:'trial2', 'person', 'Zákazník') returning id as ver_client \gset
+insert into documents (company_id, client_id, type, vat_mode, total_due, snapshot)
+  values (:'trial2', :'ver_client', 'invoice_non_payer', 'standard', 1000, '{"lines":[]}') returning id as ver_inv \gset
+insert into documents (company_id, client_id, type, vat_mode, total_due, snapshot)
+  values (:'trial2', :'ver_client', 'quote', 'standard', 1000, '{"kind":"quote","lines":[{"description":"x"}]}') returning id as ver_quote \gset
+select t_fails(format('select issue_document(%L)', :'ver_inv'), 'bez potvrzeného e-mailu nejde vystavit fakturu');
+select t_text(left(issue_document(:'ver_quote'), 3), 'CN-', 'nabídku jde vystavit i bez potvrzení');
+
+-- odkaz z e-mailu (bez přihlášení)
+set role anon;
+select t_login(null) \g /dev/null
+select t_text((select confirm_email('00' || right(:'ver_token', 62)) ->> 'ok'), 'false', 'cizí token neprojde');
+select t_text((select confirm_email('neco') ->> 'reason'), 'invalid', 'nesmyslný token neprojde');
+select t_text((select confirm_email(:'ver_token') ->> 'ok'), 'true', 'odkaz z e-mailu potvrdí e-mail');
+select t_text((select confirm_email(:'ver_token') ->> 'already'), 'true', 'druhé kliknutí: už potvrzeno');
+reset role;
+select t_eq((select count(*)::int from app.unverified_users where user_id = :'ver_user'), 0, 'účet je potvrzený');
+update app.email_verifications set expires_at = now() - interval '1 minute' where user_id = '00000000-0000-0000-0000-00000000000b';
+insert into app.email_verifications (token_hash, user_id, email, expires_at)
+  values (encode(extensions.digest(repeat('ab', 32), 'sha256'), 'hex'), '00000000-0000-0000-0000-00000000000b', 'majitel-b@test.cz', now() - interval '1 minute');
+set role anon;
+select t_text((select confirm_email(repeat('ab', 32)) ->> 'reason'), 'expired', 'prošlý odkaz neplatí');
+reset role;
+delete from app.unverified_users where user_id = '00000000-0000-0000-0000-00000000000b';
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_text(left(issue_document(:'ver_inv'), 4), '2026', 'po potvrzení e-mailu faktura projde');
+
+-- administrace e-mailů
+select t_fails('select admin_email_settings()', 'majitel nevidí nastavení e-mailů');
+select t_fails($q$select admin_set_email_settings('re_podvrh_1234567890', null, null)$q$, 'majitel nemůže změnit klíč');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_text((select admin_email_settings() ->> 'key_hint'), '…7890', 'administrace ukáže jen konec klíče');
+select t_fails($q$select admin_set_email_settings('spatny', null, null)$q$, 'neplatný klíč neprojde');
+select t_fails($q$select admin_set_email_settings(null, 'http://iremeslo.cz', null)$q$, 'adresa webu musí být https');
+select admin_set_email_settings('re_novy_klic_abcdef', 'https://iremeslo.cz/', null) \g /dev/null
+select t_text((select admin_email_settings() ->> 'key_hint'), '…cdef', 'klíč se v trezoru přepsal');
+select t_text((select admin_email_settings() ->> 'site_url'), 'https://iremeslo.cz', 'adresa webu bez lomítka na konci');
+select t_text((select admin_send_test_email('test@example.cz')::text), 'true', 'zkušební e-mail odeslán');
+select t_eq((select jsonb_array_length(admin_email_settings() -> 'log') >= 3)::int, 1, 'log odeslaných e-mailů');
+select admin_verify_user(:'new_user') \g /dev/null
+select t_eq((select (admin_email_settings() ->> 'unverified_count')::int), 0, 'provozovatel může e-mail potvrdit ručně');
+
+-- úklid: nepotvrzený účet bez firmy po 7 dnech zmizí, s firmou zůstane
+reset role;
+insert into app.unverified_users (user_id, email, created_at) values
+  (:'ver_user', 'overit@example.cz', now() - interval '8 days'),
+  ('00000000-0000-0000-0000-00000000000b', 'majitel-b@test.cz', now() - interval '8 days');
+select t_eq(app.cleanup_unverified(), 1, 'úklid smazal jeden nepotvrzený účet');
+select t_eq((select count(*)::int from auth.users where id = :'ver_user'), 0, 'účet bez firmy smazán');
+select t_eq((select count(*)::int from auth.users where id = '00000000-0000-0000-0000-00000000000b'), 1, 'účet s firmou zůstal');
+delete from app.unverified_users;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

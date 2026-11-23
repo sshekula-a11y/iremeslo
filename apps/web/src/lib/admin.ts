@@ -30,6 +30,8 @@ export const ACTION_LABELS: Record<string, string> = {
   read_only_off: "Vypnut režim jen pro čtení",
   subscription: "Změna tarifu",
   payment: "Zapsaná platba",
+  email_settings: "Změna nastavení e-mailů",
+  verify_email: "Ručně potvrzený e-mail",
 };
 
 export const SUB_STATUS_LABELS: Record<string, string> = {

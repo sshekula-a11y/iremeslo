@@ -11,11 +11,13 @@ export const metadata: Metadata = { title: "Nová faktura" };
 export default async function QuickInvoicePage() {
   const company = await requireStaff();
   const supabase = await createClient();
-  const [{ data: clients }, { data: catalog }, { data: firm }] = await Promise.all([
+  const [{ data: clients }, { data: catalog }, { data: firm }, { data: emailStatus }] = await Promise.all([
     supabase.from("clients").select("id, name, ico").eq("company_id", company.id).order("name"),
     supabase.from("catalog_items").select("name, unit, sale_price").eq("company_id", company.id).eq("active", true).order("name"),
     supabase.from("companies").select("iban, bank_account").eq("id", company.id).single(),
+    supabase.rpc("my_email_status"),
   ]);
+  const unverified = (emailStatus as { verified?: boolean } | null)?.verified === false;
 
   return (
     <div className="space-y-4">
@@ -26,6 +28,11 @@ export default async function QuickInvoicePage() {
         </div>
         <Link href="/app/faktury/nova" className="text-[14px] font-semibold text-accent-ink hover:underline">Vyfakturovat existující zakázku →</Link>
       </div>
+      {unverified && (
+        <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">
+          <strong>Nejdřív potvrďte e-mail.</strong> Fakturu můžete vyplnit, ale vystavit ji půjde až po kliknutí na odkaz z e-mailu.
+        </p>
+      )}
       {!firm?.iban && !firm?.bank_account && (
         <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
           Na faktuře zatím nebude číslo účtu ani QR Platba.{" "}

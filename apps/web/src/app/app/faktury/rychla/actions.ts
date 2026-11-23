@@ -43,6 +43,12 @@ export async function quickInvoice(input: QuickInvoiceInput): Promise<CreateResu
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Zkontrolujte údaje." };
   const v = parsed.data;
 
+  // Bez potvrzeného e-mailu databáze fakturu nevystaví – řekneme to dřív, než se uloží klient a zakázka.
+  const { data: emailStatus } = await (await createClient()).rpc("my_email_status");
+  if (emailStatus && (emailStatus as { verified?: boolean }).verified === false) {
+    return { ok: false, error: "Fakturu vystavíte po potvrzení e-mailu. Klikněte na odkaz, který jsme vám poslali (nahoře můžete poslat nový)." };
+  }
+
   const items = v.items.filter((i) => i.description || parseInput(i.qty) || parseInput(i.unitPrice));
   if (items.length === 0) return { ok: false, error: "Přidejte aspoň jednu položku." };
   if (items.some((i) => !i.description)) return { ok: false, error: "Každá položka musí mít popis." };

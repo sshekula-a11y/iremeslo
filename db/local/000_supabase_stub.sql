@@ -48,6 +48,26 @@ create table if not exists auth.identities (
 -- Šifrování hesel (v Supabase je pgcrypto ve schématu extensions).
 create schema if not exists extensions;
 create extension if not exists pgcrypto schema extensions;
+
+-- pg_net (HTTP z databáze): lokálně jen zaznamená požadavek, nic neodesílá.
+create schema if not exists net;
+create table if not exists net._test_requests (
+  id bigint generated always as identity primary key, url text, body jsonb, headers jsonb, at timestamptz default now()
+);
+create table if not exists net._http_response (id bigint primary key, status_code int, content text, created timestamptz default now());
+create or replace function net.http_post(url text, body jsonb default '{}', params jsonb default '{}',
+  headers jsonb default '{}', timeout_milliseconds int default 5000) returns bigint
+language sql as $$ insert into net._test_requests (url, body, headers) values (url, body, headers) returning id $$;
+
+-- Supabase Vault (trezor tajných klíčů): lokálně obyčejná tabulka se stejným rozhraním.
+create schema if not exists vault;
+create table if not exists vault.secrets (id uuid primary key default gen_random_uuid(), name text unique, secret text, description text);
+create or replace view vault.decrypted_secrets as select id, name, secret as decrypted_secret, description from vault.secrets;
+create or replace function vault.create_secret(new_secret text, new_name text default null, new_description text default '', new_key_id uuid default null)
+returns uuid language sql as $$ insert into vault.secrets (name, secret, description) values (new_name, new_secret, new_description) returning id $$;
+create or replace function vault.update_secret(secret_id uuid, new_secret text default null, new_name text default null,
+  new_description text default null, new_key_id uuid default null) returns void
+language sql as $$ update vault.secrets set secret = coalesce(new_secret, secret), name = coalesce(new_name, name) where id = secret_id $$;
 -- Přihlášení (v Supabase je tabulka i s dalšími sloupci); smazáním se uživatel odhlásí.
 create table if not exists auth.sessions (
   id uuid primary key default gen_random_uuid(),

@@ -48,7 +48,12 @@ async function insertAndIssue(
     if (err) return fail(err);
   }
   const { error: issueError } = await supabase.rpc("issue_document", { p_document: doc.id, p_issue_date: todayInPrague() });
-  if (issueError) return fail("Doklad se nepodařilo vystavit: " + issueError.message);
+  if (issueError) {
+    if (issueError.message.includes("potvrďte svůj e-mail")) {
+      return fail("Fakturu vystavíte po potvrzení e-mailu. Klikněte na odkaz, který jsme vám poslali (nahoře můžete poslat nový).");
+    }
+    return fail("Doklad se nepodařilo vystavit: " + issueError.message);
+  }
   return { ok: true, id: doc.id };
 }
 
