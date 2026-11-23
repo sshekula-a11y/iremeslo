@@ -1,5 +1,9 @@
 # E-maily z přihlašování (Supabase Auth)
 
+**Registrace teď e-mail nepotřebuje:** účet zakládá funkce `signup_with_password` (migrace `008_signup.sql`)
+a člověk je hned přihlášený. Šablona níže se použije, až se potvrzování e-mailem zapne (nastavení níže).
+Logo se načítá z `https://iremeslo.cz/brand/logo-bez-sloganu.png`, takže se zobrazí, až web poběží na doméně.
+
 Supabase posílá potvrzení registrace sám. Výchozí e-mail je anglicky a odkaz vede přes servery Supabase
 na adresu z nastavení „Site URL“. Tady je česká šablona, jejíž odkaz vede rovnou na `/auth/confirm` v aplikaci.
 

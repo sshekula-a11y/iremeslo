@@ -343,5 +343,24 @@ select t_eq((select count(*)::int from companies where id = :'trial3'), 1, 'data
 reset role;
 select t_eq((select count(*)::int from app.trial_claims where ico = '12345679'), 1, 'jedno IČO = jeden záznam zkušebního období');
 
+-- ---------- registrace bez potvrzovacího e-mailu ----------
+set role anon;
+select t_login(null) \g /dev/null
+select signup_with_password('  Novy.Remeslnik@Example.CZ ', 'tajneheslo123') as new_user \gset
+reset role;
+select t_text((select email from auth.users where id = :'new_user'), 'novy.remeslnik@example.cz', 'registrace: e-mail uložený malými písmeny');
+select t_eq((select count(*)::int from auth.users where id = :'new_user' and email_confirmed_at is not null), 1, 'registrace: účet je rovnou aktivní');
+select t_eq((select count(*)::int from auth.users where id = :'new_user' and encrypted_password = extensions.crypt('tajneheslo123', encrypted_password)), 1, 'registrace: heslo je zašifrované a ověřitelné');
+select t_eq((select count(*)::int from auth.users where id = :'new_user' and encrypted_password like '$2a$%'), 1, 'registrace: heslo ve formátu bcrypt jako Supabase');
+select t_eq((select count(*)::int from auth.identities where user_id = :'new_user' and provider = 'email' and provider_id = :'new_user'), 1, 'registrace: založená identita e-mail');
+select t_eq((select count(*)::int from auth.users where id = :'new_user' and confirmation_token = '' and recovery_token = ''), 1, 'registrace: tokeny jsou prázdné, ne NULL');
+set role anon;
+select t_fails($q$select signup_with_password('novy.remeslnik@example.cz', 'jineheslo99')$q$, 'stejný e-mail nejde registrovat dvakrát');
+select t_fails($q$select signup_with_password('NOVY.remeslnik@example.cz', 'jineheslo99')$q$, 'ani s jinými velkými písmeny');
+select t_fails($q$select signup_with_password('neplatny-email', 'tajneheslo123')$q$, 'neplatný e-mail neprojde');
+select t_fails($q$select signup_with_password('kratke@example.cz', 'kratke')$q$, 'krátké heslo neprojde');
+select t_fails('select * from auth.users', 'anonym nevidí uživatele');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

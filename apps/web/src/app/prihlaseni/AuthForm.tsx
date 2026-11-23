@@ -2,7 +2,6 @@
 
 import { useActionState, useState } from "react";
 import { signIn, signUp, type AuthState } from "./actions";
-import { RegistrationDone } from "./RegistrationDone";
 
 export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean; confirmed?: boolean }) {
   const [mode, setMode] = useState(initialMode);
@@ -10,9 +9,6 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
   const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
   const state = mode === "login" ? loginState : regState;
   const pending = mode === "login" ? loginPending : regPending;
-
-  // Po úspěšné registraci zmizí nadpis, přepínač i formulář – zůstane jen gratulace.
-  if (regState.registered) return <RegistrationDone email={regState.registered} />;
 
   return (
     <>

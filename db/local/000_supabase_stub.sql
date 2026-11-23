@@ -13,12 +13,41 @@ create schema if not exists auth;
 create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email text unique not null,
-  -- stejné sloupce jako v Supabase (používá je administrace provozovatele)
+  -- stejné sloupce jako v Supabase (administrace provozovatele, registrace bez e-mailu)
+  instance_id uuid,
+  aud varchar,
+  role varchar,
+  encrypted_password varchar,
+  raw_app_meta_data jsonb,
+  raw_user_meta_data jsonb,
+  confirmation_token varchar,
+  recovery_token varchar,
+  email_change_token_new varchar,
+  email_change varchar,
+  email_change_token_current varchar default '',
+  phone_change text default '',
+  phone_change_token varchar default '',
+  reauthentication_token varchar default '',
   created_at timestamptz default now(),
+  updated_at timestamptz,
   last_sign_in_at timestamptz,
   email_confirmed_at timestamptz,
   banned_until timestamptz
 );
+create table if not exists auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  provider_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  identity_data jsonb not null,
+  provider text not null,
+  last_sign_in_at timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz,
+  unique (provider_id, provider)
+);
+-- Šifrování hesel (v Supabase je pgcrypto ve schématu extensions).
+create schema if not exists extensions;
+create extension if not exists pgcrypto schema extensions;
 -- Přihlášení (v Supabase je tabulka i s dalšími sloupci); smazáním se uživatel odhlásí.
 create table if not exists auth.sessions (
   id uuid primary key default gen_random_uuid(),

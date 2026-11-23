@@ -21,7 +21,7 @@ Peníze se počítají v celých haléřích (v databázi `numeric`), nikdy ve f
 
 ```bash
 npm test          # výpočty: 36 testů včetně kontrolního příkladu ze zadání
-npm run test:db   # databáze: 123 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
+npm run test:db   # databáze: 134 kontrol oddělení firem, rolí a dokladů (potřebuje PostgreSQL 15+)
 npm run typecheck
 ```
 
@@ -45,11 +45,12 @@ Všichni noví zákazníci dostanou tarif **Beta zdarma** (`plans.beta`). Placen
 ## Nasazení databáze do Supabase
 
 1. Založit projekt v Supabase (region Frankfurt, `eu-central-1`).
-2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `007_trial.sql`, potom `db/supabase/storage.sql`.
+2. V SQL editoru spustit po řadě `db/migrations/001_schema.sql` až `008_signup.sql`, potom `db/supabase/storage.sql`.
 3. Soubor `db/local/000_supabase_stub.sql` se v Supabase **nespouští**, je jen pro lokální testy.
 4. Provozovatel (přístup do administrace `/ssh`): po registraci svého účtu jednou spustit
    `insert into app.platform_admins (user_id) select id from auth.users where email = 'vas@email.cz';`
-5. Český e-mail pro potvrzení registrace, adresa webu a odesílatel info@iremeslo.cz: viz `db/supabase/email/README.md`.
+5. Registrace nečeká na e-mail: účet založí `signup_with_password` (migrace 008) a člověk je hned přihlášený.
+6. Český e-mail pro potvrzení registrace (až se potvrzování zapne), adresa webu a odesílatel info@iremeslo.cz: viz `db/supabase/email/README.md`.
 
 **Zkušební období:** 30 dní zdarma jednou na IČO (`app.trial_claims`, migrace `007_trial.sql`). IČO je při založení firmy
 povinné a ověří se v ARES. Nová registrace se stejným IČO (jiný e-mail) dostane jen zbytek původního období;
