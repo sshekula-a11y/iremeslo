@@ -2,7 +2,6 @@
 
 import { startTransition, useActionState, useState } from "react";
 import { czAccountToIban, formatIban } from "@iremeslo/core";
-import { THEMES } from "@/lib/documents/themes";
 import { saveCompany, type SettingsState } from "./actions";
 
 export interface CompanySettings {
@@ -10,14 +9,13 @@ export interface CompanySettings {
   email: string; phone: string; web: string; registerEntry: string;
   bankAccount: string; iban: string; bic: string;
   vatPayer: boolean; defaultVatRate: "21" | "12"; paymentTermsDays: string;
-  markupPct: string; minMarginPct: string; theme: string;
+  markupPct: string; minMarginPct: string;
 }
 
 export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; canEdit: boolean }) {
   const [state, action, pending] = useActionState<SettingsState, FormData>(saveCompany, {});
   const [vatPayer, setVatPayer] = useState(initial.vatPayer);
   const [account, setAccount] = useState(initial.bankAccount);
-  const [theme, setTheme] = useState(initial.theme);
 
   let ibanPreview: { ok: boolean; text: string } | null = null;
   if (account.trim()) {
@@ -85,18 +83,6 @@ export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; c
             hint="Z nákupní ceny se dopočítá prodejní." />
           <Field id="min_margin_pct" label="Upozornit při marži pod (%)" defaultValue={initial.minMarginPct} inputMode="decimal" num
             hint="Souhrn zakázky zčervená." />
-        </Section>
-
-        <Section title="Barva dokladů">
-          <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-4">
-            {Object.entries(THEMES).map(([key, t]) => (
-              <label key={key} className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 ${theme === key ? "border-ink ring-2 ring-ink/15" : "border-line"}`}>
-                <input type="radio" name="invoice_theme" value={key} checked={theme === key} onChange={() => setTheme(key)} className="sr-only" />
-                <span className="size-6 shrink-0 rounded-full" style={{ background: t.accent }} aria-hidden="true" />
-                <span className="text-[14px] font-medium">{t.label}</span>
-              </label>
-            ))}
-          </div>
         </Section>
       </fieldset>
 

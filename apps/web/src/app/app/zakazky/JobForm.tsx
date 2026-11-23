@@ -39,6 +39,14 @@ export function JobForm({
   const [saving, startSaving] = useTransition();
   const [quoting, startQuoting] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  // Jednodušší formulář: vidět je jen to, co zakázka opravdu má. Ostatní části se otevřou tlačítkem.
+  const [open, setOpen] = useState({
+    materials: initial.materials.length > 0,
+    labor: initial.labor.length > 0,
+    expenses: initial.expenses.length > 0,
+    extras: Boolean(initial.discountKind || initial.note),
+  });
+  const reveal = (k: keyof typeof open) => setOpen((o) => ({ ...o, [k]: true }));
   const { summary, error: calcError } = useMemo(() => safeSummary(d, minMarginPct), [d, minMarginPct]);
 
   const set = <K extends keyof JobDraft>(k: K, v: JobDraft[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -217,7 +225,7 @@ export function JobForm({
         </section>
 
         {/* 1. Práce */}
-        <Section title="1. Popis prací" hint="Co se účtuje zákazníkovi" total={summary ? formatCzk(summary.revenue.work) : "—"}
+        <Section title="Práce" hint="Co se účtuje zákazníkovi" total={summary ? formatCzk(summary.revenue.work) : "—"}
           onAdd={() => addRow("work", emptyWork())}>
           {d.work.map((w, i) => (
             <Row key={w.key} tools={rowTools("work", w.key, i, d.work.length)}>
@@ -231,8 +239,8 @@ export function JobForm({
           ))}
         </Section>
 
-        {/* 2. Materiály */}
-        <Section title="2. Materiály" hint={`Prodejní cena = nákup + ${markupPct.replace(".", ",")} % přirážka`} total={summary ? formatCzk(summary.revenue.materials) : "—"}
+        {/* Materiály */}
+        {open.materials && <Section title="Materiál" hint={`Prodejní cena = nákup + ${markupPct.replace(".", ",")} % přirážka`} total={summary ? formatCzk(summary.revenue.materials) : "—"}
           onAdd={() => addRow("materials", emptyMaterial())}>
           {d.materials.map((m, i) => (
             <Row key={m.key} tools={rowTools("materials", m.key, i, d.materials.length)}>
@@ -254,10 +262,10 @@ export function JobForm({
               <LineTotal value={m.billable ? lineTotal(parseInput(m.qty), parseInput(m.salePrice)) : 0} note={m.billable ? undefined : "jen náklad"} />
             </Row>
           ))}
-        </Section>
+        </Section>}
 
-        {/* 3. Zaměstnanci */}
-        <Section title="3. Zaměstnanci" hint="Nákladová sazba se předvyplní z karty člověka" total={summary ? formatCzk(summary.costs.labor) : "—"}
+        {/* Zaměstnanci */}
+        {open.labor && <Section title="Zaměstnanci" hint="Nákladová sazba se předvyplní z karty člověka" total={summary ? formatCzk(summary.costs.labor) : "—"}
           onAdd={employees.length ? () => addRow("labor", newLabor()) : undefined}>
           {employees.length === 0 && <p className="px-1 text-[14px] text-muted">Nejdřív přidejte zaměstnance v sekci <a className="text-accent-ink underline" href="/app/zamestnanci">Zaměstnanci</a>.</p>}
           {d.labor.map((l, i) => {
@@ -288,10 +296,10 @@ export function JobForm({
               </Row>
             );
           })}
-        </Section>
+        </Section>}
 
-        {/* 4. Výdaje */}
-        <Section title="4. Výdaje" hint="Doprava, plošina, ubytování, skládka, subdodavatel" total={summary ? formatCzk(summary.costs.expenses) : "—"}
+        {/* Výdaje */}
+        {open.expenses && <Section title="Výdaje" hint="Doprava, plošina, ubytování, skládka, subdodavatel" total={summary ? formatCzk(summary.costs.expenses) : "—"}
           onAdd={() => addRow("expenses", emptyExpense())}>
           {d.expenses.map((x, i) => (
             <Row key={x.key} tools={rowTools("expenses", x.key, i, d.expenses.length)}>
@@ -301,9 +309,9 @@ export function JobForm({
               <LineTotal value={lineTotal(parseInput(x.qty), parseInput(x.unitPrice))} note="náklad" />
             </Row>
           ))}
-        </Section>
+        </Section>}
 
-        <section className="card space-y-3 p-4">
+        {open.extras && <section className="card space-y-3 p-4">
           <h2 className="font-display text-[17px] font-bold">Sleva a poznámka</h2>
           <div className="grid grid-cols-[1fr_8rem] gap-2">
             <select className="field" aria-label="Typ slevy" value={d.discountKind} onChange={(e) => set("discountKind", e.target.value as JobDraft["discountKind"])}>
@@ -314,7 +322,20 @@ export function JobForm({
             {d.discountKind && <NumField label={d.discountKind === "percent" ? "%" : "Kč"} value={d.discountValue} onChange={(v) => set("discountValue", v)} />}
           </div>
           <textarea className="field min-h-24" aria-label="Poznámka" placeholder="Poznámka k zakázce" value={d.note} onChange={(e) => set("note", e.target.value)} />
-        </section>
+        </section>}
+
+        {!(open.materials && open.labor && open.expenses && open.extras) && (
+          <section className="card p-4" aria-label="Přidat k zakázce">
+            <p className="font-semibold">Přidat k zakázce</p>
+            <p className="text-[13px] text-muted">Nepovinné. Když doplníte náklady, uvidíte v souhrnu, kolik na zakázce vyděláte.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {!open.materials && <button type="button" className="btn-ghost min-h-10" onClick={() => { reveal("materials"); addRow("materials", emptyMaterial()); }}>+ Materiál</button>}
+              {!open.labor && <button type="button" className="btn-ghost min-h-10" onClick={() => { reveal("labor"); if (employees.length) addRow("labor", newLabor()); }}>+ Zaměstnanci</button>}
+              {!open.expenses && <button type="button" className="btn-ghost min-h-10" onClick={() => { reveal("expenses"); addRow("expenses", emptyExpense()); }}>+ Výdaje (doprava, plošina…)</button>}
+              {!open.extras && <button type="button" className="btn-ghost min-h-10" onClick={() => reveal("extras")}>+ Sleva nebo poznámka</button>}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* 5. Souhrn – na mobilu přilepený dole, na počítači vpravo */}

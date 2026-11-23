@@ -61,6 +61,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-[26px] font-extrabold">Faktury</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Link href="/app/nastaveni/faktura" className="px-2 text-[14px] font-medium text-muted hover:text-ink">Vzhled faktury</Link>
           <Link href="/app/faktury/nova" className="btn-ghost">Ze zakázky</Link>
           <Link href="/app/faktury/rychla" className="btn-primary">+ Vystavit fakturu</Link>
         </div>

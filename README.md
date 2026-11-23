@@ -95,6 +95,8 @@ npm run dev                                     # http://localhost:3000
 | `/app/faktury` | faktury, zálohy a DDPP: čeká na platbu, po splatnosti, zaplacené; součty |
 | `/app/nastaveni` | nastavení firmy (mění jen majitel): údaje na dokladech, plátce DPH, splatnost, účet → IBAN, přirážka a hranice marže, barva dokladů, logo / razítko / podpis (PNG nebo JPG do 1 MB, soukromé úložiště) |
 | `/ssh` | administrace provozovatele (jen `app.platform_admins`, ostatní 404): analytika, firmy, uživatelé (blokace), tarify a ruční platby předplatného, záznam zásahů |
+| `/app/faktury/rychla` | rychlá faktura: odběratel (z ARES) a položky na jedné obrazovce; na pozadí se uloží klient i zakázka |
+| `/app/nastaveni/faktura` | vzhled faktury: barva, logo, razítko a podpis s živým náhledem |
 | `/app/cenik` | ceník prací a materiálu (nákup, prodej z přirážky, jednotka); položky se nemažou, jen skrývají. V zakázce se po napsání názvu doplní jednotka a ceny |
 | `/app/moje-zakazky` | pracovník: jen přiřazené zakázky, bez cen |
 

@@ -31,8 +31,9 @@ const schema = z.object({
   payment_terms_days: z.coerce.number().int("Splatnost je celý počet dní").min(0).max(365, "Splatnost nejvýš 365 dní"),
   material_markup_pct: z.string(),
   min_margin_pct: z.string(),
-  invoice_theme: z.enum(Object.keys(THEMES) as [keyof typeof THEMES, ...(keyof typeof THEMES)[]]),
 });
+
+const themeSchema = z.enum(Object.keys(THEMES) as [keyof typeof THEMES, ...(keyof typeof THEMES)[]]);
 
 /** Údaje firmy smí měnit jen majitel (hlídá i databáze). */
 export async function saveCompany(_prev: SettingsState, form: FormData): Promise<SettingsState> {
@@ -42,7 +43,7 @@ export async function saveCompany(_prev: SettingsState, form: FormData): Promise
   const parsed = schema.safeParse({
     ...Object.fromEntries(
       ["name", "ico", "dic", "street", "city", "zip", "email", "phone", "web", "register_entry", "bank_account", "iban", "bic",
-        "default_vat_rate", "payment_terms_days", "material_markup_pct", "min_margin_pct", "invoice_theme"].map((k) => [k, String(form.get(k) ?? "")]),
+        "default_vat_rate", "payment_terms_days", "material_markup_pct", "min_margin_pct"].map((k) => [k, String(form.get(k) ?? "")]),
     ),
     vat_payer: form.get("vat_payer") === "on",
   });
@@ -88,11 +89,23 @@ export async function saveCompany(_prev: SettingsState, form: FormData): Promise
       payment_terms_days: v.payment_terms_days,
       material_markup_pct: fromHundredths(markup),
       min_margin_pct: fromHundredths(margin),
-      invoice_theme: v.invoice_theme,
     })
     .eq("id", company.id);
   if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nepovedlo." };
 
+  revalidatePath("/app", "layout");
+  return { ok: true };
+}
+
+/** Barva dokladů (stránka Vzhled faktury). */
+export async function saveInvoiceTheme(theme: string): Promise<SettingsState> {
+  const company = await requireCompany();
+  if (company.role !== "owner") return { error: "Vzhled faktury může měnit jen majitel." };
+  const t = themeSchema.safeParse(theme);
+  if (!t.success) return { error: "Neznámá barva." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("companies").update({ invoice_theme: t.data }).eq("id", company.id);
+  if (error) return { error: error.message.includes("jen pro čtení") ? "Účet je v režimu jen pro čtení." : "Uložení se nepovedlo." };
   revalidatePath("/app", "layout");
   return { ok: true };
 }
@@ -120,6 +133,6 @@ export async function setBrandImage(kind: BrandImage, path: string | null): Prom
   const old = (before as Record<string, string | null> | null)?.[column];
   if (old && old !== path) await supabase.storage.from("files").remove([old]);
 
-  revalidatePath("/app/nastaveni");
+  revalidatePath("/app/nastaveni", "layout");
   return { ok: true };
 }
