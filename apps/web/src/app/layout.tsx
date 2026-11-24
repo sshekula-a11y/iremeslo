@@ -5,9 +5,9 @@ import "@fontsource-variable/archivo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "iRemeslo.cz – zakázky, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
+  title: { default: "iRemeslo.cz – poptávky řemeslných prací, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
   description:
-    "Cenová nabídka a faktura za pár minut z telefonu. U každé zakázky vidíte náklady, výdělek a marži. Pro řemeslníky a malé firmy v ČR.",
+    "Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Řemeslníkům iRemeslo.cz přináší nové zakázky, cenové nabídky a faktury z telefonu a přehled o zisku.",
   applicationName: "iRemeslo.cz",
 };
 

@@ -35,7 +35,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
           <div>
             <h1 className="font-display text-[30px] font-extrabold leading-tight sm:text-[38px]">Poptávky řemeslných prací</h1>
             <p className="mt-2 max-w-xl text-[16px] text-white/75">
-              Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Ozvou se vám ověření řemeslníci z iRemeslo.cz.
+              Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Ozvou se vám řemeslníci registrovaní na iRemeslo.cz.
             </p>
           </div>
           <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>

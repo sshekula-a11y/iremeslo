@@ -28,27 +28,44 @@ export default async function Home() {
     <main>
       <SiteHeader />
       <header className="bg-ink text-white">
-        <div className="mx-auto max-w-5xl px-5 pb-16 pt-12">
-          <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[13px] font-semibold text-accent">
-            30 dní zdarma, bez platební karty
-          </p>
-          <h1 className="max-w-2xl font-display text-[34px] font-extrabold leading-[1.1] tracking-tight sm:text-[46px]">
-            Zakázky, nabídky a faktury pro řemeslníky. Z telefonu, přímo na stavbě.
+        <div className="mx-auto max-w-5xl px-5 pb-14 pt-10 sm:pt-14">
+          <h1 className="max-w-3xl font-display text-[36px] font-extrabold leading-[1.08] tracking-tight sm:text-[52px]">
+            Řemeslná práce pod kontrolou
           </h1>
-          <p className="mt-4 max-w-xl text-[17px] text-white/75">
-            Pro malíře, fasádníky, pokrývače, úklidové firmy, zahradníky a instalatéry. Od poptávky po zaplacení v jedné aplikaci.
+          <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-white/80 sm:text-[19px]">
+            iRemeslo.cz propojuje zákazníky s řemeslníky. Zákazník zadá poptávku zdarma, řemeslník ji najde,
+            spočítá, pošle nabídku a vystaví fakturu – vše z telefonu.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/prihlaseni?rezim=registrace" className="btn-primary">
-              Vyzkoušet zdarma
-            </Link>
-            <Link href="/jak-to-funguje" className="btn border border-white/20 text-white hover:bg-white/10">
-              Jak to funguje
-            </Link>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <section className="flex flex-col rounded-2xl bg-white p-5 text-ink sm:p-6" aria-labelledby="hledam">
+              <p className="text-[13px] font-bold uppercase tracking-wider text-accent-ink">Pro zákazníky</p>
+              <h2 id="hledam" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Hledám řemeslníka</h2>
+              <p className="mt-2 text-[15px] text-muted">
+                Popište, co potřebujete – třeba zateplení fasády 180 m² v Brně. Zadání je zdarma a bez registrace,
+                řemeslníci se vám ozvou sami.
+              </p>
+              <div className="mt-auto pt-5">
+                <Link href="/poptavky/nova" className="btn-primary w-full sm:w-auto">Zadat poptávku zdarma</Link>
+              </div>
+            </section>
+            <section className="flex flex-col rounded-2xl border border-white/15 bg-white/[0.06] p-5 sm:p-6" aria-labelledby="jsem">
+              <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Pro řemeslníky</p>
+              <h2 id="jsem" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Jsem řemeslník</h2>
+              <p className="mt-2 text-[15px] text-white/75">
+                Nové zakázky z poptávek, cenová nabídka a faktura s QR Platbou za pár minut a přehled o zisku
+                z každé zakázky. 30 dní zdarma, bez platební karty.
+              </p>
+              <div className="mt-auto flex flex-wrap gap-3 pt-5">
+                <Link href="/prihlaseni?rezim=registrace" className="btn bg-white text-ink hover:bg-white/90">Vyzkoušet zdarma</Link>
+                <Link href="/poptavky" className="btn border border-white/20 text-white hover:bg-white/10">Prohlédnout poptávky</Link>
+              </div>
+            </section>
           </div>
-          <p className="mt-6 text-[15px] text-white/75">
-            Hledáte řemeslníka?{" "}
-            <Link href="/poptavky/nova" className="font-semibold text-accent underline-offset-2 hover:underline">Zadejte poptávku zdarma →</Link>
+
+          <p className="mt-6 text-[14px] text-white/60">
+            Pro malíře, fasádníky, pokrývače, obkladače, elektrikáře, instalatéry, zahradníky i úklidové firmy.{" "}
+            <Link href="/jak-to-funguje" className="font-semibold text-white/85 underline underline-offset-2 hover:text-white">Jak to funguje</Link>
           </p>
         </div>
       </header>
