@@ -92,10 +92,11 @@ export default function PrivacyPage() {
           </p>
         </Part>
 
-        <Part title="Cookies">
+        <Part id="cookies" title="Cookies">
           <p>
             Používáme jen nezbytné cookies: pro přihlášení a pro to, kterou firmu máte v aplikaci vybranou.
-            Nepoužíváme reklamní ani analytické cookies, proto se vás na souhlas s cookies neptáme.
+            Nepoužíváme reklamní ani analytické cookies, proto se vás na souhlas s cookies neptáme
+            (§ 89 odst. 3 zákona č. 127/2005 Sb.). To, že jste informační lištu o cookies zavřeli, si pamatuje váš prohlížeč.
           </p>
         </Part>
 

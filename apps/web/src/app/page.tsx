@@ -5,13 +5,6 @@ import { InquiryRow } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
 import type { PublicInquiry } from "@/lib/inquiries";
 
-const GDPR = [
-  "Databáze běží v EU (Frankfurt), spojení je vždy šifrované.",
-  "Data každé firmy jsou oddělená – nikdo cizí je nevidí.",
-  "Žádné reklamní ani sledovací cookies, údaje neprodáváme.",
-  "Na požádání vám data předáme nebo je smažeme.",
-];
-
 const benefits = [
   { title: "Nabídka za pár minut", text: "Práce, materiál, zaměstnanci a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
   { title: "Vidíte skutečný zisk", text: "U každé zakázky porovnáte náklady s tím, co fakturujete. Když marže klesne pod vaši hranici, aplikace vás upozorní." },
@@ -113,23 +106,11 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 py-12" aria-labelledby="gdpr">
-        <div className="card p-5 sm:p-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-ok-soft px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide text-ok">GDPR</span>
-            <h2 id="gdpr" className="font-display text-[22px] font-extrabold">Vaše data jsou v bezpečí</h2>
-          </div>
-          <ul className="mt-4 grid gap-3 text-[15px] sm:grid-cols-2">
-            {GDPR.map((g) => (
-              <li key={g} className="flex gap-2.5">
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-ok-soft text-[12px] font-bold text-ok" aria-hidden="true">✓</span>
-                {g}
-              </li>
-            ))}
-          </ul>
-          <Link href="/ochrana-osobnich-udaju" className="mt-4 inline-block font-semibold text-accent-ink hover:underline">Zásady ochrany osobních údajů →</Link>
-        </div>
-      </section>
+      <p className="mx-auto max-w-5xl px-5 py-10 text-[13px] text-muted">
+        <span className="mr-1.5 rounded-full bg-ok-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ok">GDPR</span>
+        Data v EU, oddělená pro každou firmu, bez reklamních cookies.{" "}
+        <Link href="/ochrana-osobnich-udaju" className="font-semibold text-accent-ink hover:underline">Ochrana osobních údajů</Link>
+      </p>
 
       <SiteFooter />
     </main>

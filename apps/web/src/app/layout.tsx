@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/archivo";
 import "./globals.css";
+import { CookieBar } from "@/components/CookieBar";
 
 export const metadata: Metadata = {
   title: { default: "iRemeslo.cz – poptávky řemeslných prací, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
@@ -20,7 +21,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="cs">
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        {children}
+        <CookieBar />
+      </body>
     </html>
   );
 }
