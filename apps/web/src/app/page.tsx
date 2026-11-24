@@ -30,7 +30,7 @@ export default async function Home() {
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-14 pt-10 sm:pt-14">
           <h1 className="max-w-3xl font-display text-[36px] font-extrabold leading-[1.08] tracking-tight sm:text-[52px]">
-            Řemeslná práce pod kontrolou
+            Najděte řemeslníka. <span className="block text-accent">Nebo novou zakázku.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-white/80 sm:text-[19px]">
             iRemeslo.cz propojuje zákazníky s řemeslníky. Zákazník zadá poptávku zdarma, řemeslník ji najde,
