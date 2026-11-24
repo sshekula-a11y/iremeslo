@@ -58,6 +58,9 @@ create table if not exists net._http_response (id bigint primary key, status_cod
 create or replace function net.http_post(url text, body jsonb default '{}', params jsonb default '{}',
   headers jsonb default '{}', timeout_milliseconds int default 5000) returns bigint
 language sql as $$ insert into net._test_requests (url, body, headers) values (url, body, headers) returning id $$;
+create or replace function net.http_get(url text, params jsonb default '{}', headers jsonb default '{}',
+  timeout_milliseconds int default 5000) returns bigint
+language sql as $$ insert into net._test_requests (url, body, headers) values (url, null, headers) returning id $$;
 
 -- Supabase Vault (trezor tajných klíčů): lokálně obyčejná tabulka se stejným rozhraním.
 create schema if not exists vault;

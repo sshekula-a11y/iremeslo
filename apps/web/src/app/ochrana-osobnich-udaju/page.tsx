@@ -44,7 +44,7 @@ export default function PrivacyPage() {
             <li><strong>Provoz vašeho účtu a aplikace</strong> – plnění smlouvy (čl. 6 odst. 1 písm. b GDPR).</li>
             <li><strong>Účetnictví a daně</strong> u faktur za předplatné – zákonná povinnost (čl. 6 odst. 1 písm. c).</li>
             <li><strong>Bezpečnost a ochrana proti zneužití</strong>, např. jedno zkušební období na IČO – oprávněný zájem (čl. 6 odst. 1 písm. f).</li>
-            <li><strong>Zveřejnění poptávky</strong> a předání kontaktu registrovaným řemeslníkům – souhlas zadavatele (čl. 6 odst. 1 písm. a).</li>
+            <li><strong>Zveřejnění poptávky</strong> a předání kontaktu ověřeným řemeslníkům – souhlas zadavatele (čl. 6 odst. 1 písm. a).</li>
             <li><strong>Novinky e-mailem</strong> – jen pokud k tomu dáte souhlas; můžete ho kdykoli odvolat.</li>
           </ul>
           <p>Údaje neprodáváme a nepoužíváme k reklamě.</p>
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
           <p>
             Když zadáte poptávku, zpracováváme její obsah (obor, popis, rozsah, obec, PSČ, termín), vaši ulici a kontakt
             (jméno, telefon, e-mail). Popis, obec, PSČ a termín jsou veřejné. <strong>Jméno, telefon, e-mail a ulici
-            zpřístupníme jen registrovaným řemeslníkům s ověřeným e-mailem</strong>, aby vás mohli kvůli poptávce kontaktovat;
+            zpřístupníme jen přihlášeným řemeslníkům s potvrzeným e-mailem a IČO ověřeným v ARES</strong>, aby vás mohli kvůli poptávce kontaktovat;
             každé zobrazení kontaktu zaznamenáváme.
           </p>
           <p>

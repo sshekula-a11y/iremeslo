@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { CATEGORY_LABEL, formatQuantity, formatTerm, timeAgo, type InquiryContact, type PublicInquiry } from "@/lib/inquiries";
 
+type ContactAccess = { email_verified: boolean; has_company: boolean; verified: boolean; pending: boolean; not_found: boolean };
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function load(id: string): Promise<PublicInquiry | null> {
@@ -22,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/poptavky/[id]">):
   return { title: `${q.title} – ${q.city}`, description: q.description.slice(0, 160) };
 }
 
-/** Detail poptávky. Kontakt se načte jen po kliknutí přihlášeného uživatele s potvrzeným e-mailem (?kontakt=1). */
+/** Detail poptávky. Kontakt se načte jen po kliknutí uživatele s potvrzeným e-mailem a firmou s IČO ověřeným v ARES (?kontakt=1). */
 export default async function InquiryPage({ params, searchParams }: PageProps<"/poptavky/[id]">) {
   const { id } = await params;
   const sp = await searchParams;
@@ -33,8 +35,9 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
   const { data: auth } = await supabase.auth.getClaims();
   const loggedIn = !!auth?.claims?.sub;
   const active = q.status === "open";
-  const { data: emailStatus } = loggedIn ? await supabase.rpc("my_email_status") : { data: null };
-  const verified = (emailStatus as { verified?: boolean } | null)?.verified !== false;
+  const { data: accessData } = loggedIn ? await supabase.rpc("my_contact_access") : { data: null };
+  const access = (accessData as ContactAccess | null) ?? null;
+  const verified = !!access?.email_verified && !!access?.verified;
 
   let contact: InquiryContact | null = null;
   let contactError: string | null = null;
@@ -90,15 +93,26 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
               </dl>
             ) : !loggedIn ? (
               <div className="mt-2">
-                <p className="text-[15px] text-muted">Jméno, telefon, e-mail a přesnou adresu vidí jen registrovaní řemeslníci. Registrace je zdarma.</p>
+                <p className="text-[15px] text-muted">Jméno, telefon, e-mail a přesnou adresu vidí jen řemeslníci a firmy s IČO ověřeným v ARES. Registrace je zdarma, IČO ověříme automaticky.</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link href={`/prihlaseni?next=${encodeURIComponent(back + "?kontakt=1")}`} className="btn-dark">Přihlásit se</Link>
                   <Link href={`/prihlaseni?rezim=registrace&next=${encodeURIComponent(back)}`} className="btn-ghost">Registrovat se zdarma</Link>
                 </div>
               </div>
-            ) : !verified ? (
+            ) : !access?.email_verified ? (
               <p className="mt-2 text-[15px] text-muted">
                 Kontakt se zobrazí po potvrzení vašeho e-mailu. Odkaz jsme vám poslali při registraci; nový si pošlete v <Link href="/app" className="font-semibold text-accent-ink underline">aplikaci</Link>.
+              </p>
+            ) : !access.has_company ? (
+              <div className="mt-2">
+                <p className="text-[15px] text-muted">Kontakt vidí jen firmy a živnostníci s IČO ověřeným v ARES. Zaregistrujte svou firmu – IČO ověříme automaticky.</p>
+                <Link href="/registrace-firmy" className="btn-dark mt-4">Zaregistrovat firmu</Link>
+              </div>
+            ) : !verified ? (
+              <p className="mt-2 text-[15px] text-muted">
+                {access.not_found && !access.pending
+                  ? <>IČO vaší firmy se v ARES nepodařilo ověřit. Zkontrolujte ho v <Link href="/app/nastaveni" className="font-semibold text-accent-ink underline">nastavení firmy</Link>, nebo napište na <a href="mailto:info@iremeslo.cz" className="font-semibold text-accent-ink underline">info@iremeslo.cz</a>.</>
+                  : <>Ověřujeme IČO vaší firmy v ARES. Obvykle to trvá do dvou minut – pak <Link href={back} className="font-semibold text-accent-ink underline">obnovte stránku</Link>.</>}
               </p>
             ) : (
               <div className="mt-2">

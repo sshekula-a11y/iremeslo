@@ -151,7 +151,11 @@ export default function TermsPage() {
               a obrázky (logo, razítko, podpis), a že tím neporušuje práva třetích osob.
             </li>
             <li>
-              Kontaktní údaje zadavatelů <strong>veřejných poptávek</strong> smí uživatel použít výhradně k odpovědi na danou
+              Kontaktní údaje zadavatelů <strong>veřejných poptávek</strong> se zobrazí jen uživateli s potvrzeným e-mailem,
+              který je členem firmy, jejíž IČO provozovatel automaticky ověřil ve veřejném registru ARES.
+            </li>
+            <li>
+              Kontaktní údaje zadavatelů veřejných poptávek smí uživatel použít výhradně k odpovědi na danou
               poptávku. Je zakázáno je dále šířit, ukládat do jiných databází nebo používat k zasílání obchodních sdělení.
               Provozovatel může uživateli, který toto pravidlo poruší, omezit přístup ke kontaktům nebo ukončit smlouvu podle čl. 9 odst. 3.
             </li>

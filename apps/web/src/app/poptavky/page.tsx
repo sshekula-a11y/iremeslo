@@ -83,7 +83,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
         )}
 
         <aside className="card flex flex-wrap items-center justify-between gap-3 border-dashed p-5">
-          <p className="text-[15px]"><strong>Jste řemeslník?</strong> Kontakty na zadavatele vidí registrovaní uživatelé iRemeslo.cz.</p>
+          <p className="text-[15px]"><strong>Jste řemeslník?</strong> Kontakty na zadavatele vidí řemeslníci a firmy s IČO ověřeným v ARES. Registrace je zdarma.</p>
           <Link href="/prihlaseni?rezim=registrace&next=/poptavky" className="btn-ghost">Registrovat se zdarma</Link>
         </aside>
       </div>

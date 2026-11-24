@@ -13,7 +13,7 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: c } = await supabase
     .from("companies")
-    .select("name, ico, dic, street, city, zip, email, phone, web, register_entry, bank_account, iban, bic, vat_payer, default_vat_rate, payment_terms_days, material_markup_pct, min_margin_pct")
+    .select("name, ico, ico_verified_at, ares_name, dic, street, city, zip, email, phone, web, register_entry, bank_account, iban, bic, vat_payer, default_vat_rate, payment_terms_days, material_markup_pct, min_margin_pct")
     .eq("id", company.id)
     .single();
   if (!c) throw new Error("Firmu se nepodařilo načíst.");
@@ -27,6 +27,17 @@ export default async function SettingsPage() {
         <h1 className="font-display text-[26px] font-extrabold">Nastavení firmy</h1>
         <p className="text-[14px] text-muted">Vaše role: {ROLE_LABELS[company.role]}. Změny platí pro nové doklady, vystavené zůstávají beze změny.</p>
       </div>
+
+      {c.ico_verified_at ? (
+        <p className="rounded-xl bg-ok-soft px-4 py-3 text-[14px] text-ok">
+          <strong>IČO {c.ico} je ověřené v ARES</strong>{c.ares_name ? ` (${c.ares_name})` : ""}. Vidíte kontakty na zadavatele poptávek.
+        </p>
+      ) : (
+        <p className="rounded-xl bg-warn-soft px-4 py-3 text-[14px] text-warn">
+          <strong>IČO {c.ico} zatím není ověřené v ARES.</strong> Ověření běží automaticky a obvykle trvá do dvou minut.
+          Pokud se nedaří, zkontrolujte IČO níže nebo napište na <a className="underline" href="mailto:info@iremeslo.cz">info@iremeslo.cz</a>.
+        </p>
+      )}
 
       <Link href="/app/nastaveni/faktura" className="card flex items-center justify-between gap-3 p-4 hover:border-ink/30">
         <span>

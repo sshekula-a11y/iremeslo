@@ -368,7 +368,7 @@ reset role;
 select t_eq((select count(*)::int from app.unverified_users where user_id = :'new_user'), 1, 'nový účet čeká na potvrzení e-mailu');
 select t_eq((select count(*)::int from app.unverified_users where user_id = '00000000-0000-0000-0000-00000000000a'), 0, 'účty založené dřív platí jako potvrzené');
 select t_eq((select count(*)::int from app.email_log where to_email = 'novy.remeslnik@example.cz' and error like 'chybí klíč%'), 1, 'bez klíče Resend se e-mail jen zapíše do logu');
-select t_eq((select count(*)::int from net._test_requests), 0, 'bez klíče se nic neodeslalo');
+select t_eq((select count(*)::int from net._test_requests where url like 'https://api.resend.com%'), 0, 'bez klíče se nic neodeslalo');
 
 insert into vault.secrets (name, secret) values ('resend_api_key', 're_test_1234567890');
 set role anon;
@@ -491,7 +491,14 @@ select t_fails(format('select inquiry_contact(%L)', :'inq'), 'uživatel s nepotv
 reset role;
 delete from app.unverified_users where user_id = :'new_user';
 set role authenticated;
-select t_text((select inquiry_contact(:'inq') ->> 'phone'), '+420 777 123 456', 'přihlášený s potvrzeným e-mailem vidí telefon');
+select t_fails(format('select inquiry_contact(%L)', :'inq'), 'uživatel bez firmy s ověřeným IČO kontakt nevidí');
+reset role;
+select set_config('app.ares', 'on', false) \g /dev/null
+update companies set ico_verified_at = now(), ares_name = 'Firma A s.r.o.' where id = :'company_a';
+select set_config('app.ares', 'off', false) \g /dev/null
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_text((select inquiry_contact(:'inq') ->> 'phone'), '+420 777 123 456', 'firma s IČO ověřeným v ARES vidí telefon');
 select t_text((select inquiry_contact(:'inq') ->> 'street'), 'Lipová 12', '… i ulici');
 select t_text((select get_inquiry(:'inq') ->> 'views'), '1', 'zobrazení kontaktu se počítá jednou na uživatele');
 select t_login('00000000-0000-0000-0000-00000000000a');
@@ -504,7 +511,7 @@ select t_eq((select (list_inquiries() ->> 'total')::int), 0, 'uzavřená poptáv
 select t_text((select get_inquiry(:'inq') ->> 'status'), 'closed', 'detail uzavřené poptávky ukáže stav');
 reset role;
 set role authenticated;
-select t_login(:'new_user');
+select t_login('00000000-0000-0000-0000-00000000000a');
 select t_fails(format('select inquiry_contact(%L)', :'inq'), 'u uzavřené poptávky se kontakt už nevydá');
 select t_login('00000000-0000-0000-0000-0000000000ad');
 select admin_set_inquiry_status(:'inq', 'hidden') \g /dev/null
@@ -532,6 +539,46 @@ reset role;
 select (submit_inquiry(jsonb_build_object('category','uklid','title','Úklid po malování','description','Jednorázový úklid bytu po malování, 60 m².',
   'city','Praha','term','asap','term_date',(current_date + 5)::text,'contact_name','Petr Test','contact_email','petr2@example.cz')) ->> 'id')::uuid as inq3 \gset
 select t_eq((select count(*)::int from app.inquiries where id = :'inq3' and term = 'asap' and term_from is null and term_date is null), 1, 'u „ihned“ se data neukládají');
+
+-- ---------- ověření IČO v ARES (014) ----------
+reset role;
+select t_eq((select count(*)::int from app.ares_checks where company_id = :'company_a'), 1, 'založení firmy zařadí ověření v ARES');
+select t_eq((select count(*)::int from app.ares_checks where company_id = :'company_b' and ico = '27074358' and request_id is not null), 1, 'dotaz jde do ARES na IČO firmy');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+update companies set ico_verified_at = now(), ares_name = 'Podvrh' where id = :'company_b';
+reset role;
+select t_eq((select count(*)::int from companies where id = :'company_b' and ico_verified_at is null and ares_name is null), 1, 'uživatel si ověření sám nenastaví');
+-- odpověď ARES: B nalezena, firma trial3 nenalezena
+insert into net._http_response (id, status_code, content)
+  select request_id, 200, '{"ico":"27074358","obchodniJmeno":"Firma B z ARES"}' from app.ares_checks where company_id = :'company_b';
+insert into net._http_response (id, status_code, content)
+  select request_id, 404, '{"kod":"NENALEZENO"}' from app.ares_checks where company_id = :'trial3';
+select app.process_ares_checks() \g /dev/null
+select t_text((select ares_name from companies where id = :'company_b'), 'Firma B z ARES', 'IČO nalezené v ARES = firma ověřená');
+select t_eq((select count(*)::int from companies where id = :'company_b' and ico_verified_at is not null), 1, '… s časem ověření');
+select t_text((select status from app.ares_checks where company_id = :'trial3'), 'not_found', 'nenalezené IČO se označí');
+select t_eq((select count(*)::int from companies where id = :'trial3' and ico_verified_at is null), 1, 'nenalezená firma ověřená není');
+-- změna IČO ověření zruší a pošle nový dotaz
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_text((select my_contact_access() ->> 'verified'), 'true', 'majitel B má přístup ke kontaktům');
+update companies set ico = '25596641' where id = :'company_b';
+reset role;
+select t_eq((select count(*)::int from companies where id = :'company_b' and ico_verified_at is null), 1, 'změna IČO zruší ověření');
+select t_text((select status || ':' || ico from app.ares_checks where company_id = :'company_b'), 'pending:25596641', 'a zařadí nové ověření');
+-- výpadek ARES: opakování
+update app.ares_checks set requested_at = now() - interval '11 minutes' where company_id = :'company_b';
+delete from net._http_response where id = (select request_id from app.ares_checks where company_id = :'company_b');
+select app.process_ares_checks() \g /dev/null
+select t_eq((select attempts from app.ares_checks where company_id = :'company_b'), 2, 'bez odpovědi se dotaz po 10 minutách zopakuje');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_fails('select admin_ares_checks()', 'stav ověření vidí jen provozovatel');
+select t_fails('select * from app.ares_checks', 'fronta ověření není přímo čitelná');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq((select (jsonb_array_length(admin_ares_checks()) > 0)::int), 1, 'provozovatel vidí stav ověření');
+reset role;
 
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

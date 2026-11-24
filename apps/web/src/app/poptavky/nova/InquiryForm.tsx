@@ -64,7 +64,7 @@ export function InquiryForm({ today }: { today: string }) {
         <div>
           <label className="label" htmlFor="street">Ulice a číslo (nepovinné)</label>
           <input className="field" id="street" name="street" autoComplete="street-address" />
-          <p className="mt-1 text-[13px] text-muted">Veřejně ukážeme jen obec a PSČ. Ulici uvidí pouze registrovaní řemeslníci.</p>
+          <p className="mt-1 text-[13px] text-muted">Veřejně ukážeme jen obec a PSČ. Ulici uvidí jen ověření řemeslníci.</p>
         </div>
         <fieldset>
           <legend className="label">Termín realizace</legend>
@@ -95,7 +95,7 @@ export function InquiryForm({ today }: { today: string }) {
       <section className="card space-y-4 p-5 sm:p-6">
         <div>
           <h2 className="font-display text-[19px] font-bold">Váš kontakt</h2>
-          <p className="text-[14px] text-muted">Uvidí ho jen registrovaní řemeslníci s ověřeným e-mailem, nikoli veřejnost.</p>
+          <p className="text-[14px] text-muted">Uvidí ho jen přihlášení řemeslníci s IČO ověřeným v ARES, nikoli veřejnost.</p>
         </div>
         <div>
           <label className="label" htmlFor="contact_name">Jméno a příjmení</label>
@@ -119,7 +119,7 @@ export function InquiryForm({ today }: { today: string }) {
         <label className="flex items-start gap-2.5 text-[14px] text-muted">
           <input type="checkbox" name="consent" className="mt-0.5 size-5 shrink-0 accent-accent" required />
           <span>
-            Souhlasím se zveřejněním poptávky a s tím, že můj kontakt uvidí registrovaní řemeslníci, kteří mě mohou kvůli poptávce kontaktovat.
+            Souhlasím se zveřejněním poptávky a s tím, že můj kontakt uvidí řemeslníci s IČO ověřeným v ARES, kteří mě mohou kvůli poptávce kontaktovat.
             Více v <a href="/ochrana-osobnich-udaju#poptavky" target="_blank" rel="noreferrer" className="font-semibold text-accent-ink underline">zásadách ochrany osobních údajů</a>.
           </span>
         </label>
