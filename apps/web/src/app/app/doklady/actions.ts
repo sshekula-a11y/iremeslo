@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { buildDdpp, buildQuote, DocumentError, toDecimalString, type InvoiceSnapshot } from "@iremeslo/core";
+import { buildDdpp, buildQuote, DocumentError, toDecimalString, type InvoiceSnapshot, type VatRate } from "@iremeslo/core";
 import { requireStaff, type ActiveCompany } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { toHundredths } from "@/lib/money";
@@ -11,6 +11,7 @@ import { loadDraft } from "@/app/app/zakazky/load";
 import { draftToJob } from "@/app/app/zakazky/summary";
 import { loadParties } from "@/lib/documents/parties";
 import { prepareAdvance, prepareInvoice, type AdvanceSpec, type Prepared } from "@/lib/documents/prepare";
+import { buildContract, buildHandover, ContractError, type ContractSnapshot } from "@/lib/documents/contract";
 
 export type CreateResult = { ok: true; id: string } | { ok: false; error: string };
 
@@ -257,4 +258,100 @@ function revalidateMoney(jobId: string | null) {
   revalidatePath("/app/faktury");
   revalidatePath("/app");
   if (jobId) revalidatePath(`/app/zakazky/${jobId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Smlouva o dílo + předávací protokol
+// ---------------------------------------------------------------------------
+
+export interface ContractForm {
+  title: string;
+  subject: string;
+  price: string;
+  dateFrom: string;
+  dateTo: string;
+  siteAddress: string;
+  advancePct: string;
+  paymentTermsDays: string;
+  warrantyMonths: string;
+  notes: string;
+}
+
+const optDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal(""));
+const contractSchema = z.object({
+  title: z.string().trim().max(200),
+  subject: z.string().trim().max(5000),
+  price: z.string().max(30),
+  dateFrom: optDate,
+  dateTo: optDate,
+  siteAddress: z.string().trim().max(300),
+  advancePct: z.string().regex(/^\d{0,3}$/, "Záloha se zadává v celých procentech."),
+  paymentTermsDays: z.string().regex(/^\d{1,3}$/, "Splatnost zadejte ve dnech."),
+  warrantyMonths: z.string().regex(/^\d{1,3}$/, "Záruku zadejte v měsících."),
+  notes: z.string().trim().max(3000),
+});
+
+/**
+ * Vystaví smlouvu o dílo (řada SOD) ze zakázky a hned k ní předávací protokol (řada PP).
+ * Logo, razítko a podpis se doplní z nastavení firmy stejně jako na nabídkách a fakturách.
+ */
+export async function createContract(jobId: string, form: ContractForm): Promise<CreateResult & { warning?: string }> {
+  const company = await requireStaff();
+  if (!uuid.safeParse(jobId).success) return { ok: false, error: "Neplatná zakázka" };
+  const parsed = contractSchema.safeParse(form);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Zkontrolujte údaje." };
+  const f = parsed.data;
+
+  const draft = await loadDraft(company.id, jobId);
+  const parties = await loadParties(company.id, draft.clientId || null);
+  let snapshot: ContractSnapshot;
+  try {
+    snapshot = buildContract({
+      input: {
+        title: f.title,
+        subject: f.subject,
+        priceNet: toHundredths(f.price),
+        dateFrom: f.dateFrom || null,
+        dateTo: f.dateTo || null,
+        siteAddress: f.siteAddress || null,
+        advancePct: Number(f.advancePct || "0"),
+        paymentTermsDays: Number(f.paymentTermsDays),
+        warrantyMonths: Number(f.warrantyMonths),
+        notes: f.notes,
+      },
+      supplier: parties.supplier,
+      customer: parties.customer,
+      vatPayer: parties.vatPayer,
+      vatMode: draft.vatMode,
+      vatRate: draft.vatRate as VatRate,
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof ContractError ? e.message : "Smlouvu se nepodařilo připravit." };
+  }
+
+  const price = toDecimalString(snapshot.vatMode === "standard" ? snapshot.gross : snapshot.priceNet);
+  const contract = await insertAndIssue(company, {
+    job_id: jobId,
+    client_id: draft.clientId || null,
+    type: "contract",
+    vat_mode: snapshot.vatMode,
+    total_due: price,
+    snapshot,
+  });
+  if (!contract.ok) return contract;
+  revalidatePath(`/app/zakazky/${jobId}`);
+
+  const supabase = await createClient();
+  const { data: issued } = await supabase.from("documents").select("number").eq("company_id", company.id).eq("id", contract.id).single();
+  const handover = await insertAndIssue(company, {
+    job_id: jobId,
+    client_id: draft.clientId || null,
+    type: "handover",
+    vat_mode: snapshot.vatMode,
+    total_due: price,
+    related_document_id: contract.id,
+    snapshot: buildHandover(snapshot, issued?.number ?? ""),
+  });
+  if (!handover.ok) return { ...contract, warning: "Smlouva je vystavená, ale předávací protokol se nepodařilo vytvořit." };
+  return contract;
 }

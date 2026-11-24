@@ -27,12 +27,13 @@ export default async function JobPage({ params }: PageProps<"/app/zakazky/[id]">
       <section className="card mb-5" aria-label="Doklady a fakturace">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5">
           <h2 className="text-[14px] font-semibold text-muted">Doklady a fakturace</h2>
-          {!invoiced && (
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/app/doklady/nova?zakazka=${id}&typ=smlouva`} className="btn-ghost min-h-9 px-3 text-[14px]">Smlouva o dílo</Link>
+            {!invoiced && <>
               <Link href={`/app/doklady/nova?zakazka=${id}&typ=zaloha`} className="btn-ghost min-h-9 px-3 text-[14px]">Vystavit zálohu</Link>
               <Link href={`/app/doklady/nova?zakazka=${id}&typ=faktura`} className="btn-dark min-h-9 px-3 text-[14px]">Vystavit fakturu</Link>
-            </div>
-          )}
+            </>}
+          </div>
         </div>
         {documents.length > 0 ? (
           <ul className="divide-y divide-line">
@@ -49,7 +50,7 @@ export default async function JobPage({ params }: PageProps<"/app/zakazky/[id]">
             ))}
           </ul>
         ) : (
-          <p className="px-4 py-3 text-[14px] text-muted">Zatím zde nejsou žádné doklady. Nabídku vystavíte tlačítkem u souhrnu, fakturu a zálohu tlačítky výše. Do dokladu se převezme uložený stav zakázky.</p>
+          <p className="px-4 py-3 text-[14px] text-muted">Zatím zde nejsou žádné doklady. Nabídku vystavíte tlačítkem u souhrnu; smlouvu o dílo (s předávacím protokolem), zálohu a fakturu tlačítky výše. Do dokladu se převezme uložený stav zakázky.</p>
         )}
       </section>
 

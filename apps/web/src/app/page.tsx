@@ -46,10 +46,9 @@ export default async function Home() {
               <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Pro řemeslníky</p>
               <h2 id="jsem" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Jsem řemeslník</h2>
               <p className="mt-2 text-[15px] text-white/80">
-                iRemeslo především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury
-                i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
+                iRemeslo především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury,
+                smlouvy o dílo, předávací protokoly i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
               </p>
-              <p className="mt-2 text-[13px] text-white/60">Smlouvy o dílo a předávací protokoly připravujeme.</p>
               <p className="mt-3 text-[13px] font-semibold text-accent">30 dní zdarma · bez platební karty</p>
               <div className="mt-auto flex flex-wrap gap-3 pt-5">
                 <Link href="/prihlaseni?rezim=registrace" className="btn bg-white text-ink hover:bg-white/90">Vyzkoušet zdarma</Link>

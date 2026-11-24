@@ -2,7 +2,7 @@
 export type DocState = "paid" | "overdue" | "unpaid" | "info";
 
 export function docState(type: string, status: string, dueDate: string | null, today: string): DocState {
-  if (type === "ddpp" || type === "quote") return "info";
+  if (!["invoice", "invoice_non_payer", "advance"].includes(type)) return "info";
   if (status === "paid") return "paid";
   if (dueDate && dueDate < today) return "overdue";
   return "unpaid";

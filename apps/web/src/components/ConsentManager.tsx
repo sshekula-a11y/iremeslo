@@ -14,7 +14,9 @@ export function ConsentManager() {
   const onServer = stored === SERVER;
   const consent: Consent | null = onServer ? null : (stored as Consent | null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const admin = path.startsWith("/ssh");
+  // V aplikaci a administraci lištu neukazujeme: zakrývala by tlačítka a spodní menu. Rozhoduje se na veřejném webu;
+  // bez souhlasu se GTM nenačte nikde.
+  const admin = path.startsWith("/ssh") || path.startsWith("/app");
   const trackingAllowed = !NO_TRACKING_PATHS.some((p) => path === p || path.startsWith(p + "/"));
 
   useEffect(() => {

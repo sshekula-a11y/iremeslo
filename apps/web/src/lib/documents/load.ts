@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { buildSpayd, variableSymbol, type InvoiceSnapshot, type QuoteSnapshot } from "@iremeslo/core";
 import { createClient } from "@/lib/supabase/server";
 import { invoiceView, quoteView, type DocumentView } from "./view";
+import { contractView, handoverView, type ContractSnapshot, type HandoverSnapshot } from "./contract";
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
   quote: "Cenová nabídka",
@@ -25,6 +26,7 @@ export const DOC_STATUS_LABELS: Record<string, string> = {
 };
 
 export const INVOICE_TYPES = ["invoice", "invoice_non_payer", "advance", "ddpp"] as const;
+export const AGREEMENT_TYPES = ["contract", "handover"] as const;
 
 export interface RelatedDocument { id: string; type: string; number: string; status: string }
 
@@ -37,7 +39,7 @@ export interface LoadedDocument {
   issueDate: string | null;
   dueDate: string | null;
   totalDue: string;
-  snapshot: QuoteSnapshot | InvoiceSnapshot;
+  snapshot: QuoteSnapshot | InvoiceSnapshot | ContractSnapshot | HandoverSnapshot;
   view: DocumentView;
   payments: { paid_on: string; amount: string; method: string }[];
   /** záloha → její DDPP; DDPP → jeho záloha; záloha → faktura, na které je odečtená */
@@ -76,7 +78,8 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
   ]);
   if (!d || !d.number) notFound();
   const isQuote = d.type === "quote";
-  if (!isQuote && !(INVOICE_TYPES as readonly string[]).includes(d.type)) notFound();
+  const isAgreement = (AGREEMENT_TYPES as readonly string[]).includes(d.type);
+  if (!isQuote && !isAgreement && !(INVOICE_TYPES as readonly string[]).includes(d.type)) notFound();
 
   // Obrázky leží v soukromém úložišti; odkaz platí hodinu (na náhled i vytvoření PDF stačí).
   const paths = [firm?.logo_path, firm?.stamp_path, firm?.signature_path].filter((p): p is string => !!p);
@@ -101,6 +104,10 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
   let view: DocumentView;
   if (isQuote) {
     view = quoteView(d.snapshot as QuoteSnapshot, meta);
+  } else if (d.type === "contract") {
+    view = contractView(d.snapshot as ContractSnapshot, meta);
+  } else if (d.type === "handover") {
+    view = handoverView(d.snapshot as HandoverSnapshot, meta);
   } else {
     const snap = d.snapshot as InvoiceSnapshot;
     view = invoiceView(snap, { ...meta, qrDataUrl: await qrPayment(snap, d.number, d.due_date) });
@@ -120,6 +127,10 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
       for (const r of invs ?? []) related.push(r as RelatedDocument);
     }
   }
+  if (d.type === "contract") {
+    const { data: pp } = await supabase.from("documents").select("id, type, number, status").eq("company_id", companyId).eq("related_document_id", d.id).not("number", "is", null);
+    for (const r of pp ?? []) related.push(r as RelatedDocument);
+  }
   if (d.related_document_id) {
     const { data: adv } = await supabase.from("documents").select("id, type, number, status").eq("company_id", companyId).eq("id", d.related_document_id).single();
     if (adv) related.push(adv as RelatedDocument);
@@ -134,7 +145,7 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
     issueDate: d.issue_date,
     dueDate: d.due_date,
     totalDue: String(d.total_due),
-    snapshot: d.snapshot as QuoteSnapshot | InvoiceSnapshot,
+    snapshot: d.snapshot as LoadedDocument["snapshot"],
     view,
     payments: ((d as unknown as { payments: LoadedDocument["payments"] }).payments ?? []).map((p) => ({ ...p, amount: String(p.amount) })),
     related,

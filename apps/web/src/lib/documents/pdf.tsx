@@ -1,6 +1,6 @@
 /* PDF dokladu. Vytváří se v prohlížeči (načítá se až po kliknutí), server tím nezatěžujeme. */
 import { Document, Font, Image, Page, StyleSheet, Text, View, pdf } from "@react-pdf/renderer";
-import type { DocumentView } from "./view";
+import { toRoman, type DocumentView } from "./view";
 
 let fontsReady = false;
 function registerFonts() {
@@ -77,12 +77,22 @@ const s = StyleSheet.create({
   signImage: { maxHeight: 64, maxWidth: 120, objectFit: "contain" },
   signLine: { width: "100%", borderTopWidth: 1, borderTopColor: LINE, marginTop: 4, paddingTop: 4, textAlign: "center", color: MUTED, fontSize: 7.5 },
   note: { color: INK },
+  article: { marginBottom: 9 },
+  articleTitle: { fontSize: 10, fontWeight: 700, marginBottom: 3 },
+  articleText: { marginBottom: 3 },
+  blankLabel: { fontSize: 7.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 8 },
+  blankLine: { height: 18, borderBottomWidth: 1, borderBottomColor: "#9aa5b4", borderBottomStyle: "dotted" },
+  signs: { flexDirection: "row", gap: 40, marginTop: 26 },
+  signCol: { flex: 1, alignItems: "center" },
+  place: { marginTop: 18 },
   footer: { position: "absolute", left: 40, right: 40, bottom: 22, flexDirection: "row", justifyContent: "space-between", color: MUTED, fontSize: 7.5, borderTopWidth: 1, borderTopColor: LINE, paddingTop: 6 },
 });
 
 export function DocumentPdf({ v }: { v: DocumentView }) {
   const grand = v.totals.find((t) => t.strong);
   const rest = v.totals.filter((t) => !t.strong);
+  const [supplierLabel, customerLabel] = v.partyLabels ?? ["Dodavatel", "Odběratel"];
+  const hasItems = v.rows.length > 0 || v.totals.length > 0;
   return (
     <Document title={`${v.heading} ${v.number}`} author={v.supplier.name} creator="iŘemeslo.cz" producer="iŘemeslo.cz" language="cs">
       <Page size="A4" style={s.page}>
@@ -97,8 +107,8 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
         </View>
 
         <View style={s.parties}>
-          <PartyBox label="Dodavatel" party={v.supplier} />
-          {v.customer ? <PartyBox label="Odběratel" party={v.customer} /> : <View style={[s.party, { borderStyle: "dashed" }]} />}
+          <PartyBox label={supplierLabel} party={v.supplier} />
+          {v.customer ? <PartyBox label={customerLabel} party={v.customer} /> : <View style={[s.party, { borderStyle: "dashed" }]} />}
         </View>
 
         <View style={s.meta}>
@@ -111,6 +121,22 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
         </View>
 
         <Text style={s.title}>{v.title}</Text>
+
+        {v.articles?.map((a, i) => (
+          <View key={i} style={s.article}>
+            <Text style={s.articleTitle} minPresenceAhead={30}>{toRoman(i + 1)}. {a.title}</Text>
+            {a.paragraphs.map((p, j) => <Text key={j} style={s.articleText}>{p}</Text>)}
+          </View>
+        ))}
+
+        {v.blanks?.map((b) => (
+          <View key={b.label} wrap={false}>
+            <Text style={s.blankLabel}>{b.label}</Text>
+            {Array.from({ length: b.lines }, (_, k) => <View key={k} style={s.blankLine} />)}
+          </View>
+        ))}
+
+        {hasItems && <>
         <View style={[s.th, { backgroundColor: v.accent }]} fixed>
           {(["description", "qty", "unit", "unitPrice", "total"] as const).map((k) => (
             <Text key={k} style={[s.thText, col(k), { color: v.accentText }]}>{v.columns[k]}</Text>
@@ -186,13 +212,36 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
           </View>
         )}
 
+        </>}
+
         {v.notes.length > 0 && (
           <View style={s.notes} wrap={false}>
             {v.notes.map((n, i) => <Text key={i} style={s.note}>{n}</Text>)}
           </View>
         )}
 
-        {(v.stampUrl || v.signatureUrl) && (
+        {v.signatures && (
+          <View wrap={false}>
+            {v.signatures.place && <Text style={s.place}>V ……………………… dne ………………</Text>}
+            <View style={s.signs}>
+              <View style={s.signCol}>
+                <View style={s.signImages}>
+                  {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+                  {v.stampUrl && <Image src={v.stampUrl} style={s.signImage} />}
+                  {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+                  {v.signatureUrl && <Image src={v.signatureUrl} style={s.signImage} />}
+                </View>
+                <Text style={s.signLine}>{v.signatures.left}{"\n"}{v.supplier.name}</Text>
+              </View>
+              <View style={s.signCol}>
+                <View style={s.signImages} />
+                <Text style={s.signLine}>{v.signatures.right}{"\n"}{v.customer?.name ?? ""}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {!v.signatures && (v.stampUrl || v.signatureUrl) && (
           <View style={s.sign} wrap={false}>
             <View style={s.signImages}>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}

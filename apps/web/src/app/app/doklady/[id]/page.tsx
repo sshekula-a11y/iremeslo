@@ -14,6 +14,7 @@ export const metadata: Metadata = { title: "Doklad" };
 
 const FILE_PREFIX: Record<string, string> = {
   quote: "Nabidka", invoice: "Faktura", invoice_non_payer: "Faktura", advance: "Zalohova-faktura", ddpp: "Danovy-doklad",
+  contract: "Smlouva-o-dilo", handover: "Predavaci-protokol",
 };
 const METHOD_LABELS: Record<string, string> = { bank: "převodem", cash: "hotově", card: "kartou", other: "jinak" };
 
@@ -99,7 +100,7 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
               <li key={r.id}>
                 <Link href={`/app/doklady/${r.id}`} className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-paper">
                   <span className="font-semibold">{DOC_TYPE_LABELS[r.type] ?? r.type} <span className="num">{r.number}</span></span>
-                  <span className="text-[13px] text-muted">{r.type === "invoice" || r.type === "invoice_non_payer" ? "záloha je na ní odečtená" : DOC_STATUS_LABELS[r.status]}</span>
+                  <span className="text-[13px] text-muted">{r.type === "invoice" || r.type === "invoice_non_payer" ? "záloha je na ní odečtená" : r.type === "handover" ? "k podpisu při předání díla" : r.type === "contract" ? "smlouva, ke které protokol patří" : DOC_STATUS_LABELS[r.status]}</span>
                 </Link>
               </li>
             ))}
@@ -110,7 +111,11 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
       <p className="text-[13px] text-muted">
         {doc.type === "quote"
           ? "Vystavený doklad už nejde měnit. Když se cena změní, upravte zakázku a vystavte novou nabídku."
-          : "Vystavený doklad už nejde měnit ani smazat."}
+          : doc.type === "contract"
+            ? "Vystavená smlouva už nejde měnit. Stáhněte PDF, vytiskněte ho dvakrát a nechte podepsat. Změny řešte dodatkem nebo novou smlouvou."
+            : doc.type === "handover"
+              ? "Protokol vytiskněte a při předání díla vyplňte a podepište s objednatelem."
+              : "Vystavený doklad už nejde měnit ani smazat."}
       </p>
       <DocumentPaper v={doc.view} />
     </div>

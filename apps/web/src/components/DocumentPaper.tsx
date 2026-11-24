@@ -1,9 +1,11 @@
-import type { DocumentView } from "@/lib/documents/view";
+import { toRoman, type DocumentView } from "@/lib/documents/view";
 
 /** Náhled dokladu na obrazovce – stejný obsah a rozvržení jako PDF. */
 export function DocumentPaper({ v }: { v: DocumentView }) {
   const grand = v.totals.find((t) => t.strong);
   const rest = v.totals.filter((t) => !t.strong);
+  const [supplierLabel, customerLabel] = v.partyLabels ?? ["Dodavatel", "Odběratel"];
+  const hasItems = v.rows.length > 0 || v.totals.length > 0;
   return (
     <article className="card overflow-hidden text-[14px]" aria-label={`${v.heading} ${v.number}`}>
       <div className="h-1.5" style={{ background: v.accent }} />
@@ -22,8 +24,8 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
         </header>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Party label="Dodavatel" party={v.supplier} />
-          {v.customer ? <Party label="Odběratel" party={v.customer} /> : <div className="hidden rounded-xl border border-dashed border-line sm:block" />}
+          <Party label={supplierLabel} party={v.supplier} />
+          {v.customer ? <Party label={customerLabel} party={v.customer} /> : <div className="hidden rounded-xl border border-dashed border-line sm:block" />}
         </div>
 
         <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
@@ -35,8 +37,32 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
           ))}
         </dl>
 
+        <h2 className="text-[16px] font-bold">{v.title}</h2>
+
+        {v.articles && (
+          <ol className="space-y-4">
+            {v.articles.map((a, i) => (
+              <li key={i}>
+                <h3 className="font-bold">{toRoman(i + 1)}. {a.title}</h3>
+                {a.paragraphs.map((p, j) => <p key={j} className="mt-1 whitespace-pre-line leading-relaxed">{p}</p>)}
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {v.blanks && (
+          <div className="space-y-3">
+            {v.blanks.map((b) => (
+              <div key={b.label}>
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">{b.label}</p>
+                {Array.from({ length: b.lines }, (_, k) => <div key={k} className="h-7 border-b border-dotted border-ink/40" />)}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasItems && <>
         <div>
-          <h2 className="mb-2 text-[16px] font-bold">{v.title}</h2>
           {/* Počítač: tabulka */}
           <table className="hidden w-full sm:table">
             <thead>
@@ -138,8 +164,30 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
           </div>
         )}
 
+        </>}
+
         {v.notes.length > 0 && <div className="space-y-1">{v.notes.map((n, i) => <p key={i} className="whitespace-pre-line">{n}</p>)}</div>}
-        {(v.stampUrl || v.signatureUrl) && (
+        {v.signatures && (
+          <div className="pt-2">
+            {v.signatures.place && <p className="mb-6 text-[13px]">V ……………………… dne ………………</p>}
+            <div className="grid grid-cols-2 gap-6 sm:gap-12">
+              <div className="text-center">
+                <div className="flex h-20 items-end justify-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {v.stampUrl && <img src={v.stampUrl} alt="Razítko" className="max-h-20 max-w-28 object-contain" />}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {v.signatureUrl && <img src={v.signatureUrl} alt="Podpis" className="max-h-20 max-w-28 object-contain" />}
+                </div>
+                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.left}<br />{v.supplier.name}</p>
+              </div>
+              <div className="text-center">
+                <div className="h-20" />
+                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.right}<br />{v.customer?.name}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {!v.signatures && (v.stampUrl || v.signatureUrl) && (
           <div className="ml-auto w-56 text-center">
             <div className="flex h-20 items-end justify-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -165,3 +213,4 @@ function Party({ label, party }: { label: string; party: { name: string; lines: 
     </div>
   );
 }
+

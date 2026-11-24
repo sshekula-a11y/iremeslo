@@ -28,6 +28,14 @@ export interface DocumentView {
   payment: { lines: { label: string; value: string }[]; amount: string; qrDataUrl: string | null } | null;
   notes: string[];
   footer: string;
+  /** popisky stran místo „Dodavatel / Odběratel“ (smlouva: Zhotovitel / Objednatel) */
+  partyLabels?: [string, string];
+  /** články textu (smlouva o dílo, předávací protokol) – místo tabulky položek */
+  articles?: { title: string; paragraphs: string[] }[];
+  /** prázdné řádky k ručnímu vyplnění (předávací protokol) */
+  blanks?: { label: string; lines: number }[];
+  /** podpisy obou stran; vlevo razítko a podpis dodavatele z nastavení */
+  signatures?: { left: string; right: string; place: boolean };
 }
 
 export interface DocumentMeta {
@@ -207,4 +215,12 @@ export function invoiceView(s: InvoiceSnapshot, m: DocumentMeta): DocumentView {
     notes: s.notes,
     footer: s.kind === "ddpp" ? "Ceny jsou v Kč." : `Při platbě uveďte variabilní symbol ${vs}. Ceny jsou v Kč.`,
   };
+}
+
+/** 1 → I, 4 → IV (články smlouvy) */
+export function toRoman(n: number): string {
+  const map: [number, string][] = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let out = "";
+  for (const [v, r] of map) while (n >= v) { out += r; n -= v; }
+  return out;
 }
