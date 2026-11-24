@@ -17,7 +17,8 @@ const schema = z.object({
   city: z.string().trim().min(2, "Vyplňte obec.").max(100),
   zip: z.string().trim().refine((v) => v === "" || /^\d{3} ?\d{2}$/.test(v), "PSČ má tvar 602 00."),
   street: z.string().trim().max(200),
-  term: z.enum(["asap", "month", "quarter", "flexible", "date"]),
+  term: z.enum(["flexible", "asap", "date"]),
+  term_from: z.string().trim(),
   term_date: z.string().trim(),
   contact_name: z.string().trim().min(2, "Vyplňte své jméno.").max(100),
   contact_phone: z.string().trim().refine((v) => v === "" || /^\+?[0-9 ]{9,20}$/.test(v), "Telefon zadejte jako 777 123 456 nebo +420 777 123 456."),
@@ -33,8 +34,11 @@ export async function submitInquiry(_prev: InquiryState, form: FormData): Promis
   const p = schema.safeParse(raw);
   if (!p.success) return { error: p.error.issues[0]?.message ?? "Zkontrolujte údaje." };
   const v = p.data;
-  if (v.term === "date" && (!v.term_date || v.term_date < new Date().toISOString().slice(0, 10))) {
-    return { error: "Zadejte termín v budoucnosti." };
+  if (v.term === "date") {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!v.term_from && !v.term_date) return { error: "Zadejte datum zahájení nebo dokončení." };
+    if ((v.term_from && v.term_from < today) || (v.term_date && v.term_date < today)) return { error: "Zadejte termín v budoucnosti." };
+    if (v.term_from && v.term_date && v.term_date < v.term_from) return { error: "Dokončení nesmí být před zahájením." };
   }
   if (v.unit && v.unit !== "pausal" && !v.quantity) return { error: "K jednotce doplňte rozsah, např. 500 m²." };
 

@@ -15,7 +15,7 @@ export function InquiryCard({ q }: { q: PublicInquiry }) {
       <dl className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-1 text-[14px]">
         {qty && <div className="flex gap-1"><dt className="sr-only">Rozsah</dt><dd className="num font-semibold">{qty}</dd></div>}
         <div className="flex gap-1"><dt className="sr-only">Místo</dt><dd>📍 {q.city}</dd></div>
-        <div className="flex gap-1"><dt className="sr-only">Termín</dt><dd className="text-muted">{formatTerm(q.term, q.term_date)}</dd></div>
+        <div className="flex gap-1"><dt className="sr-only">Termín</dt><dd className="text-muted">{formatTerm(q.term, q.term_date, q.term_from)}</dd></div>
       </dl>
     </Link>
   );
@@ -33,7 +33,7 @@ export function InquiryRow({ q }: { q: PublicInquiry }) {
           <span className="mt-0.5 block text-[13px] leading-snug text-muted">
             <span className="sm:hidden">{ago} · </span>
             {q.city}{qty ? <> · <span className="num">{qty}</span></> : null}
-            <span className="hidden sm:inline"> · {CATEGORY_LABEL[q.category] ?? q.category} · {formatTerm(q.term, q.term_date)}</span>
+            <span className="hidden sm:inline"> · {CATEGORY_LABEL[q.category] ?? q.category} · {formatTerm(q.term, q.term_date, q.term_from)}</span>
           </span>
         </span>
         <span className="hidden shrink-0 whitespace-nowrap pt-0.5 text-[12px] text-muted sm:block">{ago}</span>

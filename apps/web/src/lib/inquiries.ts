@@ -28,13 +28,15 @@ export const INQUIRY_UNITS = [
 ] as const;
 export const UNIT_LABEL: Record<string, string> = Object.fromEntries(INQUIRY_UNITS);
 
+/** Volby termínu ve formuláři poptávky. */
 export const INQUIRY_TERMS = [
-  ["asap", "Co nejdříve"],
-  ["month", "Do měsíce"],
-  ["quarter", "Do 3 měsíců"],
-  ["flexible", "Termín je flexibilní"],
-  ["date", "Nejpozději do data"],
+  ["flexible", "Dohodou"],
+  ["asap", "Ihned"],
+  ["date", "Zadat vlastní"],
 ] as const;
+
+/** Popisky všech uložených hodnot (month a quarter mají starší poptávky). */
+const TERM_LABEL: Record<string, string> = { flexible: "Dohodou", asap: "Ihned", month: "Do měsíce", quarter: "Do 3 měsíců" };
 
 export interface PublicInquiry {
   id: string;
@@ -48,6 +50,7 @@ export interface PublicInquiry {
   city: string;
   zip: string | null;
   term: string;
+  term_from?: string | null;
   term_date: string | null;
   expires_at: string;
   views: number;
@@ -70,9 +73,14 @@ export function formatQuantity(q: number | null, unit: string | null): string | 
   return unit ? `${n} ${UNIT_LABEL[unit] ?? unit}` : n;
 }
 
-export function formatTerm(term: string, date: string | null): string {
-  if (term === "date" && date) return `Nejpozději do ${formatDate(date)}`;
-  return (Object.fromEntries(INQUIRY_TERMS) as Record<string, string>)[term] ?? "";
+/** „Dohodou“, „Ihned“, „1. 12. 2026 – 15. 12. 2026“, „od 1. 12. 2026“, „do 15. 12. 2026“ */
+export function formatTerm(term: string, date: string | null, from?: string | null): string {
+  if (term === "date") {
+    if (from && date) return `${formatDate(from)} – ${formatDate(date)}`;
+    if (from) return `od ${formatDate(from)}`;
+    if (date) return `do ${formatDate(date)}`;
+  }
+  return TERM_LABEL[term] ?? "";
 }
 
 /** „před 3 hodinami“, „včera“, „před 5 dny“ */

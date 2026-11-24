@@ -7,6 +7,7 @@ import { submitInquiry, type InquiryState } from "./actions";
 export function InquiryForm({ today }: { today: string }) {
   const [state, action, pending] = useActionState<InquiryState, FormData>(submitInquiry, {});
   const [term, setTerm] = useState("flexible");
+  const [termFrom, setTermFrom] = useState("");
 
   return (
     // Odeslání bez resetu formuláře: při chybě zůstane vše vyplněné.
@@ -65,16 +66,28 @@ export function InquiryForm({ today }: { today: string }) {
           <input className="field" id="street" name="street" autoComplete="street-address" />
           <p className="mt-1 text-[13px] text-muted">Veřejně ukážeme jen obec a PSČ. Ulici uvidí pouze registrovaní řemeslníci.</p>
         </div>
-        <div>
-          <label className="label" htmlFor="term">Termín</label>
-          <select className="field" id="term" name="term" value={term} onChange={(e) => setTerm(e.target.value)}>
-            {INQUIRY_TERMS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-        </div>
+        <fieldset>
+          <legend className="label">Termín realizace</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {INQUIRY_TERMS.map(([v, l]) => (
+              <label key={v} className="btn border border-line bg-white px-2 text-center has-checked:border-ink has-checked:bg-ink has-checked:text-white">
+                <input type="radio" name="term" value={v} checked={term === v} onChange={() => setTerm(v)} className="sr-only" />
+                {l}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         {term === "date" && (
-          <div>
-            <label className="label" htmlFor="term_date">Nejpozději do</label>
-            <input className="field num" id="term_date" name="term_date" type="date" min={today} required />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label" htmlFor="term_from">Zahájení</label>
+              <input className="field num" id="term_from" name="term_from" type="date" min={today} value={termFrom} onChange={(e) => setTermFrom(e.target.value)} />
+            </div>
+            <div>
+              <label className="label" htmlFor="term_date">Dokončení</label>
+              <input className="field num" id="term_date" name="term_date" type="date" min={termFrom || today} />
+            </div>
+            <p className="col-span-2 text-[13px] text-muted">Stačí vyplnit jedno z dat.</p>
           </div>
         )}
       </section>

@@ -69,7 +69,7 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
           <dl className="mt-4 grid gap-3 rounded-xl bg-paper p-4 text-[15px] sm:grid-cols-3">
             {qty && <div><dt className="text-[13px] text-muted">Rozsah</dt><dd className="num font-semibold">{qty}</dd></div>}
             <div><dt className="text-[13px] text-muted">Místo</dt><dd className="font-semibold">{q.city}{q.zip ? `, ${q.zip}` : ""}</dd></div>
-            <div><dt className="text-[13px] text-muted">Termín</dt><dd className="font-semibold">{formatTerm(q.term, q.term_date)}</dd></div>
+            <div><dt className="text-[13px] text-muted">Termín</dt><dd className="font-semibold">{formatTerm(q.term, q.term_date, q.term_from)}</dd></div>
           </dl>
 
           <h2 className="mt-5 font-display text-[17px] font-bold">Popis</h2>
