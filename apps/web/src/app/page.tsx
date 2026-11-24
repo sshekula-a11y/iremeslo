@@ -22,6 +22,9 @@ export default async function Home() {
       <SiteHeader />
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-14 pt-10 sm:pt-14">
+          <p className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[14px] font-semibold text-accent sm:text-[15px]">
+            iRemeslo.cz je virtuální kancelář
+          </p>
           <h1 className="max-w-3xl font-display text-[36px] font-extrabold leading-[1.08] tracking-tight sm:text-[52px]">
             Najděte řemeslníka. <span className="block text-accent">Nebo novou zakázku.</span>
           </h1>
@@ -46,7 +49,7 @@ export default async function Home() {
               <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Pro řemeslníky</p>
               <h2 id="jsem" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Jsem řemeslník</h2>
               <p className="mt-2 text-[15px] text-white/80">
-                iRemeslo především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury,
+                iRemeslo.cz je virtuální kancelář, která především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury,
                 smlouvy o dílo, předávací protokoly i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
               </p>
               <p className="mt-3 text-[13px] font-semibold text-accent">30 dní zdarma · bez platební karty</p>

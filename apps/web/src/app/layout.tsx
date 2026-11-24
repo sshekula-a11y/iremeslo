@@ -6,9 +6,9 @@ import "./globals.css";
 import { ConsentManager } from "@/components/ConsentManager";
 
 export const metadata: Metadata = {
-  title: { default: "iRemeslo.cz – poptávky řemeslných prací, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
+  title: { default: "iRemeslo.cz je virtuální kancelář pro řemeslníky a poptávky řemeslných prací", template: "%s · iRemeslo.cz" },
   description:
-    "Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Řemeslníkům iRemeslo.cz přináší nové zakázky, cenové nabídky a faktury z telefonu a přehled o zisku.",
+    "iRemeslo.cz je virtuální kancelář pro řemeslníky: zakázky, cenové nabídky, faktury, smlouvy o dílo a nové poptávky na jednom místě. Zákazníci zadávají poptávky zdarma a bez registrace.",
   applicationName: "iRemeslo.cz",
 };
 
