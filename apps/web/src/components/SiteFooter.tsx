@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OPERATOR } from "@/lib/operator";
+import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
 /** Patička veřejného webu: provozovatel, obchodní podmínky, GDPR a kontakt. */
 export function SiteFooter() {
@@ -11,6 +12,7 @@ export function SiteFooter() {
           <Link href="/jak-to-funguje" className="hover:text-ink">Jak to funguje</Link>
           <Link href="/obchodni-podminky" className="hover:text-ink">Obchodní podmínky</Link>
           <Link href="/ochrana-osobnich-udaju" className="hover:text-ink">Ochrana osobních údajů (GDPR)</Link>
+          <CookieSettingsLink className="hover:text-ink" />
           <a href={`mailto:${OPERATOR.email}`} className="hover:text-ink">{OPERATOR.email}</a>
         </nav>
       </div>

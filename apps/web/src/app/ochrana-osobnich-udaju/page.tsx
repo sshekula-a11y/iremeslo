@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { OPERATOR } from "@/lib/operator";
+import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
 export const metadata: Metadata = {
   title: "Ochrana osobních údajů (GDPR)",
@@ -34,7 +35,7 @@ export default function PrivacyPage() {
             <li><strong>Účet:</strong> e-mail a heslo (ukládáme jen jeho zašifrovanou podobu, samotné heslo neznáme).</li>
             <li><strong>Firma:</strong> název, IČO, DIČ, adresa, kontakty, bankovní účet, logo, razítko a podpis.</li>
             <li><strong>Data, která do aplikace zadáte:</strong> zakázky, zákazníci, zaměstnanci a jejich sazby, ceník, nabídky a faktury.</li>
-            <li><strong>Technické údaje:</strong> přihlašovací cookie, čas posledního přihlášení a záznamy o změnách dokladů.</li>
+            <li><strong>Technické údaje:</strong> přihlašovací cookie, čas posledního přihlášení a záznamy o změnách dokladů; s vaším souhlasem také údaje o návštěvě webu z analytických a reklamních cookies.</li>
           </ul>
         </Part>
 
@@ -76,6 +77,7 @@ export default function PrivacyPage() {
             <li><strong>Supabase</strong> – databáze, přihlašování a úložiště souborů; data jsou uložena v EU (Frankfurt).</li>
             <li><strong>Vercel</strong> – provoz webu a aplikace.</li>
             <li><strong>Resend</strong> – odesílání e-mailů z platformy (např. potvrzení e-mailu); servery v EU (Irsko).</li>
+            <li><strong>Google, Seznam.cz a Meta</strong> – měření návštěvnosti a reklamy, jen pokud s cookies souhlasíte (viz Cookies).</li>
             <li><strong>ARES</strong> (Ministerstvo financí) – při zadání IČO se z veřejného rejstříku načtou údaje o firmě.</li>
           </ul>
           <p>
@@ -93,10 +95,30 @@ export default function PrivacyPage() {
         </Part>
 
         <Part id="cookies" title="Cookies">
+          <ul className="list-disc space-y-1.5 pl-5">
+            <li>
+              <strong>Nezbytné</strong> – přihlášení, vybraná firma v aplikaci a uložení vaší volby cookies. Bez nich web nefunguje,
+              souhlas se k nim nevyžaduje (§ 89 odst. 3 zákona č. 127/2005 Sb.).
+            </li>
+            <li>
+              <strong>Analytické</strong> – Google Analytics (Google Ireland Ltd.) měří návštěvnost a používání webu. Jen s vaším souhlasem.
+            </li>
+            <li>
+              <strong>Reklamní</strong> – Google Ads (Google Ireland Ltd.), Sklik (Seznam.cz, a.s.) a Meta (Meta Platforms Ireland Ltd.)
+              měří výsledky reklamy a pomáhají s jejím cílením. Jen s vaším souhlasem.
+            </li>
+          </ul>
           <p>
-            Používáme jen nezbytné cookies: pro přihlášení a pro to, kterou firmu máte v aplikaci vybranou.
-            Nepoužíváme reklamní ani analytické cookies, proto se vás na souhlas s cookies neptáme
-            (§ 89 odst. 3 zákona č. 127/2005 Sb.). To, že jste informační lištu o cookies zavřeli, si pamatuje váš prohlížeč.
+            Analytické a reklamní značky načítáme přes Google Tag Manager až poté, co souhlas udělíte. Právním základem je váš
+            souhlas (čl. 6 odst. 1 písm. a GDPR). Kontaktní údaje ani obsah vašich zakázek, dokladů a poptávek těmto systémům
+            neposíláme; na stránkách s tajnými odkazy (správa poptávky, potvrzení e-mailu) a v administraci se značky nenačítají.
+            Společnosti Google a Meta mohou údaje zpracovávat i v USA, a to na základě rámce EU–USA pro ochranu osobních údajů
+            (Data Privacy Framework) a standardních smluvních doložek.
+          </p>
+          <p>
+            Vaši volbu si pamatuje prohlížeč po dobu 12 měsíců, pak se zeptáme znovu. Souhlas můžete kdykoli změnit nebo odvolat:{" "}
+            <CookieSettingsLink className="font-semibold text-accent-ink underline">Nastavení cookies</CookieSettingsLink>.
+            Po odvolání značky vypneme a jejich cookies smažeme.
           </p>
         </Part>
 

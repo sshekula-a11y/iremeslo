@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/archivo";
 import "./globals.css";
-import { CookieBar } from "@/components/CookieBar";
+import { ConsentManager } from "@/components/ConsentManager";
 
 export const metadata: Metadata = {
   title: { default: "iRemeslo.cz – poptávky řemeslných prací, nabídky a faktury pro řemeslníky", template: "%s · iRemeslo.cz" },
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="cs">
       <body className="min-h-dvh antialiased">
         {children}
-        <CookieBar />
+        <ConsentManager />
       </body>
     </html>
   );

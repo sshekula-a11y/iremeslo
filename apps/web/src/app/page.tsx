@@ -108,7 +108,7 @@ export default async function Home() {
 
       <p className="mx-auto max-w-5xl px-5 py-10 text-[13px] text-muted">
         <span className="mr-1.5 rounded-full bg-ok-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ok">GDPR</span>
-        Data v EU, oddělená pro každou firmu, bez reklamních cookies.{" "}
+        Data v EU, oddělená pro každou firmu. Analytické a reklamní cookies jen s vaším souhlasem.{" "}
         <Link href="/ochrana-osobnich-udaju" className="font-semibold text-accent-ink hover:underline">Ochrana osobních údajů</Link>
       </p>
 

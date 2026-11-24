@@ -3,6 +3,7 @@ import { Logo } from "@/components/Logo";
 import { requireUser } from "@/lib/data";
 import { CompanyForm } from "./CompanyForm";
 import { SIGNUP_STEP_COUNT, SignupSteps } from "@/components/SignupSteps";
+import { DataLayerEvent } from "@/components/DataLayerEvent";
 
 export const metadata: Metadata = { title: "Registrace firmy" };
 
@@ -19,6 +20,7 @@ export default async function RegisterCompanyPage({ searchParams }: PageProps<"/
         </div>
       </header>
       <div className="mx-auto max-w-md space-y-6 px-5 py-8">
+        {justRegistered && <DataLayerEvent name="sign_up" />}
         {justRegistered && (
           // Hned po registraci: gratulace a co ještě zbývá (formulář registrace už je pryč).
           <section className="card overflow-hidden" aria-labelledby="gratulace">

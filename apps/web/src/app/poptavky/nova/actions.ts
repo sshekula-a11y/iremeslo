@@ -47,5 +47,6 @@ export async function submitInquiry(_prev: InquiryState, form: FormData): Promis
     if (error.message.includes("e-mail")) return { error: "Zadejte platný e-mail." };
     return { error: "Poptávku se nepodařilo odeslat. Zkontrolujte údaje a zkuste to znovu." };
   }
-  redirect(`/poptavky/odeslano?e=${encodeURIComponent(v.contact_email)}`);
+  // Bez e-mailu v adrese – adresy stránek zaznamenává Google Analytics.
+  redirect("/poptavky/odeslano");
 }
