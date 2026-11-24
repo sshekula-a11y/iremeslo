@@ -7,7 +7,11 @@ import Image from "next/image";
  *  - compact: bez sloganu (hlavička aplikace)
  *  - mark: jen znak domečku (malé plochy)
  */
-export function Logo({ variant = "compact", height = 32, priority = false }: { variant?: "full" | "compact" | "mark"; height?: number; priority?: boolean }) {
+export function Logo({ variant = "compact", height = 32, priority = false, className }: {
+  variant?: "full" | "compact" | "mark"; height?: number; priority?: boolean;
+  /** Výška přes třídy (např. „h-7 sm:h-11“) – logo se pak zmenšuje podle šířky obrazovky. */
+  className?: string;
+}) {
   const src = variant === "full" ? "/brand/logo.png" : variant === "mark" ? "/brand/znak.png" : "/brand/logo-bez-sloganu.png";
   const ratio = variant === "full" ? 1000 / 229 : variant === "mark" ? 1 : 800 / 144;
   return (
@@ -17,7 +21,8 @@ export function Logo({ variant = "compact", height = 32, priority = false }: { v
       height={height}
       width={Math.round(height * ratio)}
       priority={priority}
-      style={{ height, width: "auto" }}
+      className={className}
+      style={className ? { width: "auto" } : { height, width: "auto" }}
     />
   );
 }
