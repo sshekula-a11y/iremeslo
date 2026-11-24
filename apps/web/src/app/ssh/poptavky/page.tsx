@@ -46,7 +46,7 @@ export default async function AdminInquiries() {
                   <span>· zobrazení kontaktu {q.views}</span>
                 </div>
                 <p className="mt-1 font-semibold">
-                  {q.status === "open" ? <Link href={`/poptavky/${q.id}`} className="hover:underline">{q.title}</Link> : q.title}
+                  {q.status === "open" ? <Link href={`/poptavky/${q.id}`} className="hover:underline">{q.title}</Link> : q.title} {q.is_demo && <span className="ml-1 rounded-full bg-accent-soft px-1.5 py-0.5 text-[11px] font-bold text-accent-ink">Ukázka</span>}
                   <span className="font-normal text-muted"> · {q.city}{formatQuantity(q.quantity, q.unit) ? ` · ${formatQuantity(q.quantity, q.unit)}` : ""}</span>
                 </p>
                 <p className="mt-1 line-clamp-2 text-[14px] text-muted">{q.description}</p>

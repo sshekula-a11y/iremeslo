@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InquiryRow } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
-import type { PublicInquiry } from "@/lib/inquiries";
+import type { InquiryList } from "@/lib/inquiries";
 
 const benefits = [
   { title: "Nabídka za pár minut", text: "Práce, materiál, zaměstnanci a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
@@ -14,8 +14,11 @@ const benefits = [
 export default async function Home() {
   const supabase = await createClient();
   const { data } = await supabase.rpc("list_inquiries", { p_limit: 10 });
-  const latest = ((data as { items?: PublicInquiry[] } | null)?.items ?? []);
-  const total = (data as { total?: number } | null)?.total ?? 0;
+  const list = data as InquiryList | null;
+  const latest = list?.items ?? [];
+  const total = list?.total ?? 0;
+  // Ukázky jen doplní místo, dokud je skutečných poptávek málo – vždy pod nimi a se štítkem.
+  const demo = (list?.demo ?? []).slice(0, Math.max(10 - latest.length, 0));
 
   return (
     <main>
@@ -97,15 +100,26 @@ export default async function Home() {
             <h3 className="font-display text-[18px] font-bold">Nejnovější poptávky</h3>
             {total > 0 && <Link href="/poptavky" className="text-[14px] font-semibold text-accent-ink hover:underline">Všechny poptávky ({total}) →</Link>}
           </div>
-          {latest.length ? (
+          {latest.length > 0 && (
             <ul className="divide-y divide-line">
               {latest.map((q) => <InquiryRow key={q.id} q={q} />)}
             </ul>
-          ) : (
-            <div className="px-5 py-8 text-center">
-              <p className="text-muted">Zatím tu není žádná poptávka. Buďte první – zadání trvá pár minut.</p>
+          )}
+          {latest.length === 0 && (
+            <div className="px-5 py-6 text-center">
+              <p className="text-muted">Zatím tu není žádná skutečná poptávka. Buďte první – zadání trvá pár minut.</p>
               <Link href="/poptavky/nova" className="btn-ghost mt-3">Zadat první poptávku</Link>
             </div>
+          )}
+          {demo.length > 0 && (
+            <>
+              <p className="border-y border-line bg-paper px-4 py-2 text-[13px] text-muted sm:px-5">
+                <strong className="text-ink">Ukázky</strong> – takto budou poptávky vypadat. Nejde o skutečné zakázky.
+              </p>
+              <ul className="divide-y divide-line">
+                {demo.map((q) => <InquiryRow key={q.id} q={q} />)}
+              </ul>
+            </>
           )}
         </div>
       </section>

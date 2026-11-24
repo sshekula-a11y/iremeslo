@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL } from "@/lib/inquiries";
+import { CATEGORY_LABEL, REGION_LABEL } from "@/lib/inquiries";
 
 export type InquiryState = { error?: string };
 
@@ -16,6 +16,7 @@ const schema = z.object({
   description: z.string().trim().min(20, "Popište práci podrobněji (alespoň 20 znaků).").max(3000, "Popis může mít nejvýše 3000 znaků."),
   city: z.string().trim().min(2, "Vyplňte obec.").max(100),
   zip: z.string().trim().refine((v) => v === "" || /^\d{3} ?\d{2}$/.test(v), "PSČ má tvar 602 00."),
+  region: z.string().refine((v) => !!REGION_LABEL[v], "Vyberte kraj."),
   street: z.string().trim().max(200),
   term: z.enum(["flexible", "asap", "date"]),
   term_from: z.string().trim(),

@@ -5,7 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
-import { CATEGORY_LABEL, formatQuantity, formatTerm, timeAgo, type InquiryContact, type PublicInquiry } from "@/lib/inquiries";
+import { DemoBadge } from "@/components/InquiryCard";
+import { CATEGORY_LABEL, REGION_LABEL, formatQuantity, formatTerm, timeAgo, type InquiryContact, type PublicInquiry } from "@/lib/inquiries";
 
 type ContactAccess = { email_verified: boolean; has_company: boolean; verified: boolean; pending: boolean; not_found: boolean };
 
@@ -21,7 +22,13 @@ async function load(id: string): Promise<PublicInquiry | null> {
 export async function generateMetadata({ params }: PageProps<"/poptavky/[id]">): Promise<Metadata> {
   const q = await load((await params).id);
   if (!q) return { title: "Poptávka nenalezena" };
-  return { title: `${q.title} – ${q.city}`, description: q.description.slice(0, 160) };
+  return {
+    title: `${q.title} – ${q.city}`,
+    description: q.description.slice(0, 160),
+    alternates: { canonical: `/poptavky/${q.id}` },
+    // Ukázky ani uzavřené poptávky nemají být ve vyhledávačích.
+    ...(q.is_demo || q.status !== "open" ? { robots: { index: false, follow: true } } : {}),
+  };
 }
 
 /** Detail poptávky. Kontakt se načte jen po kliknutí uživatele s potvrzeným e-mailem a firmou s IČO ověřeným v ARES (?kontakt=1). */
@@ -64,14 +71,14 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
         <article className="card p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted">
             <span className="rounded-full bg-paper px-2 py-0.5 font-semibold text-ink">{CATEGORY_LABEL[q.category] ?? q.category}</span>
-            <span>zadáno {timeAgo(q.created_at)}</span>
+            {q.is_demo ? <DemoBadge long /> : <span>zadáno {timeAgo(q.created_at)}</span>}
             {!active && <span className="rounded-full bg-warn-soft px-2 py-0.5 font-semibold text-warn">{q.status === "closed" ? "Uzavřeno" : "Platnost skončila"}</span>}
           </div>
           <h1 className="mt-2 font-display text-[26px] font-extrabold leading-tight sm:text-[30px]">{q.title}</h1>
 
           <dl className="mt-4 grid gap-3 rounded-xl bg-paper p-4 text-[15px] sm:grid-cols-3">
             {qty && <div><dt className="text-[13px] text-muted">Rozsah</dt><dd className="num font-semibold">{qty}</dd></div>}
-            <div><dt className="text-[13px] text-muted">Místo</dt><dd className="font-semibold">{q.city}{q.zip ? `, ${q.zip}` : ""}</dd></div>
+            <div><dt className="text-[13px] text-muted">Místo</dt><dd className="font-semibold">{q.city}{q.zip ? `, ${q.zip}` : ""}{q.region && REGION_LABEL[q.region] ? <span className="block text-[13px] font-normal text-muted">{REGION_LABEL[q.region]} kraj</span> : null}</dd></div>
             <div><dt className="text-[13px] text-muted">Termín</dt><dd className="font-semibold">{formatTerm(q.term, q.term_date, q.term_from)}</dd></div>
           </dl>
 

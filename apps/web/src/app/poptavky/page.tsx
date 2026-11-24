@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InquiryCard } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL, INQUIRY_CATEGORIES, type PublicInquiry } from "@/lib/inquiries";
+import { CATEGORY_LABEL, INQUIRY_AGES, INQUIRY_CATEGORIES, REGIONS, REGION_LABEL, type InquiryList } from "@/lib/inquiries";
 
 export const metadata: Metadata = {
   title: "Poptávky řemeslných prací",
@@ -17,15 +17,19 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
   const sp = await searchParams;
   const category = typeof sp.kategorie === "string" && CATEGORY_LABEL[sp.kategorie] ? sp.kategorie : "";
   const city = typeof sp.misto === "string" ? sp.misto.slice(0, 60) : "";
+  const region = typeof sp.kraj === "string" && REGION_LABEL[sp.kraj] ? sp.kraj : "";
+  const days = typeof sp.stari === "string" && ["1", "7", "30"].includes(sp.stari) ? sp.stari : "";
   const page = Math.max(1, Number(sp.strana) || 1);
 
   const supabase = await createClient();
   const { data } = await supabase.rpc("list_inquiries", {
     p_category: category || null, p_city: city || null, p_limit: PAGE, p_offset: (page - 1) * PAGE,
+    p_region: region || null, p_days: days ? Number(days) : null,
   });
-  const list = (data ?? { total: 0, items: [] }) as { total: number; items: PublicInquiry[] };
+  const list = (data ?? { total: 0, real_total: 0, items: [], demo: [] }) as InquiryList;
+  const filtered = !!(category || city || region || days);
   const pages = Math.max(1, Math.ceil(list.total / PAGE));
-  const href = (p: number) => `/poptavky?${new URLSearchParams({ ...(category && { kategorie: category }), ...(city && { misto: city }), ...(p > 1 && { strana: String(p) }) })}`;
+  const href = (p: number) => `/poptavky?${new URLSearchParams({ ...(category && { kategorie: category }), ...(region && { kraj: region }), ...(city && { misto: city }), ...(days && { stari: days }), ...(p > 1 && { strana: String(p) }) })}`;
 
   return (
     <main>
@@ -35,7 +39,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
           <div>
             <h1 className="font-display text-[30px] font-extrabold leading-tight sm:text-[38px]">Poptávky řemeslných prací</h1>
             <p className="mt-2 max-w-xl text-[16px] text-white/75">
-              Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Ozvou se vám řemeslníci registrovaní na iRemeslo.cz.
+              Hledáte řemeslníka? Zadejte poptávku zdarma a bez registrace. Ozvou se vám řemeslníci s IČO ověřeným v ARES.
             </p>
           </div>
           <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>
@@ -43,7 +47,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
       </header>
 
       <div className="mx-auto max-w-5xl space-y-5 px-5 py-8">
-        <form className="card grid gap-3 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end" role="search">
+        <form className="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr_auto] lg:items-end" role="search">
           <div>
             <label className="label" htmlFor="kategorie">Obor</label>
             <select className="field" id="kategorie" name="kategorie" defaultValue={category}>
@@ -52,15 +56,29 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
             </select>
           </div>
           <div>
+            <label className="label" htmlFor="kraj">Kraj</label>
+            <select className="field" id="kraj" name="kraj" defaultValue={region}>
+              <option value="">Celá ČR</option>
+              {REGIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+          <div>
             <label className="label" htmlFor="misto">Obec nebo PSČ</label>
             <input className="field" id="misto" name="misto" defaultValue={city} placeholder="např. Brno" />
           </div>
-          <button className="btn-dark">Hledat</button>
+          <div>
+            <label className="label" htmlFor="stari">Zadáno</label>
+            <select className="field" id="stari" name="stari" defaultValue={days}>
+              <option value="">kdykoli</option>
+              {INQUIRY_AGES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+          <button className="btn-dark sm:col-span-2 lg:col-span-1">Hledat</button>
         </form>
 
         <p className="text-[14px] text-muted" aria-live="polite">
           {list.total === 0 ? "Žádná aktivní poptávka" : list.total === 1 ? "1 aktivní poptávka" : list.total < 5 ? `${list.total} aktivní poptávky` : `${list.total} aktivních poptávek`}
-          {(category || city) && <> · <Link href="/poptavky" className="font-semibold text-accent-ink underline">zrušit filtr</Link></>}
+          {filtered && <> · <Link href="/poptavky" className="font-semibold text-accent-ink underline">zrušit filtr</Link></>}
         </p>
 
         {list.items.length ? (
@@ -69,9 +87,24 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
           </div>
         ) : (
           <div className="card px-5 py-10 text-center">
-            <p className="text-muted">{category || city ? "Tomuto hledání zatím žádná poptávka neodpovídá." : "Zatím tu není žádná poptávka."}</p>
+            <p className="text-muted">{filtered ? "Tomuto hledání zatím žádná poptávka neodpovídá." : "Zatím tu není žádná skutečná poptávka."}</p>
             <Link href="/poptavky/nova" className="btn-primary mt-4">Zadat první poptávku</Link>
           </div>
+        )}
+
+        {list.demo.length > 0 && page === 1 && (
+          <section aria-labelledby="ukazky" className="space-y-3 pt-4">
+            <div>
+              <h2 id="ukazky" className="font-display text-[20px] font-extrabold">Ukázkové poptávky</h2>
+              <p className="text-[14px] text-muted">
+                Takto budou poptávky vypadat. Nejde o skutečné zakázky a nepočítají se do čísel výše.
+                Zmizí, jakmile tu bude aspoň 5 skutečných poptávek.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {list.demo.map((q) => <InquiryCard key={q.id} q={q} />)}
+            </div>
+          </section>
         )}
 
         {pages > 1 && (

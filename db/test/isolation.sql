@@ -580,5 +580,53 @@ select t_login('00000000-0000-0000-0000-0000000000ad');
 select t_eq((select (jsonb_array_length(admin_ares_checks()) > 0)::int), 1, 'provozovatel vidí stav ověření');
 reset role;
 
+-- ---------- ukázkové poptávky, kraj a filtry (015) ----------
+reset role;
+delete from app.inquiries;
+select t_text(app.region_from_zip('602 00'), 'jihomoravsky', 'PSČ 602 = Jihomoravský kraj');
+select t_text(app.region_from_zip('11000'), 'praha', 'PSČ 110 = Praha');
+select t_text(app.region_from_zip('393 01'), 'vysocina', 'Pelhřimov = Vysočina');
+select t_text(app.region_from_zip('512 51'), 'liberecky', 'Semily = Liberecký kraj');
+select t_text(app.region_from_zip('760 01'), 'zlinsky', 'Zlín = Zlínský kraj');
+select t_text(app.region_from_zip('790 01'), 'olomoucky', 'Jeseník = Olomoucký kraj');
+select t_eq((select count(*)::int from (select app.region_from_zip(null) r) x where r is null), 1, 'bez PSČ bez kraje');
+-- tři ukázky a dvě skutečné
+insert into app.inquiries (status, confirmed_at, is_demo, category, title, description, city, zip, region, term, contact_name, contact_email, token_hash)
+select 'open', now() - make_interval(days => g), true, 'malovani', 'Ukázka číslo ' || g, 'Ukázková poptávka pro představení platformy.', 'Brno', '602 00', 'jihomoravsky', 'flexible', 'Ukázka', 'info@iremeslo.cz', 'demo' || g
+from generate_series(1, 3) g;
+insert into app.inquiries (status, confirmed_at, category, title, description, city, zip, region, term, contact_name, contact_email, token_hash)
+values ('open', now() - interval '2 hours', 'fasady', 'Zateplení fasády domu', 'Zateplení fasády rodinného domu polystyrenem.', 'Brno', '602 00', 'jihomoravsky', 'flexible', 'Jana', 'jana@example.cz', 'real1'),
+       ('open', now() - interval '10 days', 'strechy', 'Oprava střechy chaty', 'Výměna několika tašek a oplechování komína.', 'Liberec', '460 01', 'liberecky', 'asap', 'Petr', 'petr@example.cz', 'real2');
+set role anon;
+select t_eq((select (list_inquiries() ->> 'total')::int), 2, 'ukázky se nepočítají do čísel');
+select t_eq((select jsonb_array_length(list_inquiries() -> 'items')), 2, 'v seznamu jen skutečné poptávky');
+select t_eq((select jsonb_array_length(list_inquiries() -> 'demo')), 3, 'ukázky jsou ve vlastním bloku');
+select t_eq((select count(*)::int from jsonb_array_elements(list_inquiries() -> 'demo') e where (e ->> 'is_demo')::boolean), 3, 'ukázky mají příznak');
+select t_eq((select (list_inquiries(p_region => 'liberecky') ->> 'total')::int), 1, 'filtr kraje');
+select t_eq((select (list_inquiries(p_days => 7) ->> 'total')::int), 1, 'filtr stáří 7 dní');
+select t_eq((select (list_inquiries(p_city => '46001') ->> 'total')::int), 1, 'PSČ bez mezery najde poptávku');
+reset role;
+select id as demo1 from app.inquiries where token_hash = 'demo1' \gset
+set role anon;
+select t_eq((select count(*)::int from (select get_inquiry(:'demo1') g) x where g is not null), 1, 'detail ukázky je vidět, dokud je skutečných málo');
+reset role;
+insert into app.inquiries (status, confirmed_at, category, title, description, city, term, contact_name, contact_email, token_hash)
+select 'open', now(), 'uklid', 'Úklid po rekonstrukci ' || g, 'Úklid bytu po rekonstrukci včetně oken.', 'Praha', 'flexible', 'Eva', 'eva@example.cz', 'realx' || g
+from generate_series(1, 3) g;
+set role anon;
+select t_eq((select jsonb_array_length(list_inquiries() -> 'demo')), 0, 'od 5 skutečných poptávek ukázky zmizí');
+select t_eq((select count(*)::int from (select get_inquiry(:'demo1') g) x where g is not null), 0, '… i jejich detail');
+reset role;
+select t_eq((select count(*)::int from app.inquiries where token_hash = 'realx1' and region is null), 1, 'bez PSČ zůstane kraj prázdný');
+select (submit_inquiry('{"category":"malovani","title":"Výmalba bytu 3+1","description":"Výmalba tří pokojů, kuchyně a chodby.","city":"Zlín","zip":"760 01","term":"flexible","contact_name":"Ivo","contact_email":"ivo@example.cz"}'::jsonb) ->> 'id') as zin \gset
+select t_text((select region from app.inquiries where id = :'zin'), 'zlinsky', 'kraj se doplní z PSČ');
+select (submit_inquiry('{"category":"malovani","title":"Výmalba bytu 3+1","description":"Výmalba tří pokojů, kuchyně a chodby.","city":"Zlín","zip":"760 01","region":"olomoucky","term":"flexible","contact_name":"Ivo","contact_email":"ivo@example.cz"}'::jsonb) ->> 'id') as zin2 \gset
+select t_text((select region from app.inquiries where id = :'zin2'), 'olomoucky', 'zvolený kraj má přednost před PSČ');
+select t_fails($q$select submit_inquiry('{"category":"malovani","title":"Výmalba bytu 3+1","description":"Výmalba tří pokojů, kuchyně a chodby.","city":"Zlín","region":"atlantida","term":"flexible","contact_name":"Ivo","contact_email":"ivo@example.cz"}'::jsonb)$q$, 'neznámý kraj neprojde');
+update app.inquiries set expires_at = now() - interval '200 days' where token_hash in ('demo2', 'real2');
+select app.cleanup_inquiries() \g /dev/null
+select t_eq((select count(*)::int from app.inquiries where token_hash = 'demo2'), 1, 'úklid ukázky nemaže');
+select t_eq((select count(*)::int from app.inquiries where token_hash = 'real2'), 0, 'prošlé skutečné poptávky úklid smaže');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

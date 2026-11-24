@@ -1,5 +1,16 @@
 import Link from "next/link";
-import { CATEGORY_LABEL, formatQuantity, formatTerm, timeAgo, type PublicInquiry } from "@/lib/inquiries";
+import { CATEGORY_LABEL, REGION_LABEL, formatQuantity, formatTerm, timeAgo, type PublicInquiry } from "@/lib/inquiries";
+
+/** Oranžový štítek ukázkové poptávky – ukázky se nikdy nesmí plést se skutečnými zakázkami. */
+export function DemoBadge({ long = false }: { long?: boolean }) {
+  return (
+    <span className="inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-bold text-accent-ink">
+      {long ? "Ukázka – nejde o skutečnou zakázku" : "Ukázka"}
+    </span>
+  );
+}
+
+const place = (q: PublicInquiry) => q.region && q.region !== "praha" && REGION_LABEL[q.region] ? `${q.city} (${REGION_LABEL[q.region]})` : q.city;
 
 /** Karta veřejné poptávky v seznamu (bez kontaktu). */
 export function InquiryCard({ q }: { q: PublicInquiry }) {
@@ -8,13 +19,13 @@ export function InquiryCard({ q }: { q: PublicInquiry }) {
     <Link href={`/poptavky/${q.id}`} className="card group flex flex-col gap-2 p-4 transition hover:border-ink/30 sm:p-5">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted">
         <span className="rounded-full bg-paper px-2 py-0.5 font-semibold text-ink">{CATEGORY_LABEL[q.category] ?? q.category}</span>
-        <span>{timeAgo(q.created_at)}</span>
+        {q.is_demo ? <DemoBadge /> : <span>{timeAgo(q.created_at)}</span>}
       </div>
       <h3 className="font-display text-[18px] font-bold leading-snug group-hover:text-accent-ink">{q.title}</h3>
       <p className="line-clamp-2 text-[14px] text-muted">{q.description}</p>
       <dl className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-1 text-[14px]">
         {qty && <div className="flex gap-1"><dt className="sr-only">Rozsah</dt><dd className="num font-semibold">{qty}</dd></div>}
-        <div className="flex gap-1"><dt className="sr-only">Místo</dt><dd>📍 {q.city}</dd></div>
+        <div className="flex gap-1"><dt className="sr-only">Místo</dt><dd>📍 {place(q)}</dd></div>
         <div className="flex gap-1"><dt className="sr-only">Termín</dt><dd className="text-muted">{formatTerm(q.term, q.term_date, q.term_from)}</dd></div>
       </dl>
     </Link>
@@ -24,7 +35,7 @@ export function InquiryCard({ q }: { q: PublicInquiry }) {
 /** Kompaktní řádek poptávky (úvodní stránka – posledních 10). Na telefonu je čas v druhém řádku, ať se vejde název. */
 export function InquiryRow({ q }: { q: PublicInquiry }) {
   const qty = formatQuantity(q.quantity, q.unit);
-  const ago = timeAgo(q.created_at);
+  const ago = q.is_demo ? <DemoBadge /> : timeAgo(q.created_at);
   return (
     <li>
       <Link href={`/poptavky/${q.id}`} className="group flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-paper sm:px-5">
@@ -32,7 +43,7 @@ export function InquiryRow({ q }: { q: PublicInquiry }) {
           <span className="line-clamp-2 font-semibold leading-snug group-hover:text-accent-ink sm:line-clamp-1">{q.title}</span>
           <span className="mt-0.5 block text-[13px] leading-snug text-muted">
             <span className="sm:hidden">{ago} · </span>
-            {q.city}{qty ? <> · <span className="num">{qty}</span></> : null}
+            {place(q)}{qty ? <> · <span className="num">{qty}</span></> : null}
             <span className="hidden sm:inline"> · {CATEGORY_LABEL[q.category] ?? q.category} · {formatTerm(q.term, q.term_date, q.term_from)}</span>
           </span>
         </span>

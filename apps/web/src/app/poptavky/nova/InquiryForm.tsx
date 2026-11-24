@@ -1,13 +1,16 @@
 "use client";
 
 import { startTransition, useActionState, useState } from "react";
-import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS } from "@/lib/inquiries";
+import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS, REGIONS, regionFromZip } from "@/lib/inquiries";
 import { submitInquiry, type InquiryState } from "./actions";
 
 export function InquiryForm({ today }: { today: string }) {
   const [state, action, pending] = useActionState<InquiryState, FormData>(submitInquiry, {});
   const [term, setTerm] = useState("flexible");
   const [termFrom, setTermFrom] = useState("");
+  // Kraj předvyplníme podle PSČ, dokud ho zadavatel nezmění sám.
+  const [region, setRegion] = useState("");
+  const [regionTouched, setRegionTouched] = useState(false);
 
   return (
     // Odeslání bez resetu formuláře: při chybě zůstane vše vyplněné.
@@ -58,8 +61,18 @@ export function InquiryForm({ today }: { today: string }) {
           </div>
           <div>
             <label className="label" htmlFor="zip">PSČ</label>
-            <input className="field num" id="zip" name="zip" inputMode="numeric" placeholder="602 00" autoComplete="postal-code" />
+            <input className="field num" id="zip" name="zip" inputMode="numeric" placeholder="602 00" autoComplete="postal-code"
+              onChange={(e) => { const r = regionFromZip(e.target.value); if (r && !regionTouched) setRegion(r); }} />
           </div>
+        </div>
+        <div>
+          <label className="label" htmlFor="region">Kraj</label>
+          <select className="field" id="region" name="region" required value={region}
+            onChange={(e) => { setRegion(e.target.value); setRegionTouched(true); }}>
+            <option value="" disabled>Vyberte kraj</option>
+            {REGIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <p className="mt-1 text-[13px] text-muted">Podle kraje řemeslníci poptávky filtrují. Po zadání PSČ ho doplníme sami.</p>
         </div>
         <div>
           <label className="label" htmlFor="street">Ulice a číslo (nepovinné)</label>
