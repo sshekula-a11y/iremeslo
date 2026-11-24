@@ -110,7 +110,7 @@ export default function TermsPage() {
           <ol className="list-decimal space-y-2 pl-5">
             <li>
               Užívání služby po skončení zkušebního období je zpoplatněno formou <strong>předplatného</strong> na měsíční
-              nebo roční období. Aktuální cena je uvedena v aplikaci nebo ji provozovatel sdělí uživateli před uzavřením
+              nebo roční období. Aktuální ceny jsou uvedeny v ceníku na www.iremeslo.cz/cenik, případně je provozovatel sdělí uživateli před uzavřením
               předplatného. Ceny jsou uváděny bez DPH, k ceně se připočte DPH v zákonné výši.
             </li>
             <li>

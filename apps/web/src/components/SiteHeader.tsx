@@ -1,27 +1,36 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { SiteMenu } from "@/components/SiteMenu";
+import { SITE_LINKS, type SiteSection } from "@/lib/site-links";
 
-/** Horní lišta veřejného webu (úvod, poptávky, Jak to funguje). */
-export function SiteHeader({ current }: { current?: "jak-to-funguje" | "poptavky" }) {
+/**
+ * Horní lišta veřejného webu. Na počítači odkazy v řádku, na telefonu tlačítko „Menu“;
+ * „Zadat poptávku“ je vidět vždy.
+ */
+export function SiteHeader({ current }: { current?: SiteSection }) {
   return (
-    <div className="border-b border-line bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
+    <header className="relative border-b border-line bg-white">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:px-5 sm:py-3">
         <Link href="/" aria-label="iRemeslo.cz – úvod" className="shrink-0">
           {/* Stejné logo se sloganem jako na počítači, na telefonu jen menší. */}
-          <Logo variant="full" height={44} priority className="h-7 min-[360px]:h-8 min-[390px]:h-9 sm:h-11" />
+          <Logo variant="full" height={44} priority className="h-6 min-[360px]:h-7 min-[390px]:h-8 sm:h-10 lg:h-11" />
         </Link>
-        <nav className="flex items-center whitespace-nowrap text-[14px] font-semibold sm:gap-0.5 sm:text-[15px]" aria-label="Web">
-          <Link href="/poptavky" aria-current={current === "poptavky" ? "page" : undefined}
-            className={`rounded-lg px-2 py-2 sm:px-2.5 ${current === "poptavky" ? "text-accent-ink" : "text-ink hover:text-accent-ink"}`}>
-            Poptávky
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <nav className="hidden items-center whitespace-nowrap text-[15px] font-semibold md:flex" aria-label="Web">
+            {SITE_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} aria-current={current === l.id ? "page" : undefined}
+                className={`rounded-lg px-2.5 py-2 ${current === l.id ? "text-accent-ink" : "text-ink hover:text-accent-ink"}`}>
+                {l.label}
+              </Link>
+            ))}
+            <Link href="/prihlaseni" className="rounded-lg px-2.5 py-2 text-ink hover:text-accent-ink">Přihlásit se</Link>
+          </nav>
+          <Link href="/poptavky/nova" className="btn-primary min-h-10 whitespace-nowrap px-2.5 text-[14px] min-[390px]:px-3 sm:px-4 sm:text-[15px]">
+            Zadat poptávku
           </Link>
-          <Link href="/jak-to-funguje" aria-current={current === "jak-to-funguje" ? "page" : undefined}
-            className={`hidden rounded-lg px-2 py-2 sm:px-2.5 sm:block ${current === "jak-to-funguje" ? "text-accent-ink" : "text-ink hover:text-accent-ink"}`}>
-            Jak to funguje
-          </Link>
-          <Link href="/prihlaseni" className="rounded-lg px-2 py-2 sm:px-2.5 text-ink hover:text-accent-ink">Přihlásit se</Link>
-        </nav>
+          <SiteMenu current={current} />
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

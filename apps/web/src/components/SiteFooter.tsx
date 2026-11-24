@@ -2,20 +2,47 @@ import Link from "next/link";
 import { OPERATOR } from "@/lib/operator";
 import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
-/** Patička veřejného webu: provozovatel, obchodní podmínky, GDPR a kontakt. */
+const link = "hover:text-ink hover:underline";
+
+/** Patička veřejného webu: čtyři sloupce (zákazníci, řemeslníci, podpora, právní) a provozovatel. */
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-6 text-[13px] text-muted">
-        <p>© 2026 iRemeslo.cz · Provozovatel: {OPERATOR.name}, IČO {OPERATOR.ico}, {OPERATOR.address}</p>
-        <nav className="flex flex-wrap gap-x-5 gap-y-1" aria-label="Patička">
-          <Link href="/jak-to-funguje" className="hover:text-ink">Jak to funguje</Link>
-          <Link href="/obchodni-podminky" className="hover:text-ink">Obchodní podmínky</Link>
-          <Link href="/ochrana-osobnich-udaju" className="hover:text-ink">Ochrana osobních údajů (GDPR)</Link>
-          <CookieSettingsLink className="hover:text-ink" />
-          <a href={`mailto:${OPERATOR.email}`} className="hover:text-ink">{OPERATOR.email}</a>
-        </nav>
+    <footer className="mt-4 border-t border-line bg-white">
+      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-x-6 gap-y-7 px-5 py-8 text-[14px] text-muted md:grid-cols-4">
+        <Col title="Pro zákazníky">
+          <Link href="/poptavky/nova" className={link}>Zadat poptávku zdarma</Link>
+          <Link href="/poptavky" className={link}>Všechny poptávky</Link>
+        </Col>
+        <Col title="Pro řemeslníky">
+          <Link href="/poptavky" className={link}>Poptávky</Link>
+          <Link href="/jak-to-funguje" className={link}>Funkce aplikace</Link>
+          <Link href="/cenik" className={link}>Ceník</Link>
+          <Link href="/prihlaseni?rezim=registrace" className={link}>Vyzkoušet 30 dní zdarma</Link>
+        </Col>
+        <Col title="Podpora">
+          <Link href="/jak-to-funguje" className={link}>Jak to funguje</Link>
+          <a href={`mailto:${OPERATOR.email}`} className={link}>{OPERATOR.email}</a>
+        </Col>
+        <Col title="Právní">
+          <Link href="/obchodni-podminky" className={link}>Obchodní podmínky</Link>
+          <Link href="/ochrana-osobnich-udaju" className={link}>Ochrana osobních údajů</Link>
+          <CookieSettingsLink className={`text-left ${link}`} />
+        </Col>
+      </div>
+      <div className="border-t border-line">
+        <p className="mx-auto max-w-5xl px-5 py-4 text-[13px] text-muted">
+          © 2026 iRemeslo.cz · Provozovatel: {OPERATOR.name}, IČO {OPERATOR.ico}, {OPERATOR.address}
+        </p>
       </div>
     </footer>
+  );
+}
+
+function Col({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h2 className="mb-2.5 font-display text-[14px] font-bold text-ink">{title}</h2>
+      <div className="flex flex-col items-start gap-2">{children}</div>
+    </div>
   );
 }

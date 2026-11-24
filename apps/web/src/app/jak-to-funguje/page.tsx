@@ -95,7 +95,7 @@ const SOON = [
 ];
 
 const FAQ = [
-  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez platební karty (jednou pro každé IČO). Poté pokračujete s předplatným. Na konec zkušebního období vás aplikace upozorní předem a vaše data zůstanou zachována." },
+  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez platební karty (jednou pro každé IČO). Poté pokračujete s předplatným od 199 Kč měsíčně bez DPH (podrobnosti v Ceníku). Na konec zkušebního období vás aplikace upozorní předem a vaše data zůstanou zachována." },
   { q: "Musím si něco instalovat?", a: "Ne. Aplikace běží v prohlížeči na telefonu i počítači. Na telefonu si ji můžete přidat na plochu a otevírat jako aplikaci." },
   { q: "Hodí se i pro neplátce DPH?", a: "Ano. Při založení firmy zvolíte, jestli jste plátce. Doklady neplátce jsou bez DPH a obsahují text „Nejsem plátce DPH“." },
   { q: "Kdo uvidí moje čísla?", a: "Jen vaše firma. Data každé firmy jsou oddělená a pracovníci nevidí ceny ani zisk. Databáze běží v EU (Frankfurt)." },
