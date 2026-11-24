@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { TERMS_VERSION } from "@/lib/legal";
+import { inquiryReturn, safeNext } from "@/lib/safe-next";
 
 export type AuthState = { error?: string; info?: string; noAccount?: boolean };
 
@@ -11,11 +12,6 @@ const credentials = z.object({
   email: z.string().trim().toLowerCase().email("Zadejte platný e-mail"),
   password: z.string().min(8, "Heslo musí mít alespoň 8 znaků"),
 });
-
-function safeNext(value: FormDataEntryValue | null): string {
-  const s = typeof value === "string" ? value : "";
-  return s.startsWith("/") && !s.startsWith("//") ? s : "/app";
-}
 
 export async function signIn(_prev: AuthState, form: FormData): Promise<AuthState> {
   const parsed = credentials.safeParse({ email: form.get("email"), password: form.get("password") });
@@ -56,7 +52,9 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   // Doklad o souhlasu s obchodními podmínkami (verze a čas) – § 1753 OZ, archivace smlouvy (VOP čl. 2).
   await supabase.auth.updateUser({ data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString() } });
   // Gratulace a další kroky jsou na stránce zadání IČO.
-  redirect("/registrace-firmy?vitejte=1");
+  // Řemeslník, který přišel z poptávky, se po zadání IČO vrátí zpět k ní.
+  const back = inquiryReturn(form.get("next"));
+  redirect(back ? `/registrace-firmy?vitejte=1&next=${encodeURIComponent(back)}` : "/registrace-firmy?vitejte=1");
 }
 
 export async function signOut() {

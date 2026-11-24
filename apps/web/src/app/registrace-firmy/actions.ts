@@ -6,6 +6,7 @@ import { z } from "zod";
 import { isValidIco, isValidCzDic } from "@iremeslo/core";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAres } from "@/lib/ares";
+import { inquiryReturn } from "@/lib/safe-next";
 
 export type RegisterState = { error?: string };
 
@@ -71,7 +72,7 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
   }
 
   (await cookies()).set("firma", String(data), { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60 * 60 * 24 * 365 });
-  redirect("/app");
+  redirect(inquiryReturn(form.get("next")) ?? "/app");
 }
 
 export type TrialInfo = { used: false; days: number } | { used: true; trialEnd: string; active: boolean };

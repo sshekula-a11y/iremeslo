@@ -5,7 +5,7 @@ import { checkTrial, registerCompany, type RegisterState, type TrialInfo } from 
 import { formatDate } from "@/lib/format";
 import type { AresCompany } from "@/lib/types";
 
-export function CompanyForm() {
+export function CompanyForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(registerCompany, {});
   const [ico, setIco] = useState("");
   const [values, setValues] = useState({ name: "", dic: "", street: "", city: "", zip: "", vatPayer: false });
@@ -42,6 +42,7 @@ export function CompanyForm() {
 
   return (
     <form action={action} className="card space-y-4 p-5 sm:p-6">
+      {next && <input type="hidden" name="next" value={next} />}
       <div>
         <label className="label" htmlFor="ico">IČO</label>
         <div className="flex gap-2">

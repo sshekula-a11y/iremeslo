@@ -4,12 +4,14 @@ import { requireUser } from "@/lib/data";
 import { CompanyForm } from "./CompanyForm";
 import { SIGNUP_STEP_COUNT, SignupSteps } from "@/components/SignupSteps";
 import { DataLayerEvent } from "@/components/DataLayerEvent";
+import { inquiryReturn } from "@/lib/safe-next";
 
 export const metadata: Metadata = { title: "Registrace firmy" };
 
 export default async function RegisterCompanyPage({ searchParams }: PageProps<"/registrace-firmy">) {
   const user = await requireUser();
-  const { vitejte } = await searchParams;
+  const { vitejte, next: rawNext } = await searchParams;
+  const next = inquiryReturn(rawNext);
   const justRegistered = vitejte === "1";
 
   return (
@@ -52,7 +54,12 @@ export default async function RegisterCompanyPage({ searchParams }: PageProps<"/
             <h1 className="font-display text-[26px] font-extrabold">Zadejte IČO</h1>
           )}
           <p className="mb-5 mt-1 text-[15px] text-muted">Název, adresu i DIČ vaší firmy načteme z ARES. Když ARES zrovna neodpovídá, vyplňte údaje ručně.</p>
-          <CompanyForm />
+          {next && (
+            <p className="mb-4 rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
+              Po založení firmy vás vrátíme zpět k poptávce. Kontakt na zadavatele se zobrazí, jakmile ověříme IČO v ARES (obvykle do dvou minut).
+            </p>
+          )}
+          <CompanyForm next={next} />
         </div>
       </div>
     </main>

@@ -113,7 +113,7 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
             ) : !access.has_company ? (
               <div className="mt-2">
                 <p className="text-[15px] text-muted">Kontakt vidí jen firmy a živnostníci s IČO ověřeným v ARES. Zaregistrujte svou firmu – IČO ověříme automaticky.</p>
-                <Link href="/registrace-firmy" className="btn-dark mt-4">Zaregistrovat firmu</Link>
+                <Link href={`/registrace-firmy?next=${encodeURIComponent(back)}`} className="btn-dark mt-4">Zaregistrovat firmu</Link>
               </div>
             ) : !verified ? (
               <p className="mt-2 text-[15px] text-muted">
