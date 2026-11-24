@@ -6,6 +6,7 @@ import { todayInPrague } from "@/lib/calendar";
 import { InquiryForm } from "./InquiryForm";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/poptavky/nova" },
   title: "Zadat poptávku zdarma",
   description: "Zadejte poptávku řemeslných prací zdarma a bez registrace. Ozvou se vám řemeslníci z iRemeslo.cz.",
 };

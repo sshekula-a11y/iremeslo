@@ -6,6 +6,7 @@ import { OPERATOR } from "@/lib/operator";
 import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/ochrana-osobnich-udaju" },
   title: "Ochrana osobních údajů (GDPR)",
   description: "Jak iRemeslo.cz zpracovává osobní údaje: co ukládáme, proč, komu je předáváme, jak dlouho a jaká máte práva.",
 };

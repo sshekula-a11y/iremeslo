@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { AuthForm } from "./AuthForm";
 
-export const metadata: Metadata = { title: "Přihlášení" };
+export const metadata: Metadata = { title: "Přihlášení", alternates: { canonical: "/prihlaseni" }, robots: { index: false, follow: true } };
 
 export default async function LoginPage({ searchParams }: PageProps<"/prihlaseni">) {
   const sp = await searchParams;

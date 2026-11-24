@@ -4,12 +4,17 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/archivo";
 import "./globals.css";
 import { ConsentManager } from "@/components/ConsentManager";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: { default: "iRemeslo.cz je virtuální kancelář pro řemeslníky a poptávky řemeslných prací", template: "%s · iRemeslo.cz" },
   description:
     "iRemeslo.cz je virtuální kancelář pro řemeslníky: zakázky, cenové nabídky, faktury, smlouvy o dílo a nové poptávky na jednom místě. Zákazníci zadávají poptávky zdarma a bez registrace.",
   applicationName: "iRemeslo.cz",
+  metadataBase: new URL(SITE_URL),
+  // Náhled při sdílení (Facebook, WhatsApp, LinkedIn…). Obrázek je app/opengraph-image.png.
+  openGraph: { type: "website", siteName: "iRemeslo.cz", locale: "cs_CZ" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

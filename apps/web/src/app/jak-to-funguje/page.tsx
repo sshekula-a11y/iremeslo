@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/jak-to-funguje" },
   title: "Jak to funguje",
   description: "Od poptávky po cenovou nabídku v PDF: založení firmy přes IČO, výpočet zakázky se ziskem a marží, nabídka a kalendář. Ukázky z aplikace.",
 };

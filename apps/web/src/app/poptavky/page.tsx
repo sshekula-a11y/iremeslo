@@ -6,10 +6,17 @@ import { InquiryCard } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, INQUIRY_AGES, INQUIRY_CATEGORIES, REGIONS, REGION_LABEL, type InquiryList } from "@/lib/inquiries";
 
-export const metadata: Metadata = {
+const META = {
   title: "Poptávky řemeslných prací",
   description: "Aktuální poptávky malování, fasád, střech, rekonstrukcí a dalších řemeslných prací. Zadejte poptávku zdarma, řemeslníci se vám ozvou.",
 };
+
+/** Filtrované výsledky do vyhledávačů nepatří (stejný obsah pod mnoha adresami). */
+export async function generateMetadata({ searchParams }: PageProps<"/poptavky">): Promise<Metadata> {
+  const sp = await searchParams;
+  const filtered = ["kategorie", "kraj", "misto", "stari"].some((k) => typeof sp[k] === "string" && sp[k] !== "");
+  return { ...META, alternates: { canonical: "/poptavky" }, ...(filtered ? { robots: { index: false, follow: true } } : {}) };
+}
 
 const PAGE = 20;
 

@@ -6,6 +6,7 @@ import { OPERATOR } from "@/lib/operator";
 import { TERMS_VALID_FROM, TERMS_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/obchodni-podminky" },
   title: "Obchodní podmínky",
   description: "Všeobecné obchodní podmínky platformy iRemeslo.cz: registrace, zkušební období, předplatné, odpovědnost, data a ukončení smlouvy.",
 };

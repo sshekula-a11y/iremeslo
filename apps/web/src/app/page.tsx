@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { OPERATOR } from "@/lib/operator";
+import { SITE_URL } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InquiryRow } from "@/components/InquiryCard";
@@ -11,6 +14,27 @@ const benefits = [
   { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Doklady jsou číslované bez mezer." },
 ];
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+/** Strukturovaná data pro vyhledávače: kdo web provozuje a jak se jmenuje. */
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: "iRemeslo.cz",
+      legalName: OPERATOR.name,
+      url: SITE_URL,
+      logo: `${SITE_URL}/brand/logo.png`,
+      email: OPERATOR.email,
+      vatID: OPERATOR.dic,
+      address: { "@type": "PostalAddress", streetAddress: "Hybernská 1007/20", postalCode: "110 00", addressLocality: "Praha", addressCountry: "CZ" },
+    },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#web`, name: "iRemeslo.cz", url: SITE_URL, inLanguage: "cs", publisher: { "@id": `${SITE_URL}/#org` } },
+  ],
+};
+
 export default async function Home() {
   const supabase = await createClient();
   const { data } = await supabase.rpc("list_inquiries", { p_limit: 10 });
@@ -22,6 +46,7 @@ export default async function Home() {
 
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <SiteHeader />
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-14 pt-10 sm:pt-14">

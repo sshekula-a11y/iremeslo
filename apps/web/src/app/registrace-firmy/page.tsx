@@ -6,7 +6,7 @@ import { SIGNUP_STEP_COUNT, SignupSteps } from "@/components/SignupSteps";
 import { DataLayerEvent } from "@/components/DataLayerEvent";
 import { inquiryReturn } from "@/lib/safe-next";
 
-export const metadata: Metadata = { title: "Registrace firmy" };
+export const metadata: Metadata = { title: "Registrace firmy", robots: { index: false, follow: false } };
 
 export default async function RegisterCompanyPage({ searchParams }: PageProps<"/registrace-firmy">) {
   const user = await requireUser();
