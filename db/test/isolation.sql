@@ -514,5 +514,24 @@ reset role;
 update app.inquiries set closed_at = now() - interval '91 days' where id = :'inq';
 select t_eq(app.cleanup_inquiries(), 1, 'úklid smaže poptávku 90 dní po uzavření');
 
+-- ---------- termín realizace poptávky (013) ----------
+set role anon;
+select t_login(null) \g /dev/null
+select (submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba bytu 2+1','description','Výmalba dvou pokojů a kuchyně, bílá barva.',
+  'city','Praha','term','date','term_from',(current_date + 10)::text,'term_date',(current_date + 20)::text,
+  'contact_name','Petr Test','contact_email','petr@example.cz')) ->> 'id')::uuid as inq2 \gset
+select t_fails($q$select submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba bytu 2+1','description','Výmalba dvou pokojů a kuchyně, bílá barva.','city','Praha','term','date','term_from',(current_date + 20)::text,'term_date',(current_date + 10)::text,'contact_name','Petr Test','contact_email','petr@example.cz'))$q$, 'dokončení před zahájením neprojde');
+select t_fails($q$select submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba bytu 2+1','description','Výmalba dvou pokojů a kuchyně, bílá barva.','city','Praha','term','date','term_from',(current_date - 1)::text,'contact_name','Petr Test','contact_email','petr@example.cz'))$q$, 'termín v minulosti neprojde');
+select t_fails($q$select submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba bytu 2+1','description','Výmalba dvou pokojů a kuchyně, bílá barva.','city','Praha','term','date','contact_name','Petr Test','contact_email','petr@example.cz'))$q$, 'vlastní termín bez data neprojde');
+reset role;
+select t_text((select term_from::text || '/' || term_date::text from app.inquiries where id = :'inq2'), (current_date + 10)::text || '/' || (current_date + 20)::text, 'vlastní termín od–do se uloží');
+update app.inquiries set status = 'open' where id = :'inq2';
+set role anon;
+select t_text((select get_inquiry(:'inq2') ->> 'term_from'), (current_date + 10)::text, 'veřejný detail ukáže začátek termínu');
+reset role;
+select (submit_inquiry(jsonb_build_object('category','uklid','title','Úklid po malování','description','Jednorázový úklid bytu po malování, 60 m².',
+  'city','Praha','term','asap','term_date',(current_date + 5)::text,'contact_name','Petr Test','contact_email','petr2@example.cz')) ->> 'id')::uuid as inq3 \gset
+select t_eq((select count(*)::int from app.inquiries where id = :'inq3' and term = 'asap' and term_from is null and term_date is null), 1, 'u „ihned“ se data neukládají');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'
