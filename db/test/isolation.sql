@@ -651,5 +651,12 @@ select t_eq((select jsonb_array_length(admin_funnel() -> 'weekly')), 12, 'přehl
 select t_eq((select (admin_funnel() -> 'total' ->> 'contacts')::int), 1, 'součty sedí');
 reset role;
 
+-- ---------- nové obory (017) ----------
+reset role;
+select (submit_inquiry('{"category":"cisteni","title":"Čištění střechy a dlažby","description":"Odstranění mechu ze střechy a čištění zámkové dlažby.","city":"Brno","term":"flexible","contact_name":"Ema","contact_email":"ema@example.cz"}'::jsonb) ->> 'id') is not null as ok \gset
+select t_eq(:'ok'::boolean::int, 1, 'obor čištění střech, fasád a dlažeb');
+select (submit_inquiry('{"category":"renovace","title":"Renovace fasády a plotu","description":"Renovace exteriéru rodinného domu včetně plotu.","city":"Brno","term":"flexible","contact_name":"Ema","contact_email":"ema@example.cz"}'::jsonb) ->> 'id') is not null as ok2 \gset
+select t_eq(:'ok2'::boolean::int, 1, 'obor renovace exteriérů');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

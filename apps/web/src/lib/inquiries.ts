@@ -1,9 +1,11 @@
 import { formatDate } from "@/lib/format";
 
-/** Kategorie veřejných poptávek (stejné hodnoty hlídá databáze, migrace 012). */
+/** Kategorie veřejných poptávek (stejné hodnoty hlídá databáze, migrace 012 a 017). */
 export const INQUIRY_CATEGORIES = [
   ["malovani", "Malování a natěračství"],
   ["fasady", "Fasády a zateplení"],
+  ["cisteni", "Čištění střech, fasád a dlažeb"],
+  ["renovace", "Renovace exteriérů nemovitostí"],
   ["strechy", "Střechy a klempířství"],
   ["podlahy", "Podlahy"],
   ["obklady", "Obklady a dlažby"],
