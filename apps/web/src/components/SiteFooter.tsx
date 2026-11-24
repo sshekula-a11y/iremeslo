@@ -12,6 +12,11 @@ export function SiteFooter() {
         <Col title="Pro zákazníky">
           <Link href="/poptavky/nova" className={link}>Zadat poptávku zdarma</Link>
           <Link href="/poptavky" className={link}>Všechny poptávky</Link>
+          <Link href="/remeslnici" className={link}>Řemeslníci podle oboru</Link>
+          <Link href="/remeslnici/instalater" className={link}>Instalatér</Link>
+          <Link href="/remeslnici/elektrikar" className={link}>Elektrikář</Link>
+          <Link href="/remeslnici/malir" className={link}>Malíř pokojů</Link>
+          <Link href="/remeslnici/rekonstrukce-bytu" className={link}>Rekonstrukce bytu</Link>
         </Col>
         <Col title="Pro řemeslníky">
           <Link href="/pro-remeslniky" className={link}>Funkce aplikace</Link>

@@ -30,7 +30,7 @@ function clearDraft() {
 }
 
 /** Poptávka ve třech krocích: Co → Kde a kdy → Kontakt. Rozepsané údaje se průběžně ukládají v prohlížeči. */
-export function InquiryForm({ today }: { today: string }) {
+export function InquiryForm({ today, defaultCategory = "" }: { today: string; defaultCategory?: string }) {
   const [state, action, pending] = useActionState<InquiryState, FormData>(submitInquiry, {});
   const [step, setStep] = useState(0);
   const [term, setTerm] = useState("flexible");
@@ -124,7 +124,7 @@ export function InquiryForm({ today }: { today: string }) {
         <h2 className="font-display text-[19px] font-bold">Co poptáváte</h2>
         <div>
           <label className="label" htmlFor="category">Obor</label>
-          <select className="field" id="category" name="category" required defaultValue="">
+          <select className="field" id="category" name="category" required defaultValue={defaultCategory}>
             <option value="" disabled>Vyberte obor</option>
             {INQUIRY_CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 
@@ -138,4 +139,66 @@ export async function setInquiryStatus(_: AdminState, form: FormData): Promise<A
   revalidatePath("/ssh/poptavky");
   revalidatePath("/poptavky");
   return { ok: true, message: p.data.status === "open" ? "Zveřejněno." : p.data.status === "hidden" ? "Skryto." : "Uzavřeno." };
+}
+
+// ---------------------------------------------------------------------------
+// Profese (stránky /remeslnici/<slug>)
+// ---------------------------------------------------------------------------
+
+const lines = (v: FormDataEntryValue | null) => String(v ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+
+/** Otázky: bloky oddělené prázdným řádkem, první řádek otázka, zbytek odpověď. */
+function parseFaq(v: FormDataEntryValue | null) {
+  return String(v ?? "").replace(/\r/g, "").split(/\n\s*\n/).map((b) => {
+    const [q = "", ...a] = b.split("\n").map((s) => s.trim());
+    return { q, a: a.join(" ").trim() };
+  }).filter((f) => f.q && f.a);
+}
+
+const profession = z.object({
+  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Adresa smí obsahovat jen malá písmena bez diakritiky, číslice a pomlčky.").min(2).max(60),
+  name: z.string().trim().min(2, "Vyplňte název.").max(80),
+  category: z.string().min(1, "Vyberte obor poptávek."),
+  meta_title: z.string().trim().min(10, "Titulek pro Google má mít 10–90 znaků.").max(90, "Titulek pro Google má mít 10–90 znaků."),
+  meta_description: z.string().trim().min(50, "Popis pro Google má mít 50–200 znaků.").max(200, "Popis pro Google má mít 50–200 znaků."),
+  intro: z.string().trim().min(50, "Úvodní text má mít aspoň 50 znaků.").max(2000),
+  tip: z.string().trim().max(600, "Tip může mít nejvýše 600 znaků."),
+  sort: z.coerce.number().int().min(0).max(9999),
+});
+
+export async function saveProfession(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const p = profession.safeParse(Object.fromEntries(["slug", "name", "category", "meta_title", "meta_description", "intro", "tip", "sort"].map((k) => [k, form.get(k) ?? ""])));
+  if (!p.success) return { error: p.error.issues[0]?.message ?? "Zkontrolujte údaje." };
+  const original = String(form.get("original") ?? "") || null;
+  const payload = {
+    ...p.data,
+    services: lines(form.get("services")).slice(0, 20),
+    price_factors: lines(form.get("price_factors")).slice(0, 20),
+    faq: parseFaq(form.get("faq")).slice(0, 10),
+    published: form.get("published") === "on",
+  };
+  const { error } = await supabase.rpc("admin_save_profession", { p: payload, p_original: original });
+  if (error) {
+    if (error.message.includes("duplicate key")) return { error: "Profese s touto adresou už existuje." };
+    return fail(error, "Profesi se nepodařilo uložit.");
+  }
+  revalidatePath("/remeslnici");
+  revalidatePath(`/remeslnici/${p.data.slug}`);
+  if (original && original !== p.data.slug) revalidatePath(`/remeslnici/${original}`);
+  revalidatePath("/ssh/profese");
+  if (original !== p.data.slug) redirect(`/ssh/profese/${p.data.slug}?ulozeno=1`);
+  return { ok: true, message: "Uloženo. Stránka se na webu obnoví do 5 minut." };
+}
+
+export async function deleteProfession(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const slug = String(form.get("slug") ?? "");
+  if (form.get("confirm") !== "on") return { error: "Potvrďte smazání zaškrtnutím." };
+  const { error } = await supabase.rpc("admin_delete_profession", { p_slug: slug });
+  if (error) return fail(error, "Profesi se nepodařilo smazat.");
+  revalidatePath("/remeslnici");
+  revalidatePath(`/remeslnici/${slug}`);
+  revalidatePath("/ssh/profese");
+  redirect("/ssh/profese");
 }

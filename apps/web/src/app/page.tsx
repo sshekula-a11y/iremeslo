@@ -109,6 +109,7 @@ export default async function Home() {
 
           <p className="mt-6 text-[14px] text-white/60">
             Pro malíře, fasádníky, pokrývače, obkladače, elektrikáře, instalatéry, zahradníky, firmy na čištění a renovace exteriérů i úklidové firmy.{" "}
+            <Link href="/remeslnici" className="font-semibold text-white/85 underline underline-offset-2 hover:text-white">Všechny obory</Link> ·{" "}
             <Link href="/jak-to-funguje" className="font-semibold text-white/85 underline underline-offset-2 hover:text-white">Jak to funguje</Link>
           </p>
         </div>

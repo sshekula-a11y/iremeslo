@@ -658,5 +658,39 @@ select t_eq(:'ok'::boolean::int, 1, 'obor čištění střech, fasád a dlažeb'
 select (submit_inquiry('{"category":"renovace","title":"Renovace fasády a plotu","description":"Renovace exteriéru rodinného domu včetně plotu.","city":"Brno","term":"flexible","contact_name":"Ema","contact_email":"ema@example.cz"}'::jsonb) ->> 'id') is not null as ok2 \gset
 select t_eq(:'ok2'::boolean::int, 1, 'obor renovace exteriérů');
 
+-- ---------- profese (018) ----------
+set role anon;
+select t_eq((select count(*)::int from professions), 23, 'veřejně je 23 profesí');
+select t_fails($q$insert into professions (slug, name, category, meta_title, meta_description, intro) values ('x', 'Hack', 'jine', 'Hack hack hack', repeat('x', 60), repeat('x', 60))$q$, 'veřejnost profesi nepřidá');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_fails($q$select admin_save_profession('{"slug":"x"}'::jsonb)$q$, 'běžný uživatel profesi neuloží');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select admin_save_profession(jsonb_build_object('slug', 'kominik', 'name', 'Kominík', 'category', 'jine', 'meta_title', 'Kominík – poptávka zdarma',
+  'meta_description', 'Kominík na čištění a kontrolu spalinové cesty. Zadejte poptávku zdarma a bez registrace.',
+  'intro', 'Kominík vyčistí a zkontroluje komín a spalinovou cestu, aby topení bylo bezpečné.',
+  'services', jsonb_build_array('Čištění komínů', ' ', 'Kontrola spalinové cesty'), 'faq', jsonb_build_array(jsonb_build_object('q', 'Jak často?', 'a', 'Podle paliva.'), jsonb_build_object('q', '', 'a', 'x')),
+  'published', false)) \g /dev/null
+select t_eq((select jsonb_array_length(admin_professions())), 24, 'provozovatel vidí i skryté');
+reset role;
+select t_eq((select cardinality(services) from professions where slug = 'kominik'), 2, 'prázdné položky seznamu se zahodí');
+select t_eq((select jsonb_array_length(faq) from professions where slug = 'kominik'), 1, 'neúplná otázka se zahodí');
+set role anon;
+select t_eq((select count(*)::int from professions where slug = 'kominik'), 0, 'skrytá profese není veřejná');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select admin_save_profession(jsonb_build_object('slug', 'kominictvi', 'name', 'Kominík', 'category', 'jine', 'meta_title', 'Kominík – poptávka zdarma',
+  'meta_description', 'Kominík na čištění a kontrolu spalinové cesty. Zadejte poptávku zdarma a bez registrace.',
+  'intro', 'Kominík vyčistí a zkontroluje komín a spalinovou cestu, aby topení bylo bezpečné.', 'published', true), 'kominik') \g /dev/null
+reset role;
+select t_eq((select count(*)::int from professions where slug in ('kominik', 'kominictvi')), 1, 'změna adresy profesi přejmenuje, nezdvojí');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_fails($q$select admin_save_profession('{"slug":"Spatna adresa!","name":"X"}'::jsonb)$q$, 'neplatná adresa neprojde');
+select admin_delete_profession('kominictvi');
+reset role;
+select t_eq((select count(*)::int from professions where slug = 'kominictvi'), 0, 'profesi jde smazat');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

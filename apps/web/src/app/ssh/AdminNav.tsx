@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/ssh/uzivatele", label: "Uživatelé" },
   { href: "/ssh/platby", label: "Platby" },
   { href: "/ssh/poptavky", label: "Poptávky" },
+  { href: "/ssh/profese", label: "Profese" },
   { href: "/ssh/emaily", label: "E-maily" },
 ];
 

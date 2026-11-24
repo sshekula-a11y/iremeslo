@@ -35,6 +35,8 @@ export const ACTION_LABELS: Record<string, string> = {
   inquiry_open: "Zveřejněna poptávka",
   inquiry_closed: "Uzavřena poptávka",
   inquiry_hidden: "Skryta poptávka",
+  profession_save: "Uložena profese",
+  profession_delete: "Smazána profese",
 };
 
 export const SUB_STATUS_LABELS: Record<string, string> = {
