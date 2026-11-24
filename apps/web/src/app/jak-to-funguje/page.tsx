@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_TRADESMEN } from "@/lib/faq";
+import { CUSTOMER_STEPS } from "@/lib/marketing";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/jak-to-funguje" },
@@ -95,14 +96,6 @@ const MORE = [
 const SOON = [
   "Odeslání nabídky e-mailem a schválení nabídky zákazníkem jedním kliknutím",
   "Pozvánky pro kolegy do kanceláře a pracovníky",
-];
-
-/** Zákazník: od poptávky po výběr řemeslníka. */
-const CUSTOMER_STEPS = [
-  { title: "Zadáte poptávku", text: "Popíšete práci, místo a termín. Zdarma a bez registrace; poptávku potvrdíte odkazem z e-mailu." },
-  { title: "Poptávka se zobrazí řemeslníkům", text: "Je ve veřejném seznamu poptávek. Váš kontakt vidí jen řemeslníci s IČO ověřeným v ARES." },
-  { title: "Řemeslníci se vám ozvou", text: "Zavolají nebo napíšou s nabídkou. U poptávky vidíte, kolik z nich si kontakt zobrazilo." },
-  { title: "Vyberete a poptávku uzavřete", text: "Nic nepodepisujete. Až si vyberete, poptávku jedním kliknutím z e-mailu uzavřete." },
 ];
 
 const FAQ_PICK = ["Kolik to stojí?", "Funguje to na mobilu?", "Hodí se i pro neplátce DPH?", "Kdo uvidí moje čísla?"];

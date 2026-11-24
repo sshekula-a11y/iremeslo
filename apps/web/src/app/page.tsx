@@ -7,12 +7,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { InquiryRow } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
 import type { InquiryList } from "@/lib/inquiries";
+import { FaqList } from "@/components/FaqList";
+import { FAQ_CUSTOMERS, FAQ_TRADESMEN } from "@/lib/faq";
+import { CUSTOMER_STEPS, FEATURES, TRADESMAN_STEPS, TRUST } from "@/lib/marketing";
+import { PRICE_FROM } from "@/lib/pricing";
 
-const benefits = [
-  { title: "Nabídka za pár minut", text: "Práce, materiál, zaměstnanci a výdaje na jednom místě. Ceny z vašeho ceníku se doplní samy, PDF pošlete zákazníkovi rovnou ze stavby." },
-  { title: "Vidíte skutečný zisk", text: "U každé zakázky porovnáte náklady s tím, co fakturujete. Když marže klesne pod vaši hranici, aplikace vás upozorní." },
-  { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Doklady jsou číslované bez mezer." },
-];
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -34,6 +33,29 @@ const JSON_LD = {
     { "@type": "WebSite", "@id": `${SITE_URL}/#web`, name: "iRemeslo.cz", url: SITE_URL, inLanguage: "cs", publisher: { "@id": `${SITE_URL}/#org` } },
   ],
 };
+
+/** Čtyři nejčastější otázky: dvě zákaznické, dvě řemeslnické. */
+const faq = [
+  ...FAQ_CUSTOMERS.filter((f) => ["Je zadání poptávky zdarma?", "Kdo uvidí můj kontakt?"].includes(f.q)),
+  ...FAQ_TRADESMEN.filter((f) => ["Kolik to stojí?", "Funguje to na mobilu?"].includes(f.q)),
+];
+
+function Steps({ label, steps }: { label: string; steps: { title: string; text: string }[] }) {
+  return (
+    <div className="mt-5">
+      <h3 className="text-[13px] font-bold uppercase tracking-wider text-accent-ink">{label}</h3>
+      <ol className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map((s, i) => (
+          <li key={s.title} className="card p-4">
+            <span className="num flex size-7 items-center justify-center rounded-full bg-accent text-[14px] font-bold text-ink" aria-hidden="true">{i + 1}</span>
+            <p className="mt-2 font-semibold leading-snug">{s.title}</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 export default async function Home() {
   const supabase = await createClient();
@@ -95,19 +117,10 @@ export default async function Home() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-5xl gap-4 px-5 pt-12 sm:grid-cols-3">
-        {benefits.map((b) => (
-          <div key={b.title} className="card p-5">
-            <h2 className="font-display text-[18px] font-bold">
-              {b.title}
-            </h2>
-            <p className="mt-2 text-[15px] leading-relaxed text-muted">{b.text}</p>
-          </div>
-        ))}
-      </section>
-
-      <p className="mx-auto max-w-5xl px-5 pt-5">
-        <Link href="/jak-to-funguje" className="font-semibold text-accent-ink hover:underline">Podívejte se, jak to funguje krok za krokem →</Link>
+      <p className="border-b border-line bg-white">
+        <span className="mx-auto block max-w-5xl px-5 py-4 text-center font-display text-[17px] font-bold sm:text-[19px]">
+          Více zakázek. <span className="text-accent-ink">Méně administrativy.</span> Lepší přehled o podnikání.
+        </span>
       </p>
 
       <section className="mx-auto max-w-5xl px-5 pt-12" aria-labelledby="poptavky">
@@ -149,11 +162,62 @@ export default async function Home() {
         </div>
       </section>
 
-      <p className="mx-auto max-w-5xl px-5 py-10 text-[13px] text-muted">
-        <span className="mr-1.5 rounded-full bg-ok-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ok">GDPR</span>
-        Data v EU, oddělená pro každou firmu. Analytické a reklamní cookies jen s vaším souhlasem.{" "}
-        <Link href="/ochrana-osobnich-udaju" className="font-semibold text-accent-ink hover:underline">Ochrana osobních údajů</Link>
-      </p>
+      <div className="mx-auto max-w-5xl px-5">
+        <section className="pt-14" aria-labelledby="funkce">
+          <h2 id="funkce" className="font-display text-[26px] font-extrabold sm:text-[30px]">Vše pro vaše řemeslo na jednom místě</h2>
+          <p className="mt-1 text-[16px] text-muted">iRemeslo.cz je virtuální kancelář – na telefonu i na počítači.</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="card p-5">
+                <h3 className="font-display text-[18px] font-bold">{f.title}</h3>
+                <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{f.text}</p>
+              </div>
+            ))}
+          </div>
+          <Link href="/pro-remeslniky" className="mt-4 inline-block font-semibold text-accent-ink underline">Více pro řemeslníky →</Link>
+        </section>
+
+        <section className="pt-14" aria-labelledby="jak">
+          <h2 id="jak" className="font-display text-[26px] font-extrabold sm:text-[30px]">Jak to funguje</h2>
+          <Steps label="Zákazník" steps={CUSTOMER_STEPS} />
+          <Steps label="Řemeslník" steps={TRADESMAN_STEPS} />
+          <Link href="/jak-to-funguje" className="mt-4 inline-block font-semibold text-accent-ink underline">Krok za krokem s ukázkami z aplikace →</Link>
+        </section>
+
+        <section className="grid gap-4 pt-14 md:grid-cols-2" aria-label="Cena a důvěra">
+          <div className="card flex flex-col p-5 sm:p-6">
+            <h2 className="font-display text-[22px] font-extrabold">Cena</h2>
+            <p className="mt-2 text-[16px]">
+              Zadání poptávky je pro zákazníky <strong>vždy zdarma</strong>. Řemeslníci mají <strong>30 dní zdarma</strong>,
+              pak od <strong className="num">{PRICE_FROM} Kč</strong> měsíčně bez DPH.
+            </p>
+            <div className="mt-auto pt-4"><Link href="/cenik" className="btn-ghost">Zobrazit ceník</Link></div>
+          </div>
+          <div className="card p-5 sm:p-6">
+            <h2 className="font-display text-[22px] font-extrabold">Komu svěřujete data</h2>
+            <ul className="mt-2 space-y-1.5 text-[15px]">
+              {TRUST.map((t) => <li key={t} className="flex gap-2"><span className="text-ok" aria-hidden="true">✓</span><span>{t}</span></li>)}
+            </ul>
+            <Link href="/ochrana-osobnich-udaju" className="mt-3 inline-block text-[14px] font-semibold text-accent-ink underline">Ochrana osobních údajů</Link>
+          </div>
+        </section>
+
+        <section className="pt-14" aria-labelledby="otazky">
+          <h2 id="otazky" className="mb-3 font-display text-[26px] font-extrabold sm:text-[30px]">Časté otázky</h2>
+          <FaqList items={faq} />
+          <Link href="/caste-otazky" className="mt-3 inline-block font-semibold text-accent-ink underline">Všechny otázky →</Link>
+        </section>
+      </div>
+
+      <section className="mt-14 bg-ink text-white" aria-labelledby="zacit">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-5 px-5 py-10">
+          <h2 id="zacit" className="font-display text-[24px] font-extrabold sm:text-[28px]">Hledáte řemeslníka, nebo zakázky?</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>
+            <Link href="/prihlaseni?rezim=registrace" className="btn bg-white text-ink hover:bg-white/90">Vyzkoušet zdarma</Link>
+          </div>
+        </div>
+      </section>
 
       <SiteFooter />
     </main>

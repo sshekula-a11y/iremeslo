@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_TRADESMEN } from "@/lib/faq";
-import { OPERATOR } from "@/lib/operator";
+import { FEATURES, TRADESMAN_STEPS as STEPS, TRUST } from "@/lib/marketing";
 import { PRICE_FROM } from "@/lib/pricing";
 
 export const metadata: Metadata = {
@@ -14,34 +14,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pro-remeslniky" },
 };
 
-/** Co aplikace umí – jen to, co opravdu funguje (viz Jak to funguje). */
-const FEATURES = [
-  { title: "Nové zakázky", text: "Procházejte poptávky z vašeho oboru a kraje a ozvěte se zákazníkovi jako první." },
-  { title: "Kalkulace", text: "Práce, materiál, lidé a výdaje. Hned vidíte cenu, náklady i marži." },
-  { title: "Cenové nabídky", text: "Profesionální PDF s logem, razítkem a podpisem za pár minut." },
-  { title: "Faktury", text: "Pro plátce i neplátce DPH, zálohy a QR Platba. Čísla dokladů jdou po sobě." },
-  { title: "Smlouva o dílo", text: "Ze zakázky vystavíte smlouvu s předmětem a cenou. Předávací protokol vznikne s ní." },
-  { title: "Kalendář a přehled", text: "Kdo, kde a kdy pracuje. Co čeká na platbu a kolik vyděláte na každé zakázce." },
-];
-
-const STEPS = [
-  { title: "Zaregistrujte se a zadejte IČO", text: "Údaje firmy načteme z ARES. IČO ověříme automaticky – pak uvidíte kontakty z poptávek." },
-  { title: "Najděte vhodnou zakázku", text: "Filtrujte poptávky podle oboru, kraje a stáří a ozvěte se zákazníkovi." },
-  { title: "Spočítejte a pošlete nabídku", text: "Zakázka spočítá cenu i marži, nabídku stáhnete jako PDF." },
-  { title: "Naplánujte práci a vyfakturujte", text: "Termín v kalendáři, smlouva o dílo, předávací protokol a faktura s QR Platbou." },
-];
-
 const SHOTS = [
   { src: "/jak-to-funguje/zakazka-pocitac.webp", alt: "Zakázka na počítači: práce, materiál a souhrn s náklady a marží", width: 1600, height: 1112, caption: "Zakázka s výpočtem marže" },
   { src: "/jak-to-funguje/nabidka.webp", alt: "Cenová nabídka v PDF s položkami a součtem s DPH", width: 1240, height: 1753, caption: "Cenová nabídka v PDF" },
   { src: "/jak-to-funguje/kalendar-pocitac.webp", alt: "Měsíční kalendář zakázek s barvami podle stavu", width: 1600, height: 1112, caption: "Kalendář zakázek" },
-];
-
-const TRUST = [
-  `Provozovatel ${OPERATOR.name}, IČO ${OPERATOR.ico}`,
-  "Data v EU (Frankfurt), oddělená pro každou firmu",
-  "Faktury a doklady podle zákona o DPH, číslované bez mezer",
-  "Analytické a reklamní cookies jen s vaším souhlasem",
 ];
 
 const FAQ_PICK = ["Jak získám nové zakázky?", "Kolik to stojí?", "Co obsahuje bezplatné období?", "Funguje to na mobilu?"];
