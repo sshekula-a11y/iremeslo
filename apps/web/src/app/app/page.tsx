@@ -40,6 +40,8 @@ export default async function Dashboard({ searchParams }: PageProps<"/app">) {
       .in("type", ["invoice", "invoice_non_payer", "advance"])
       .in("status", ["issued", "sent"]),
   ]);
+  const { count: professionCount } = await supabase
+    .from("company_professions").select("profession_slug", { count: "exact", head: true }).eq("company_id", company.id);
   const unpaid = (open ?? []).reduce((sum, d) => sum + toHundredths(d.total_due), 0);
   const overdue = (open ?? []).filter((d) => d.due_date && d.due_date < todayIso).reduce((sum, d) => sum + toHundredths(d.total_due), 0);
 
@@ -56,6 +58,16 @@ export default async function Dashboard({ searchParams }: PageProps<"/app">) {
           <Link href="/app/faktury/rychla" className="btn-primary">+ Vystavit fakturu</Link>
         </div>
       </div>
+
+      {professionCount === 0 && company.role === "owner" && (
+        <Link href="/app/nastaveni#profese" className="card flex items-center justify-between gap-3 border-accent/40 bg-accent-soft p-4 hover:border-accent">
+          <span>
+            <span className="block font-display text-[17px] font-bold">Vyberte profese své firmy (až 5)</span>
+            <span className="block text-[14px] text-muted">V poptávkách pak uvidíte jen ty z vašich oborů.</span>
+          </span>
+          <span className="text-[20px] text-accent-ink" aria-hidden="true">→</span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Zakázky tento týden" value={String(jobs?.length ?? 0)} />

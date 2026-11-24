@@ -136,3 +136,17 @@ export async function setBrandImage(kind: BrandImage, path: string | null): Prom
   revalidatePath("/app/nastaveni", "layout");
   return { ok: true };
 }
+
+/** Profese firmy (nejvýš 5) – podle nich se filtrují poptávky „Moje obory“. */
+export async function saveProfessions(slugs: string[]): Promise<SettingsState> {
+  const company = await requireCompany();
+  if (company.role !== "owner") return { error: "Profese může měnit jen majitel firmy." };
+  const clean = [...new Set(slugs.filter((s) => /^[a-z0-9-]{2,60}$/.test(s)))];
+  if (clean.length > 5) return { error: "Vyberte nejvýše 5 profesí." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_company_professions", { p_company: company.id, p_slugs: clean });
+  if (error) return { error: error.message.includes("nejvýše 5") ? "Vyberte nejvýše 5 profesí." : "Profese se nepodařilo uložit." };
+  revalidatePath("/app/nastaveni");
+  revalidatePath("/app");
+  return { ok: true };
+}

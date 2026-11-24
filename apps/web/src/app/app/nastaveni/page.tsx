@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toHundredths, toInput } from "@/lib/money";
 import { ROLE_LABELS } from "@/lib/labels";
 import { SettingsForm } from "./SettingsForm";
+import { ProfessionPicker } from "./ProfessionPicker";
 
 export const metadata: Metadata = { title: "Nastavení firmy" };
 
@@ -17,6 +18,10 @@ export default async function SettingsPage() {
     .eq("id", company.id)
     .single();
   if (!c) throw new Error("Firmu se nepodařilo načíst.");
+  const [{ data: profs }, { data: mine }] = await Promise.all([
+    supabase.from("professions").select("slug, name").order("sort").order("name"),
+    supabase.from("company_professions").select("profession_slug").eq("company_id", company.id),
+  ]);
 
   const canEdit = company.role === "owner";
   const pct = (v: string | number) => toInput(toHundredths(v)) || "0";
@@ -38,6 +43,12 @@ export default async function SettingsPage() {
           Pokud se nedaří, zkontrolujte IČO níže nebo napište na <a className="underline" href="mailto:info@iremeslo.cz">info@iremeslo.cz</a>.
         </p>
       )}
+
+      <ProfessionPicker
+        options={(profs ?? []) as { slug: string; name: string }[]}
+        initial={((mine ?? []) as { profession_slug: string }[]).map((m) => m.profession_slug)}
+        canEdit={canEdit}
+      />
 
       <Link href="/app/nastaveni/faktura" className="card flex items-center justify-between gap-3 p-4 hover:border-ink/30">
         <span>

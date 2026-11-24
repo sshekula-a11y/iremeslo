@@ -692,5 +692,29 @@ reset role;
 select t_eq((select count(*)::int from professions where slug = 'kominictvi'), 0, 'profesi jde smazat');
 reset role;
 
+-- ---------- profese firmy (019) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select set_company_professions(:'company_a', array['malir', 'naterac', 'fasadnik', 'malir']);
+select t_eq((select count(*)::int from company_professions where company_id = :'company_a'), 3, 'majitel nastaví profese (bez duplicit)');
+select t_fails(format('select set_company_professions(%L, array[''malir'',''naterac'',''fasadnik'',''obkladac'',''podlahar'',''zednik''])', :'company_a'), 'víc než 5 profesí nejde');
+select t_fails(format('select set_company_professions(%L, array[''neexistuje''])', :'company_a'), 'neznámou profesi nejde');
+select set_company_professions(:'company_a', array['obkladac']);
+select t_eq((select count(*)::int from company_professions where company_id = :'company_a'), 1, 'nastavení nahradí dosavadní profese');
+select t_fails(format('select set_company_professions(%L, array[''malir''])', :'company_b'), 'cizí firmě profese nastavit nejde');
+select t_fails(format($q$insert into company_professions (company_id, profession_slug) values (%L, 'malir')$q$, :'company_a'), 'přímý zápis mimo funkci nejde');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq((select count(*)::int from company_professions where company_id = :'company_a'), 0, 'profese cizí firmy nejsou vidět');
+reset role;
+insert into company_professions (company_id, profession_slug) select :'company_b', slug from professions order by sort limit 5;
+select t_fails(format($q$insert into company_professions (company_id, profession_slug) values (%L, 'zednik')$q$, :'company_b'), 'pojistka: 6. profese neprojde ani přímo');
+update professions set slug = 'obkladac-dlazdic' where slug = 'obkladac';
+select t_eq((select count(*)::int from company_professions where company_id = :'company_a' and profession_slug = 'obkladac-dlazdic'), 1, 'přejmenování adresy profese se propíše firmám');
+update professions set slug = 'obkladac' where slug = 'obkladac-dlazdic';
+insert into app.inquiries (status, confirmed_at, category, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'obklady', 'Obklad koupelny 12 m2', 'Obklad stěn v koupelně do výšky stropu.', 'Brno', 'flexible', 'Iva', 'iva@example.cz', 'cat-obklady');
+select t_eq((select (list_inquiries(p_categories => array['obklady', 'podlahy']) ->> 'total')::int), 1, 'filtr více oborů');
+select t_eq((select (list_inquiries(p_categories => array['elektro']) ->> 'total')::int), 0, '… jiné obory poptávku nenajdou');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'
