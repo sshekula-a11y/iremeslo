@@ -43,9 +43,24 @@ export default function PrivacyPage() {
             <li><strong>Provoz vašeho účtu a aplikace</strong> – plnění smlouvy (čl. 6 odst. 1 písm. b GDPR).</li>
             <li><strong>Účetnictví a daně</strong> u faktur za předplatné – zákonná povinnost (čl. 6 odst. 1 písm. c).</li>
             <li><strong>Bezpečnost a ochrana proti zneužití</strong>, např. jedno zkušební období na IČO – oprávněný zájem (čl. 6 odst. 1 písm. f).</li>
+            <li><strong>Zveřejnění poptávky</strong> a předání kontaktu registrovaným řemeslníkům – souhlas zadavatele (čl. 6 odst. 1 písm. a).</li>
             <li><strong>Novinky e-mailem</strong> – jen pokud k tomu dáte souhlas; můžete ho kdykoli odvolat.</li>
           </ul>
           <p>Údaje neprodáváme a nepoužíváme k reklamě.</p>
+        </Part>
+
+        <Part id="poptavky" title="Veřejné poptávky">
+          <p>
+            Když zadáte poptávku, zpracováváme její obsah (obor, popis, rozsah, obec, PSČ, termín), vaši ulici a kontakt
+            (jméno, telefon, e-mail). Popis, obec, PSČ a termín jsou veřejné. <strong>Jméno, telefon, e-mail a ulici
+            zpřístupníme jen registrovaným řemeslníkům s ověřeným e-mailem</strong>, aby vás mohli kvůli poptávce kontaktovat;
+            každé zobrazení kontaktu zaznamenáváme.
+          </p>
+          <p>
+            Právním základem je váš souhlas (čl. 6 odst. 1 písm. a GDPR), který můžete kdykoli odvolat uzavřením poptávky
+            odkazem z e-mailu nebo napsáním na <a className="font-semibold text-accent-ink underline" href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.
+            Poptávka platí 60 dní. Nepotvrzené poptávky mažeme po 3 dnech, uzavřené a prošlé nejpozději 90 dní po jejich skončení.
+          </p>
         </Part>
 
         <Part title="Údaje vašich zákazníků a zaměstnanců">
@@ -118,9 +133,9 @@ export default function PrivacyPage() {
   );
 }
 
-function Part({ title, children }: { title: string; children: React.ReactNode }) {
+function Part({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
+    <section id={id} className="scroll-mt-6 space-y-3">
       <h2 className="font-display text-[22px] font-extrabold">{title}</h2>
       {children}
     </section>

@@ -32,6 +32,9 @@ export const ACTION_LABELS: Record<string, string> = {
   payment: "Zapsaná platba",
   email_settings: "Změna nastavení e-mailů",
   verify_email: "Ručně potvrzený e-mail",
+  inquiry_open: "Zveřejněna poptávka",
+  inquiry_closed: "Uzavřena poptávka",
+  inquiry_hidden: "Skryta poptávka",
 };
 
 export const SUB_STATUS_LABELS: Record<string, string> = {

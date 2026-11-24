@@ -434,7 +434,8 @@ select t_login('00000000-0000-0000-0000-0000000000ad');
 select t_text((select admin_email_settings() ->> 'key_hint'), '…7890', 'administrace ukáže jen konec klíče');
 select t_fails($q$select admin_set_email_settings('spatny', null, null)$q$, 'neplatný klíč neprojde');
 select t_fails($q$select admin_set_email_settings(null, 'http://iremeslo.cz', null)$q$, 'adresa webu musí být https');
-select admin_set_email_settings('re_novy_klic_abcdef', 'https://iremeslo.cz/', null) \g /dev/null
+select t_fails($q$select admin_set_email_settings('re_Usekly_klic', null, null)$q$, 'useknutý klíč Resend neprojde');
+select admin_set_email_settings('re_NovyKlic12_abcdefghijklmnopqrstcdef', 'https://iremeslo.cz/', null) \g /dev/null
 select t_text((select admin_email_settings() ->> 'key_hint'), '…cdef', 'klíč se v trezoru přepsal');
 select t_text((select admin_email_settings() ->> 'site_url'), 'https://iremeslo.cz', 'adresa webu bez lomítka na konci');
 select t_text((select admin_send_test_email('test@example.cz')::text), 'true', 'zkušební e-mail odeslán');
@@ -451,6 +452,67 @@ select t_eq(app.cleanup_unverified(), 1, 'úklid smazal jeden nepotvrzený úče
 select t_eq((select count(*)::int from auth.users where id = :'ver_user'), 0, 'účet bez firmy smazán');
 select t_eq((select count(*)::int from auth.users where id = '00000000-0000-0000-0000-00000000000b'), 1, 'účet s firmou zůstal');
 delete from app.unverified_users;
+
+-- ---------- veřejné poptávky (012) ----------
+reset role;
+delete from net._test_requests;
+set role anon;
+select t_login(null) \g /dev/null
+select (submit_inquiry('{"category":"fasady","title":"Zateplení fasády rodinného domu","quantity":"500","unit":"m2",
+  "description":"Zateplení fasády 15 cm EPS včetně omítky, dům je dvoupodlažní.","city":"Brno","zip":"602 00",
+  "street":"Lipová 12","term":"quarter","contact_name":"Jana Poptávková","contact_phone":"+420 777 123 456",
+  "contact_email":"Jana@Example.cz"}'::jsonb) ->> 'id')::uuid as inq \gset
+select t_fails($q$select submit_inquiry('{"category":"fasady","title":"x","description":"krátké","city":"B","term":"asap","contact_name":"J","contact_email":"spatny"}'::jsonb)$q$, 'neúplnou poptávku nejde zadat');
+select t_fails($q$select submit_inquiry('{"category":"neexistuje","title":"Zateplení fasády","description":"Popis poptávky dost dlouhý na kontrolu.","city":"Brno","term":"asap","contact_name":"Jan","contact_email":"jan@example.cz"}'::jsonb)$q$, 'neznámá kategorie neprojde');
+select t_fails('select * from app.inquiries', 'tabulka poptávek není přímo čitelná');
+select t_eq((select count(*)::int from (select get_inquiry(:'inq') as g) x where g is not null), 0, 'nepotvrzená poptávka není veřejná');
+select t_eq((select (list_inquiries() ->> 'total')::int), 0, 'nepotvrzená poptávka není v seznamu');
+reset role;
+select t_text((select body -> 'to' ->> 0 from net._test_requests order by id desc limit 1), 'jana@example.cz', 'potvrzení poptávky jde zadavateli');
+select substring((select body ->> 'html' from net._test_requests order by id desc limit 1) from '/poptavky/sprava\?t=([0-9a-f]{64})') as inq_token \gset
+select t_eq(length(:'inq_token'), 64, 'e-mail obsahuje odkaz na správu poptávky');
+select t_eq((select count(*)::int from net._test_requests where body ->> 'html' like '%„Zateplení fasády rodinného domu“%'), 1, 'název poptávky v e-mailu');
+set role anon;
+select t_text((select confirm_inquiry('00' || right(:'inq_token', 62)) ->> 'ok'), 'false', 'cizí token poptávku nepotvrdí');
+select t_text((select confirm_inquiry(:'inq_token') ->> 'just_confirmed'), 'true', 'odkaz z e-mailu poptávku zveřejní');
+select t_text((select confirm_inquiry(:'inq_token') ->> 'just_confirmed'), 'false', 'druhé otevření jen zobrazí správu');
+select t_eq((select (list_inquiries() ->> 'total')::int), 1, 'potvrzená poptávka je v seznamu');
+select t_eq((select (list_inquiries('fasady', 'brn') ->> 'total')::int), 1, 'filtr kategorie a obce');
+select t_eq((select (list_inquiries('strechy') ->> 'total')::int), 0, 'jiná kategorie poptávku nenajde');
+select t_eq((select (list_inquiries(null, '602') ->> 'total')::int), 1, 'hledání podle PSČ');
+select t_eq((select count(*)::int from (select get_inquiry(:'inq') as g) x where g ? 'contact_email' or g ? 'street' or g::text like '%777%'), 0, 'veřejný detail neobsahuje kontakt ani ulici');
+select t_eq((select count(*)::int from (select list_inquiries() as g) x where g::text like '%Poptávková%' or g::text like '%Lipová%'), 0, 'seznam neobsahuje kontakt ani ulici');
+select t_fails(format('select inquiry_contact(%L)', :'inq'), 'nepřihlášený kontakt nevidí');
+reset role;
+insert into app.unverified_users (user_id, email) values (:'new_user', 'x') on conflict do nothing;
+set role authenticated;
+select t_login(:'new_user');
+select t_fails(format('select inquiry_contact(%L)', :'inq'), 'uživatel s nepotvrzeným e-mailem kontakt nevidí');
+reset role;
+delete from app.unverified_users where user_id = :'new_user';
+set role authenticated;
+select t_text((select inquiry_contact(:'inq') ->> 'phone'), '+420 777 123 456', 'přihlášený s potvrzeným e-mailem vidí telefon');
+select t_text((select inquiry_contact(:'inq') ->> 'street'), 'Lipová 12', '… i ulici');
+select t_text((select get_inquiry(:'inq') ->> 'views'), '1', 'zobrazení kontaktu se počítá jednou na uživatele');
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_fails(format($q$select admin_set_inquiry_status(%L, 'hidden')$q$, :'inq'), 'běžný uživatel poptávku neskryje');
+select t_fails('select admin_inquiries()', 'běžný uživatel nevidí administraci poptávek');
+set role anon;
+select t_login(null) \g /dev/null
+select t_text((select close_inquiry(:'inq_token')::text), 'true', 'zadavatel poptávku uzavře odkazem');
+select t_eq((select (list_inquiries() ->> 'total')::int), 0, 'uzavřená poptávka zmizí ze seznamu');
+select t_text((select get_inquiry(:'inq') ->> 'status'), 'closed', 'detail uzavřené poptávky ukáže stav');
+reset role;
+set role authenticated;
+select t_login(:'new_user');
+select t_fails(format('select inquiry_contact(%L)', :'inq'), 'u uzavřené poptávky se kontakt už nevydá');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select admin_set_inquiry_status(:'inq', 'hidden') \g /dev/null
+select t_eq((select count(*)::int from (select get_inquiry(:'inq') as g) x where g is not null), 0, 'skrytá poptávka není veřejná');
+select t_eq((select jsonb_array_length(admin_inquiries())), 1, 'provozovatel vidí poptávky v administraci');
+reset role;
+update app.inquiries set closed_at = now() - interval '91 days' where id = :'inq';
+select t_eq(app.cleanup_inquiries(), 1, 'úklid smaže poptávku 90 dní po uzavření');
 
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

@@ -124,3 +124,18 @@ export async function verifyUserEmail(_: AdminState, form: FormData): Promise<Ad
   revalidatePath("/ssh/emaily");
   return { ok: true, message: "Potvrzeno." };
 }
+
+// ---------------------------------------------------------------------------
+// Veřejné poptávky
+// ---------------------------------------------------------------------------
+
+export async function setInquiryStatus(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const p = z.object({ id: uuid, status: z.enum(["open", "closed", "hidden"]) }).safeParse({ id: form.get("id"), status: form.get("status") });
+  if (!p.success) return { error: "Neplatný požadavek." };
+  const { error } = await supabase.rpc("admin_set_inquiry_status", { p_id: p.data.id, p_status: p.data.status });
+  if (error) return fail(error, "Nepodařilo se uložit.");
+  revalidatePath("/ssh/poptavky");
+  revalidatePath("/poptavky");
+  return { ok: true, message: p.data.status === "open" ? "Zveřejněno." : p.data.status === "hidden" ? "Skryto." : "Uzavřeno." };
+}

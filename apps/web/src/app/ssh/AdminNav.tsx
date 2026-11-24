@@ -8,6 +8,7 @@ const ITEMS = [
   { href: "/ssh/firmy", label: "Firmy" },
   { href: "/ssh/uzivatele", label: "Uživatelé" },
   { href: "/ssh/platby", label: "Platby" },
+  { href: "/ssh/poptavky", label: "Poptávky" },
   { href: "/ssh/emaily", label: "E-maily" },
 ];
 

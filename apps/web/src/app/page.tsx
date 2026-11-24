@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { InquiryCard } from "@/components/InquiryCard";
+import { createClient } from "@/lib/supabase/server";
+import type { PublicInquiry } from "@/lib/inquiries";
 
 const GDPR = [
   "Databáze běží v EU (Frankfurt), spojení je vždy šifrované.",
@@ -15,7 +18,11 @@ const benefits = [
   { title: "Faktura podle zákona", text: "Plátce i neplátce DPH, 12 i 21 %, přenesená daňová povinnost, zálohy s daňovým dokladem a QR Platba. Doklady jsou číslované bez mezer." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("list_inquiries", { p_limit: 4 });
+  const latest = ((data as { items?: PublicInquiry[] } | null)?.items ?? []);
+
   return (
     <main>
       <SiteHeader />
@@ -38,6 +45,10 @@ export default function Home() {
               Jak to funguje
             </Link>
           </div>
+          <p className="mt-6 text-[15px] text-white/75">
+            Hledáte řemeslníka?{" "}
+            <Link href="/poptavky/nova" className="font-semibold text-accent underline-offset-2 hover:underline">Zadejte poptávku zdarma →</Link>
+          </p>
         </div>
       </header>
 
@@ -55,6 +66,31 @@ export default function Home() {
       <p className="mx-auto max-w-5xl px-5 pt-5">
         <Link href="/jak-to-funguje" className="font-semibold text-accent-ink hover:underline">Podívejte se, jak to funguje krok za krokem →</Link>
       </p>
+
+      <section className="mx-auto max-w-5xl px-5 pt-12" aria-labelledby="poptavky">
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-accent-soft p-5 sm:p-6">
+            <div className="max-w-xl">
+              <h2 id="poptavky" className="font-display text-[24px] font-extrabold leading-tight">Hledáte řemeslníka?</h2>
+              <p className="mt-1 text-[15px] text-muted">
+                Zadejte poptávku zdarma a bez registrace – třeba „zateplení fasády 500 m², Brno, do 3 měsíců“. Ozvou se vám řemeslníci z iRemeslo.cz.
+              </p>
+            </div>
+            <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>
+          </div>
+          {latest.length > 0 && (
+            <div className="p-5 sm:p-6">
+              <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-[18px] font-bold">Nejnovější poptávky</h3>
+                <Link href="/poptavky" className="text-[14px] font-semibold text-accent-ink hover:underline">Všechny poptávky →</Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {latest.map((q) => <InquiryCard key={q.id} q={q} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="mx-auto max-w-5xl px-5 py-12" aria-labelledby="gdpr">
         <div className="card p-5 sm:p-6">
