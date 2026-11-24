@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { InquiryCard } from "@/components/InquiryCard";
+import { InquiryRow } from "@/components/InquiryCard";
 import { createClient } from "@/lib/supabase/server";
 import type { PublicInquiry } from "@/lib/inquiries";
 
@@ -20,8 +20,9 @@ const benefits = [
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("list_inquiries", { p_limit: 4 });
+  const { data } = await supabase.rpc("list_inquiries", { p_limit: 10 });
   const latest = ((data as { items?: PublicInquiry[] } | null)?.items ?? []);
+  const total = (data as { total?: number } | null)?.total ?? 0;
 
   return (
     <main>
@@ -78,15 +79,18 @@ export default async function Home() {
             </div>
             <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>
           </div>
-          {latest.length > 0 && (
-            <div className="p-5 sm:p-6">
-              <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="font-display text-[18px] font-bold">Nejnovější poptávky</h3>
-                <Link href="/poptavky" className="text-[14px] font-semibold text-accent-ink hover:underline">Všechny poptávky →</Link>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {latest.map((q) => <InquiryCard key={q.id} q={q} />)}
-              </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4 pb-3 pt-5 sm:px-5">
+            <h3 className="font-display text-[18px] font-bold">Nejnovější poptávky</h3>
+            {total > 0 && <Link href="/poptavky" className="text-[14px] font-semibold text-accent-ink hover:underline">Všechny poptávky ({total}) →</Link>}
+          </div>
+          {latest.length ? (
+            <ul className="divide-y divide-line">
+              {latest.map((q) => <InquiryRow key={q.id} q={q} />)}
+            </ul>
+          ) : (
+            <div className="px-5 py-8 text-center">
+              <p className="text-muted">Zatím tu není žádná poptávka. Buďte první – zadání trvá pár minut.</p>
+              <Link href="/poptavky/nova" className="btn-ghost mt-3">Zadat první poptávku</Link>
             </div>
           )}
         </div>

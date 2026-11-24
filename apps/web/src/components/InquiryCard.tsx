@@ -20,3 +20,24 @@ export function InquiryCard({ q }: { q: PublicInquiry }) {
     </Link>
   );
 }
+
+/** Kompaktní řádek poptávky (úvodní stránka – posledních 10). Na telefonu je čas v druhém řádku, ať se vejde název. */
+export function InquiryRow({ q }: { q: PublicInquiry }) {
+  const qty = formatQuantity(q.quantity, q.unit);
+  const ago = timeAgo(q.created_at);
+  return (
+    <li>
+      <Link href={`/poptavky/${q.id}`} className="group flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-paper sm:px-5">
+        <span className="min-w-0">
+          <span className="line-clamp-2 font-semibold leading-snug group-hover:text-accent-ink sm:line-clamp-1">{q.title}</span>
+          <span className="mt-0.5 block text-[13px] leading-snug text-muted">
+            <span className="sm:hidden">{ago} · </span>
+            {q.city}{qty ? <> · <span className="num">{qty}</span></> : null}
+            <span className="hidden sm:inline"> · {CATEGORY_LABEL[q.category] ?? q.category} · {formatTerm(q.term, q.term_date)}</span>
+          </span>
+        </span>
+        <span className="hidden shrink-0 whitespace-nowrap pt-0.5 text-[12px] text-muted sm:block">{ago}</span>
+      </Link>
+    </li>
+  );
+}
