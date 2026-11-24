@@ -19,14 +19,14 @@ export function SiteMenu({ current }: { current?: SiteSection }) {
     <>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="site-menu"
         aria-label="Menu"
-        className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl border border-line bg-white px-2 min-[390px]:px-2.5 text-[14px] font-semibold text-ink hover:bg-paper md:hidden">
+        className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl border border-line bg-white px-2 min-[390px]:px-2.5 text-[14px] font-semibold text-ink hover:bg-paper lg:hidden">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
           {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
         </svg>
         <span className="hidden min-[390px]:inline">Menu</span>
       </button>
       {open && (
-        <nav id="site-menu" aria-label="Menu" className="absolute inset-x-0 top-full z-40 border-b border-line bg-white shadow-lg md:hidden">
+        <nav id="site-menu" aria-label="Menu" className="absolute inset-x-0 top-full z-40 border-b border-line bg-white shadow-lg lg:hidden">
           <ul className="mx-auto max-w-5xl px-4 py-2">
             {SITE_LINKS.map((l) => (
               <li key={l.href}>

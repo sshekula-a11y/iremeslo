@@ -3,11 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FaqList } from "@/components/FaqList";
+import { FAQ_TRADESMEN } from "@/lib/faq";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/jak-to-funguje" },
   title: "Jak to funguje",
-  description: "Od poptávky po cenovou nabídku v PDF: založení firmy přes IČO, výpočet zakázky se ziskem a marží, nabídka a kalendář. Ukázky z aplikace.",
+  description: "Jak zadat poptávku zdarma a jak řemeslník za pár minut spočítá zakázku, pošle nabídku v PDF a naplánuje práci. Ukázky přímo z aplikace.",
 };
 
 interface Shot {
@@ -95,12 +97,15 @@ const SOON = [
   "Pozvánky pro kolegy do kanceláře a pracovníky",
 ];
 
-const FAQ = [
-  { q: "Kolik to stojí?", a: "Prvních 30 dní je zdarma a bez platební karty (jednou pro každé IČO). Poté pokračujete s předplatným od 199 Kč měsíčně bez DPH (podrobnosti v Ceníku). Na konec zkušebního období vás aplikace upozorní předem a vaše data zůstanou zachována." },
-  { q: "Musím si něco instalovat?", a: "Ne. Aplikace běží v prohlížeči na telefonu i počítači. Na telefonu si ji můžete přidat na plochu a otevírat jako aplikaci." },
-  { q: "Hodí se i pro neplátce DPH?", a: "Ano. Při založení firmy zvolíte, jestli jste plátce. Doklady neplátce jsou bez DPH a obsahují text „Nejsem plátce DPH“." },
-  { q: "Kdo uvidí moje čísla?", a: "Jen vaše firma. Data každé firmy jsou oddělená a pracovníci nevidí ceny ani zisk. Databáze běží v EU (Frankfurt)." },
+/** Zákazník: od poptávky po výběr řemeslníka. */
+const CUSTOMER_STEPS = [
+  { title: "Zadáte poptávku", text: "Popíšete práci, místo a termín. Zdarma a bez registrace; poptávku potvrdíte odkazem z e-mailu." },
+  { title: "Poptávka se zobrazí řemeslníkům", text: "Je ve veřejném seznamu poptávek. Váš kontakt vidí jen řemeslníci s IČO ověřeným v ARES." },
+  { title: "Řemeslníci se vám ozvou", text: "Zavolají nebo napíšou s nabídkou. U poptávky vidíte, kolik z nich si kontakt zobrazilo." },
+  { title: "Vyberete a poptávku uzavřete", text: "Nic nepodepisujete. Až si vyberete, poptávku jedním kliknutím z e-mailu uzavřete." },
 ];
+
+const FAQ_PICK = ["Kolik to stojí?", "Funguje to na mobilu?", "Hodí se i pro neplátce DPH?", "Kdo uvidí moje čísla?"];
 
 export default function HowItWorksPage() {
   return (
@@ -110,8 +115,41 @@ export default function HowItWorksPage() {
       <header className="bg-ink text-white">
         <div className="mx-auto max-w-5xl px-5 pb-12 pt-10">
           <h1 className="max-w-2xl font-display text-[32px] font-extrabold leading-[1.1] tracking-tight sm:text-[42px]">
-            Od poptávky po nabídku ve čtyřech krocích
+            Jak to funguje
           </h1>
+          <nav className="mt-5 flex flex-wrap gap-2" aria-label="Pro koho">
+            <a href="#zakaznik" className="btn bg-white text-ink hover:bg-white/90">Pro zákazníky</a>
+            <a href="#remeslnik" className="btn bg-accent text-ink hover:bg-[#f07400]">Pro řemeslníky</a>
+          </nav>
+        </div>
+      </header>
+
+      <section id="zakaznik" className="scroll-mt-4 border-b border-line bg-white" aria-labelledby="zakaznik-title">
+        <div className="mx-auto max-w-5xl px-5 py-12">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-accent-ink">Pro zákazníky</p>
+          <h2 id="zakaznik-title" className="mt-1 font-display text-[26px] font-extrabold leading-tight sm:text-[30px]">Hledáte řemeslníka? Čtyři kroky a bez registrace</h2>
+          <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CUSTOMER_STEPS.map((s, i) => (
+              <li key={s.title} className="rounded-2xl bg-paper p-5">
+                <span className="num flex size-8 items-center justify-center rounded-full bg-accent font-bold text-ink" aria-hidden="true">{i + 1}</span>
+                <h3 className="mt-3 font-display text-[17px] font-bold leading-snug">{s.title}</h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <Link href="/poptavky/nova" className="btn-primary">Zadat poptávku zdarma</Link>
+            <Link href="/caste-otazky#zakaznici" className="font-semibold text-accent-ink underline">Časté otázky zákazníků →</Link>
+          </div>
+        </div>
+      </section>
+
+      <section id="remeslnik" className="scroll-mt-4 bg-ink text-white" aria-labelledby="remeslnik-title">
+        <div className="mx-auto max-w-5xl px-5 pb-10 pt-12">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Pro řemeslníky</p>
+          <h2 id="remeslnik-title" className="mt-1 max-w-2xl font-display text-[26px] font-extrabold leading-tight sm:text-[30px]">
+            Od poptávky po nabídku ve čtyřech krocích
+          </h2>
           <p className="mt-3 max-w-xl text-[17px] text-white/75">
             Ukázky pocházejí přímo z aplikace, s vymyšlenou zakázkou na nátěr střechy.
           </p>
@@ -126,7 +164,7 @@ export default function HowItWorksPage() {
             ))}
           </ol>
         </div>
-      </header>
+      </section>
 
       <div className="mx-auto max-w-5xl space-y-16 px-5 py-12 sm:space-y-20">
         {STEPS.map((s, i) => {
@@ -179,17 +217,8 @@ export default function HowItWorksPage() {
 
         <section aria-labelledby="otazky">
           <h2 id="otazky" className="mb-4 font-display text-[24px] font-extrabold">Časté otázky</h2>
-          <div className="card divide-y divide-line">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group px-5 py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
-                  {f.q}
-                  <span className="text-muted transition group-open:rotate-45" aria-hidden="true">+</span>
-                </summary>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">{f.a}</p>
-              </details>
-            ))}
-          </div>
+          <FaqList items={FAQ_TRADESMEN.filter((f) => FAQ_PICK.includes(f.q))} />
+          <Link href="/caste-otazky" className="mt-3 inline-block font-semibold text-accent-ink underline">Všechny časté otázky →</Link>
         </section>
       </div>
 

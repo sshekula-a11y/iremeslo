@@ -16,7 +16,7 @@ export function SiteHeader({ current }: { current?: SiteSection }) {
           <Logo variant="full" height={44} priority className="h-6 min-[360px]:h-7 min-[390px]:h-8 sm:h-10 lg:h-11" />
         </Link>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <nav className="hidden items-center whitespace-nowrap text-[15px] font-semibold md:flex" aria-label="Web">
+          <nav className="hidden items-center whitespace-nowrap text-[15px] font-semibold lg:flex" aria-label="Web">
             {SITE_LINKS.map((l) => (
               <Link key={l.href} href={l.href} aria-current={current === l.id ? "page" : undefined}
                 className={`rounded-lg px-2.5 py-2 ${current === l.id ? "text-accent-ink" : "text-ink hover:text-accent-ink"}`}>

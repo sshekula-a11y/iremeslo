@@ -14,12 +14,13 @@ export function SiteFooter() {
           <Link href="/poptavky" className={link}>Všechny poptávky</Link>
         </Col>
         <Col title="Pro řemeslníky">
+          <Link href="/pro-remeslniky" className={link}>Funkce aplikace</Link>
           <Link href="/poptavky" className={link}>Poptávky</Link>
-          <Link href="/jak-to-funguje" className={link}>Funkce aplikace</Link>
           <Link href="/cenik" className={link}>Ceník</Link>
           <Link href="/prihlaseni?rezim=registrace" className={link}>Vyzkoušet 30 dní zdarma</Link>
         </Col>
         <Col title="Podpora">
+          <Link href="/caste-otazky" className={link}>Časté otázky</Link>
           <Link href="/jak-to-funguje" className={link}>Jak to funguje</Link>
           <a href={`mailto:${OPERATOR.email}`} className={link}>{OPERATOR.email}</a>
         </Col>
