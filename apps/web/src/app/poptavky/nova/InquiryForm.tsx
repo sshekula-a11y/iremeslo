@@ -1,25 +1,119 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS, REGIONS, regionFromZip } from "@/lib/inquiries";
 import { submitInquiry, type InquiryState } from "./actions";
 
+const STEPS = ["Co poptáváte", "Kde a kdy", "Kontakt"] as const;
+/** Rozepsaná poptávka v prohlížeči (jen na tomto zařízení; souhlas a past na roboty se neukládají). */
+const DRAFT_KEY = "iremeslo-poptavka-koncept";
+const NOT_SAVED = new Set(["consent", "web"]);
+
+type Draft = Record<string, string>;
+function readDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    const d = raw ? (JSON.parse(raw) as Draft) : null;
+    return d && Object.values(d).some((v) => v) ? d : null;
+  } catch { return null; }
+}
+function writeDraft(form: HTMLFormElement) {
+  try {
+    const d: Draft = {};
+    new FormData(form).forEach((v, k) => { if (!NOT_SAVED.has(k) && typeof v === "string") d[k] = v; });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  } catch { /* soukromé okno, zablokované úložiště – formulář funguje i bez konceptu */ }
+}
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* nic */ }
+}
+
+/** Poptávka ve třech krocích: Co → Kde a kdy → Kontakt. Rozepsané údaje se průběžně ukládají v prohlížeči. */
 export function InquiryForm({ today }: { today: string }) {
   const [state, action, pending] = useActionState<InquiryState, FormData>(submitInquiry, {});
+  const [step, setStep] = useState(0);
   const [term, setTerm] = useState("flexible");
   const [termFrom, setTermFrom] = useState("");
+  const [termDate, setTermDate] = useState("");
   // Kraj předvyplníme podle PSČ, dokud ho zadavatel nezmění sám.
   const [region, setRegion] = useState("");
   const [regionTouched, setRegionTouched] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const sections = useRef<(HTMLElement | null)[]>([]);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  // Obnovení konceptu po načtení (localStorage na serveru není, proto až v prohlížeči).
+  useEffect(() => {
+    const d = readDraft();
+    const form = formRef.current;
+    if (!d || !form) return;
+    for (const [k, v] of Object.entries(d)) {
+      const el = form.elements.namedItem(k);
+      if (el instanceof HTMLInputElement && el.type !== "radio" || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) el.value = v;
+    }
+    /* eslint-disable react-hooks/set-state-in-effect -- jednorázové obnovení konceptu z úložiště prohlížeče */
+    if (d.term) setTerm(d.term);
+    if (d.term_from) setTermFrom(d.term_from);
+    if (d.term_date) setTermDate(d.term_date);
+    if (d.region) { setRegion(d.region); setRegionTouched(true); }
+    else if (d.zip) { const r = regionFromZip(d.zip); if (r) setRegion(r); }
+    setRestored(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  /** Zkontroluje pole kroku; první chybné ukáže prohlížeč. */
+  const stepValid = (i: number) => {
+    const fields = sections.current[i]?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea") ?? [];
+    for (const el of fields) if (!el.checkValidity()) return el;
+    return null;
+  };
+  const go = (i: number) => {
+    setStep(i);
+    requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+  const next = () => {
+    const bad = stepValid(step);
+    if (bad) return bad.reportValidity();
+    go(step + 1);
+  };
 
   return (
-    // Odeslání bez resetu formuláře: při chybě zůstane vše vyplněné.
-    <form className="space-y-5" onSubmit={(e) => {
+    <div ref={topRef} className="scroll-mt-4 space-y-5">
+      <ol className="grid grid-cols-3 gap-2" aria-label="Postup">
+        {STEPS.map((label, i) => (
+          <li key={label} aria-current={i === step ? "step" : undefined}>
+            <span className={`block h-1.5 rounded-full ${i <= step ? "bg-accent" : "bg-line"}`} aria-hidden="true" />
+            <span className={`mt-1.5 block text-[13px] ${i === step ? "font-bold text-ink" : "text-muted"}`}>
+              <span className="num">{i + 1}.</span> {label}
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      {restored && (
+        <p className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]">
+          Obnovili jsme vaši rozepsanou poptávku.
+          <button type="button" className="font-semibold text-accent-ink underline" onClick={() => {
+            clearDraft();
+            formRef.current?.reset();
+            setTerm("flexible"); setTermFrom(""); setTermDate(""); setRegion(""); setRegionTouched(false); setRestored(false); go(0);
+          }}>Začít znovu</button>
+        </p>
+      )}
+
+    {/* Odeslání bez resetu formuláře: při chybě zůstane vše vyplněné. Kontrolu polí dělají kroky (noValidate). */}
+    <form ref={formRef} noValidate className="space-y-5" onChange={(e) => writeDraft(e.currentTarget)} onSubmit={(e) => {
       e.preventDefault();
+      for (let i = 0; i < STEPS.length; i++) {
+        const bad = stepValid(i);
+        if (bad) { setStep(i); requestAnimationFrame(() => bad.reportValidity()); return; }
+      }
       const data = new FormData(e.currentTarget);
+      clearDraft();
       startTransition(() => action(data));
     }}>
-      <section className="card space-y-4 p-5 sm:p-6">
+      <section ref={(el) => { sections.current[0] = el; }} hidden={step !== 0} className="card space-y-4 p-5 sm:p-6">
         <h2 className="font-display text-[19px] font-bold">Co poptáváte</h2>
         <div>
           <label className="label" htmlFor="category">Obor</label>
@@ -52,7 +146,7 @@ export function InquiryForm({ today }: { today: string }) {
         </div>
       </section>
 
-      <section className="card space-y-4 p-5 sm:p-6">
+      <section ref={(el) => { sections.current[1] = el; }} hidden={step !== 1} className="card space-y-4 p-5 sm:p-6">
         <h2 className="font-display text-[19px] font-bold">Kde a kdy</h2>
         <div className="grid grid-cols-[1fr_7.5rem] gap-3">
           <div>
@@ -98,14 +192,14 @@ export function InquiryForm({ today }: { today: string }) {
             </div>
             <div>
               <label className="label" htmlFor="term_date">Dokončení</label>
-              <input className="field num" id="term_date" name="term_date" type="date" min={termFrom || today} />
+              <input className="field num" id="term_date" name="term_date" type="date" min={termFrom || today} value={termDate} onChange={(e) => setTermDate(e.target.value)} />
             </div>
             <p className="col-span-2 text-[13px] text-muted">Stačí vyplnit jedno z dat.</p>
           </div>
         )}
       </section>
 
-      <section className="card space-y-4 p-5 sm:p-6">
+      <section ref={(el) => { sections.current[2] = el; }} hidden={step !== 2} className="card space-y-4 p-5 sm:p-6">
         <div>
           <h2 className="font-display text-[19px] font-bold">Váš kontakt</h2>
           <p className="text-[14px] text-muted">Uvidí ho jen přihlášení řemeslníci s IČO ověřeným v ARES, nikoli veřejnost.</p>
@@ -139,8 +233,16 @@ export function InquiryForm({ today }: { today: string }) {
       </section>
 
       {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}
-      <button className="btn-primary w-full sm:w-auto" disabled={pending}>{pending ? "Odesílám…" : "Odeslat poptávku"}</button>
-      <p className="text-[13px] text-muted">Na váš e-mail pošleme odkaz. Poptávka se zveřejní po jeho potvrzení a platí 60 dní.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        {step > 0 && <button type="button" className="btn-ghost" onClick={() => go(step - 1)}>← Zpět</button>}
+        {step < STEPS.length - 1
+          ? <button type="button" className="btn-dark min-w-40" onClick={next}>Pokračovat</button>
+          : <button className="btn-primary min-w-40" disabled={pending}>{pending ? "Odesílám…" : "Odeslat poptávku"}</button>}
+      </div>
+      {step === STEPS.length - 1
+        ? <p className="text-[13px] text-muted">Na váš e-mail pošleme odkaz. Poptávka se zveřejní po jeho potvrzení a platí 60 dní.</p>
+        : <p className="text-[13px] text-muted">Rozepsanou poptávku si pamatujeme v tomto prohlížeči, můžete se k ní vrátit.</p>}
     </form>
+    </div>
   );
 }
