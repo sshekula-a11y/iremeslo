@@ -4,6 +4,7 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/archivo";
 import "./globals.css";
 import { ConsentManager } from "@/components/ConsentManager";
+import { CtaTracker } from "@/components/CtaTracker";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-dvh antialiased">
         {children}
         <ConsentManager />
+        <CtaTracker />
       </body>
     </html>
   );

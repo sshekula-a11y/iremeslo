@@ -26,7 +26,7 @@ export function SiteMenu({ current }: { current?: SiteSection }) {
         <span className="hidden min-[390px]:inline">Menu</span>
       </button>
       {open && (
-        <nav id="site-menu" aria-label="Menu" className="absolute inset-x-0 top-full z-40 border-b border-line bg-white shadow-lg lg:hidden">
+        <nav id="site-menu" data-place="menu" aria-label="Menu" className="absolute inset-x-0 top-full z-40 border-b border-line bg-white shadow-lg lg:hidden">
           <ul className="mx-auto max-w-5xl px-4 py-2">
             {SITE_LINKS.map((l) => (
               <li key={l.href}>

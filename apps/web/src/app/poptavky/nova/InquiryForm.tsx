@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS, REGIONS, regionFromZip } from "@/lib/inquiries";
+import { pushEvent } from "@/lib/consent";
 import { submitInquiry, type InquiryState } from "./actions";
 
 const STEPS = ["Co poptáváte", "Kde a kdy", "Kontakt"] as const;
@@ -42,6 +43,7 @@ export function InquiryForm({ today }: { today: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const sections = useRef<(HTMLElement | null)[]>([]);
   const topRef = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
 
   // Obnovení konceptu po načtení (localStorage na serveru není, proto až v prohlížeči).
   useEffect(() => {
@@ -70,6 +72,7 @@ export function InquiryForm({ today }: { today: string }) {
   };
   const go = (i: number) => {
     setStep(i);
+    pushEvent("inquiry_step", { step: i + 1 });
     requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
   const next = () => {
@@ -103,7 +106,11 @@ export function InquiryForm({ today }: { today: string }) {
       )}
 
     {/* Odeslání bez resetu formuláře: při chybě zůstane vše vyplněné. Kontrolu polí dělají kroky (noValidate). */}
-    <form ref={formRef} noValidate className="space-y-5" onChange={(e) => writeDraft(e.currentTarget)} onSubmit={(e) => {
+    <form ref={formRef} noValidate className="space-y-5" onChange={(e) => {
+      writeDraft(e.currentTarget);
+      // Měření: první vyplněné pole (jen jednou za návštěvu formuláře).
+      if (!started.current) { started.current = true; pushEvent("inquiry_start"); }
+    }} onSubmit={(e) => {
       e.preventDefault();
       for (let i = 0; i < STEPS.length; i++) {
         const bad = stepValid(i);

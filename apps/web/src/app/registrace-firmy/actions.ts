@@ -72,7 +72,8 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
   }
 
   (await cookies()).set("firma", String(data), { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60 * 60 * 24 * 365 });
-  redirect(inquiryReturn(form.get("next")) ?? "/app");
+  // ?firma=nova → přehled pošle do GA událost company_registered (návrat k poptávce ji vynechá, čísla jsou i v /ssh).
+  redirect(inquiryReturn(form.get("next")) ?? "/app?firma=nova");
 }
 
 export type TrialInfo = { used: false; days: number } | { used: true; trialEnd: string; active: boolean };

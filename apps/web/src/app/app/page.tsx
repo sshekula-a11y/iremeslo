@@ -1,3 +1,4 @@
+import { DataLayerEvent } from "@/components/DataLayerEvent";
 import Link from "next/link";
 import { requireStaff } from "@/lib/data";
 import { JOB_STATUSES, type JobStatus } from "@/lib/labels";
@@ -8,7 +9,8 @@ import { formatCzk } from "@iremeslo/core";
 import { toHundredths } from "@/lib/money";
 import { todayInPrague } from "@/lib/calendar";
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: PageProps<"/app">) {
+  const { firma } = await searchParams;
   const company = await requireStaff();
   const supabase = await createClient();
 
@@ -43,6 +45,7 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-5">
+      {firma === "nova" && <DataLayerEvent name="company_registered" />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[13px] text-muted">{company.name}</p>

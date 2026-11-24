@@ -9,7 +9,7 @@ import { SITE_LINKS, type SiteSection } from "@/lib/site-links";
  */
 export function SiteHeader({ current }: { current?: SiteSection }) {
   return (
-    <header className="relative border-b border-line bg-white">
+    <header data-place="hlavicka" className="relative border-b border-line bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:px-5 sm:py-3">
         <Link href="/" aria-label="iRemeslo.cz – úvod" className="shrink-0">
           {/* Stejné logo se sloganem jako na počítači, na telefonu jen menší. */}

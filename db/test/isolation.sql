@@ -628,5 +628,28 @@ select app.cleanup_inquiries() \g /dev/null
 select t_eq((select count(*)::int from app.inquiries where token_hash = 'demo2'), 1, 'úklid ukázky nemaže');
 select t_eq((select count(*)::int from app.inquiries where token_hash = 'real2'), 0, 'prošlé skutečné poptávky úklid smaže');
 
+-- ---------- konverzní přehled (016) ----------
+reset role;
+delete from app.funnel_log;
+insert into app.inquiries (status, is_demo, category, title, description, city, term, contact_name, contact_email, token_hash)
+values ('pending', true, 'uklid', 'Ukázkový úklid bytu', 'Ukázková poptávka pro představení platformy.', 'Brno', 'flexible', 'Ukázka', 'info@iremeslo.cz', 'demo-f');
+select (submit_inquiry('{"category":"uklid","title":"Úklid kanceláře","description":"Pravidelný úklid kanceláře jednou týdně.","city":"Brno","zip":"602 00","term":"flexible","contact_name":"Ota","contact_email":"ota@example.cz"}'::jsonb) ->> 'id') as fin \gset
+select t_eq((select count(*)::int from app.funnel_log where event = 'inquiry_submitted'), 1, 'odeslaná poptávka je v přehledu (ukázka ne)');
+select t_text((select region from app.funnel_log where event = 'inquiry_submitted'), 'jihomoravsky', '… s krajem, bez osobních údajů');
+update app.inquiries set confirmed_at = now(), status = 'open' where id = :'fin';
+select t_eq((select count(*)::int from app.funnel_log where event = 'inquiry_confirmed'), 1, 'potvrzení poptávky se zapíše');
+insert into app.inquiry_contact_views (inquiry_id, user_id) values (:'fin', '00000000-0000-0000-0000-00000000000a');
+insert into app.inquiry_contact_views (inquiry_id, user_id) values ((select id from app.inquiries where token_hash = 'demo1'), '00000000-0000-0000-0000-00000000000a');
+select t_eq((select count(*)::int from app.funnel_log where event = 'contact_view'), 1, 'zobrazení kontaktu se zapíše (u ukázky ne)');
+delete from app.inquiries where id = :'fin';
+select t_eq((select count(*)::int from app.funnel_log where event = 'contact_view'), 1, 'přehled přežije smazání poptávky');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_fails('select admin_funnel()', 'přehled vidí jen provozovatel');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq((select jsonb_array_length(admin_funnel() -> 'weekly')), 12, 'přehled má 12 týdnů');
+select t_eq((select (admin_funnel() -> 'total' ->> 'contacts')::int), 1, 'součty sedí');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

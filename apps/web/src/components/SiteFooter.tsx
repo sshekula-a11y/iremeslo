@@ -7,7 +7,7 @@ const link = "hover:text-ink hover:underline";
 /** Patička veřejného webu: čtyři sloupce (zákazníci, řemeslníci, podpora, právní) a provozovatel. */
 export function SiteFooter() {
   return (
-    <footer className="mt-4 border-t border-line bg-white">
+    <footer data-place="paticka" className="mt-4 border-t border-line bg-white">
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-x-6 gap-y-7 px-5 py-8 text-[14px] text-muted md:grid-cols-4">
         <Col title="Pro zákazníky">
           <Link href="/poptavky/nova" className={link}>Zadat poptávku zdarma</Link>

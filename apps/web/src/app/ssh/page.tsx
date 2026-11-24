@@ -11,14 +11,22 @@ interface Overview {
   paying: number; read_only: number; mrr: string;
   weekly: { week: string; companies: number; users: number }[];
 }
+type FunnelRow = { inquiries: number; confirmed: number; contacts: number; signups: number; companies: number; activated: number; paying: number };
+interface Funnel { weekly: (FunnelRow & { week: string })[]; total: FunnelRow }
+
+const CUSTOMER_COLS: [keyof FunnelRow, string][] = [["inquiries", "Odeslané poptávky"], ["confirmed", "Potvrzené"], ["contacts", "Zobrazené kontakty"]];
+const TRADE_COLS: [keyof FunnelRow, string][] = [["signups", "Registrace"], ["companies", "Firmy"], ["activated", "Aktivované"], ["paying", "Platící"]];
+
 interface Action { at: string; action: string; company_id: string | null; company_name: string | null; target_email: string | null; detail: Record<string, unknown>; admin_email: string | null }
 
 export default async function AdminOverview() {
   const { supabase } = await requireAdmin();
-  const [{ data: o, error }, { data: actions }] = await Promise.all([
+  const [{ data: o, error }, { data: actions }, { data: f }] = await Promise.all([
     supabase.rpc("admin_overview"),
     supabase.rpc("admin_actions_recent", { p_limit: 12 }),
+    supabase.rpc("admin_funnel"),
   ]);
+  const funnel = f as Funnel | null;
   if (error || !o) throw new Error("Přehled se nepodařilo načíst.");
   const v = o as Overview;
   const max = Math.max(1, ...v.weekly.map((w) => Math.max(w.companies, w.users)));
@@ -62,6 +70,45 @@ export default async function AdminOverview() {
           ))}
         </div>
       </section>
+
+      {funnel && (
+        <section className="card overflow-hidden" aria-labelledby="trychtyr">
+          <div className="border-b border-line px-4 py-3">
+            <h2 id="trychtyr" className="font-display text-[17px] font-bold">Konverze po týdnech</h2>
+            <p className="text-[13px] text-muted">
+              Přímo z databáze, tedy úplně (Google Analytics vidí jen návštěvníky se souhlasem). Ukázkové poptávky se nepočítají.
+              Aktivovaná firma = první vystavená nabídka nebo faktura; platící = první zaznamenaná platba.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[42rem] text-[14px]">
+              <thead className="bg-paper text-left text-[12px] text-muted">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Týden od</th>
+                  {CUSTOMER_COLS.map(([k, l]) => <th key={k} className="px-3 py-2 text-right font-medium">{l}</th>)}
+                  {TRADE_COLS.map(([k, l], i) => <th key={k} className={`px-3 py-2 text-right font-medium ${i === 0 ? "border-l border-line" : ""}`}>{l}</th>)}
+                </tr>
+              </thead>
+              <tbody className="num divide-y divide-line">
+                {[...funnel.weekly].reverse().map((w) => (
+                  <tr key={w.week}>
+                    <td className="whitespace-nowrap px-3 py-1.5 text-muted">{adminDate(w.week)}</td>
+                    {CUSTOMER_COLS.map(([k]) => <td key={k} className={`px-3 py-1.5 text-right ${w[k] ? "font-semibold" : "text-muted"}`}>{w[k]}</td>)}
+                    {TRADE_COLS.map(([k], i) => <td key={k} className={`px-3 py-1.5 text-right ${i === 0 ? "border-l border-line" : ""} ${w[k] ? "font-semibold" : "text-muted"}`}>{w[k]}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="num border-t-2 border-line bg-paper font-bold">
+                <tr>
+                  <td className="px-3 py-2">Celkem</td>
+                  {CUSTOMER_COLS.map(([k]) => <td key={k} className="px-3 py-2 text-right">{funnel.total[k]}</td>)}
+                  {TRADE_COLS.map(([k], i) => <td key={k} className={`px-3 py-2 text-right ${i === 0 ? "border-l border-line" : ""}`}>{funnel.total[k]}</td>)}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className="card" aria-labelledby="zasahy">
         <h2 id="zasahy" className="border-b border-line px-4 py-3 font-display text-[17px] font-bold">Poslední zásahy</h2>
