@@ -61,6 +61,9 @@ language sql as $$ insert into net._test_requests (url, body, headers) values (u
 create or replace function net.http_get(url text, params jsonb default '{}', headers jsonb default '{}',
   timeout_milliseconds int default 5000) returns bigint
 language sql as $$ insert into net._test_requests (url, body, headers) values (url, null, headers) returning id $$;
+create or replace function net.http_delete(url text, params jsonb default '{}', headers jsonb default '{}',
+  timeout_milliseconds int default 5000, body jsonb default null) returns bigint
+language sql as $$ insert into net._test_requests (url, body, headers) values (url, body, headers) returning id $$;
 
 -- Supabase Vault (trezor tajných klíčů): lokálně obyčejná tabulka se stejným rozhraním.
 create schema if not exists vault;
@@ -89,3 +92,19 @@ $$;
 grant usage on schema auth to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated, service_role;
 grant usage on schema public to anon, authenticated, service_role;
+
+-- Úložiště souborů (Supabase Storage): jen tabulky, které čtou funkce a pravidla v migracích.
+create schema if not exists storage;
+create table if not exists storage.buckets (
+  id text primary key, name text, public boolean default false, file_size_limit bigint, allowed_mime_types text[]
+);
+create table if not exists storage.objects (
+  id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text,
+  owner uuid, created_at timestamptz default now(), metadata jsonb
+);
+alter table storage.objects enable row level security;
+create or replace function storage.foldername(name text) returns text[] language sql immutable as $$
+  select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1]
+$$;
+grant usage on schema storage to anon, authenticated, service_role;
+grant select, insert, delete on storage.objects to anon, authenticated;

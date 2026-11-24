@@ -53,8 +53,9 @@ export default function PrivacyPage() {
 
         <Part id="poptavky" title="Veřejné poptávky">
           <p>
-            Když zadáte poptávku, zpracováváme její obsah (obor, popis, rozsah, obec, PSČ, termín), vaši ulici a kontakt
-            (jméno, telefon, e-mail). Popis, obec, PSČ a termín jsou veřejné. <strong>Jméno, telefon, e-mail a ulici
+            Když zadáte poptávku, zpracováváme její obsah (obor, popis, rozsah, obec, PSČ, kraj, termín, případně fotky), vaši ulici a kontakt
+            (jméno, telefon, e-mail). Popis, obec, PSČ, kraj, termín a fotky jsou veřejné. Fotky před nahráním zmenšíme
+            a odstraníme z nich údaje o poloze; po uzavření poptávky je do druhého dne smažeme. <strong>Jméno, telefon, e-mail a ulici
             zpřístupníme jen přihlášeným řemeslníkům s potvrzeným e-mailem a IČO ověřeným v ARES</strong>, aby vás mohli kvůli poptávce kontaktovat;
             každé zobrazení kontaktu zaznamenáváme.
           </p>

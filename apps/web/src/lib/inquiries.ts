@@ -111,6 +111,8 @@ export interface PublicInquiry {
   zip: string | null;
   region?: string | null;
   is_demo?: boolean;
+  /** Názvy souborů v úložišti inquiry-photos (jen u nepotvrzené a aktivní poptávky). */
+  photos?: string[];
   term: string;
   term_from?: string | null;
   term_date: string | null;

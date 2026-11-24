@@ -21,6 +21,7 @@ const schema = z.object({
   term: z.enum(["flexible", "asap", "date"]),
   term_from: z.string().trim(),
   term_date: z.string().trim(),
+  photos_folder: z.string().trim().refine((v) => v === "" || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v), "Fotky se nepodařilo připojit. Zkuste je přidat znovu."),
   contact_name: z.string().trim().min(2, "Vyplňte své jméno.").max(100),
   contact_phone: z.string().trim().refine((v) => v === "" || /^\+?[0-9 ]{9,20}$/.test(v), "Telefon zadejte jako 777 123 456 nebo +420 777 123 456."),
   contact_email: z.string().trim().toLowerCase().email("Zadejte platný e-mail – pošleme na něj odkaz k potvrzení."),
@@ -50,6 +51,7 @@ export async function submitInquiry(_prev: InquiryState, form: FormData): Promis
   if (error) {
     if (error.message.includes("příliš mnoho")) return { error: "Poptávek je teď příliš mnoho. Zkuste to prosím za chvíli." };
     if (error.message.includes("e-mail")) return { error: "Zadejte platný e-mail." };
+    if (error.message.includes("fotky")) return { error: "Fotky se nepodařilo připojit. Odeberte je a přidejte znovu." };
     return { error: "Poptávku se nepodařilo odeslat. Zkontrolujte údaje a zkuste to znovu." };
   }
   // Bez e-mailu v adrese – adresy stránek zaznamenává Google Analytics.

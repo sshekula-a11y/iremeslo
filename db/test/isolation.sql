@@ -716,5 +716,47 @@ values ('open', now(), 'obklady', 'Obklad koupelny 12 m2', 'Obklad stěn v koupe
 select t_eq((select (list_inquiries(p_categories => array['obklady', 'podlahy']) ->> 'total')::int), 1, 'filtr více oborů');
 select t_eq((select (list_inquiries(p_categories => array['elektro']) ->> 'total')::int), 0, '… jiné obory poptávku nenajdou');
 
+-- ---------- fotky k poptávce (020) ----------
+reset role;
+select '11111111-2222-4333-8444-555555555555' as fold \gset
+set role anon;
+insert into storage.objects (bucket_id, name) values ('inquiry-photos', :'fold' || '/a1b2c3d4.jpg');
+select t_eq((select count(*)::int from storage.objects where name like :'fold' || '/%'), 1, 'nepřihlášený nahraje fotku do nové složky');
+select t_fails($q$insert into storage.objects (bucket_id, name) values ('inquiry-photos', 'spatna-slozka/a1b2c3d4.jpg')$q$, 'špatný název souboru neprojde');
+select t_fails($q$insert into storage.objects (bucket_id, name) values ('files', '11111111-2222-4333-8444-555555555555/a1b2c3d4.jpg')$q$, 'do cizího úložiště ne');
+insert into storage.objects (bucket_id, name) select 'inquiry-photos', :'fold' || '/0000000' || g || '.jpg' from generate_series(1, 5) g;
+select t_fails(format($q$insert into storage.objects (bucket_id, name) values ('inquiry-photos', %L)$q$, :'fold' || '/ffffffff.jpg'), 'sedmá fotka neprojde');
+select (submit_inquiry(jsonb_build_object('category','obklady','title','Obklad koupelny s fotkami','description','Obklad stěn v koupelně, fotky stavu v příloze.',
+  'city','Brno','term','flexible','contact_name','Fotka','contact_email','fotka@example.cz','photos_folder', :'fold')) ->> 'id') as finq \gset
+select t_fails(format($q$select submit_inquiry(jsonb_build_object('category','obklady','title','Cizí fotky k poptávce','description','Pokus připojit cizí fotky k jiné poptávce.','city','Brno','term','flexible','contact_name','Zloděj','contact_email','z@example.cz','photos_folder', %L))$q$, :'fold'), 'cizí složku fotek připojit nejde');
+select t_eq((select count(*)::int from storage.objects where name like :'fold' || '/%'), 0, 'fotky nepotvrzené poptávky nejsou vidět přes API');
+delete from storage.objects where name like :'fold' || '/%';
+reset role;
+select t_eq((select count(*)::int from storage.objects where name like :'fold' || '/%'), 6, 'fotky nepotvrzené poptávky nejde smazat');
+update app.inquiries set status = 'open', confirmed_at = now() where id = :'finq';
+set role anon;
+select t_eq((select jsonb_array_length(get_inquiry(:'finq') -> 'photos')), 6, 'detail aktivní poptávky ukazuje fotky');
+reset role;
+update app.inquiries set created_at = now() - interval '2 hours' where id = :'finq';
+delete from storage.objects where name = :'fold' || '/00000001.jpg';
+set role anon;
+select t_fails(format($q$insert into storage.objects (bucket_id, name) values ('inquiry-photos', %L)$q$, :'fold' || '/eeeeeeee.jpg'), 'k hotové poptávce už fotky nepřidá nikdo');
+reset role;
+update app.inquiries set status = 'closed' where id = :'finq';
+set role anon;
+select t_eq((select jsonb_array_length(get_inquiry(:'finq') -> 'photos')), 0, 'uzavřená poptávka fotky neukazuje');
+reset role;
+delete from net._test_requests;
+select t_eq(app.cleanup_inquiry_photos(), 5, 'úklid smaže fotky uzavřené poptávky');
+select t_text((select url from net._test_requests order by id desc limit 1), 'https://pisrgrqbspayqdkdeuwg.supabase.co/storage/v1/object/inquiry-photos', 'úklid volá Storage API');
+select t_eq((select jsonb_array_length(body -> 'prefixes') from net._test_requests order by id desc limit 1), 5, '… se seznamem souborů');
+-- rozpracovaná (dnešní) složka bez poptávky zůstane, opuštěná starší než den se smaže
+insert into storage.objects (bucket_id, name, created_at) values ('inquiry-photos', '22222222-2222-4333-8444-555555555555/abcdef01.jpg', now()),
+  ('inquiry-photos', '33333333-2222-4333-8444-555555555555/abcdef01.jpg', now() - interval '2 days');
+update app.inquiries set status = 'open' where id = :'finq';
+select t_eq(app.cleanup_inquiry_photos(), 1, 'úklid smaže jen opuštěnou složku starší než den');
+update app.inquiries set expires_at = now() - interval '1 day' where id = :'finq';
+select t_eq(app.cleanup_inquiry_photos(), 6, 'úklid smaže i fotky prošlé poptávky');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

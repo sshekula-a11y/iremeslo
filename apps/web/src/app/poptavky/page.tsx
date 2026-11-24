@@ -118,9 +118,9 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/poptav
           <div className="grid gap-4 sm:grid-cols-2">
             {list.items.map((q) => <InquiryCard key={q.id} q={q} />)}
           </div>
-        ) : (
+        ) : (filtered || list.demo.length === 0) && (
           <div className="card px-5 py-10 text-center">
-            <p className="text-muted">{filtered ? "Tomuto hledání zatím žádná poptávka neodpovídá." : "Zatím tu není žádná skutečná poptávka."}</p>
+            <p className="text-muted">{filtered ? "Tomuto hledání zatím žádná poptávka neodpovídá." : "Zatím tu není žádná poptávka."}</p>
             <Link href="/poptavky/nova" className="btn-primary mt-4">Zadat první poptávku</Link>
           </div>
         )}

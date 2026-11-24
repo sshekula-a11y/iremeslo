@@ -141,7 +141,8 @@ export default async function Home() {
               {latest.map((q) => <InquiryRow key={q.id} q={q} />)}
             </ul>
           )}
-          {latest.length === 0 && (
+          {/* Prázdný stav jen tehdy, když nejsou ani ukázky. */}
+          {latest.length === 0 && demo.length === 0 && (
             <div className="px-5 py-6 text-center">
               <p className="text-muted">Zatím tu není žádná skutečná poptávka. Buďte první – zadání trvá pár minut.</p>
               <Link href="/poptavky/nova" className="btn-ghost mt-3">Zadat první poptávku</Link>

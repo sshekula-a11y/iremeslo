@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS, REGIONS, regionFromZip } from "@/lib/inquiries";
 import { pushEvent } from "@/lib/consent";
+import { PhotoPicker } from "./PhotoPicker";
 import { submitInquiry, type InquiryState } from "./actions";
 
 const STEPS = ["Co poptáváte", "Kde a kdy", "Kontakt"] as const;
@@ -40,6 +41,9 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
   const [region, setRegion] = useState("");
   const [regionTouched, setRegionTouched] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [photosFolder, setPhotosFolder] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [photoKey, setPhotoKey] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const sections = useRef<(HTMLElement | null)[]>([]);
   const topRef = useRef<HTMLDivElement>(null);
@@ -58,6 +62,7 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
     if (d.term) setTerm(d.term);
     if (d.term_from) setTermFrom(d.term_from);
     if (d.term_date) setTermDate(d.term_date);
+    if (d.photos_folder && /^[0-9a-f-]{36}$/.test(d.photos_folder)) setPhotosFolder(d.photos_folder);
     if (d.region) { setRegion(d.region); setRegionTouched(true); }
     else if (d.zip) { const r = regionFromZip(d.zip); if (r) setRegion(r); }
     setRestored(true);
@@ -100,7 +105,7 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
           <button type="button" className="font-semibold text-accent-ink underline" onClick={() => {
             clearDraft();
             formRef.current?.reset();
-            setTerm("flexible"); setTermFrom(""); setTermDate(""); setRegion(""); setRegionTouched(false); setRestored(false); go(0);
+            setTerm("flexible"); setTermFrom(""); setTermDate(""); setRegion(""); setRegionTouched(false); setPhotosFolder(""); setPhotoKey((k) => k + 1); setRestored(false); go(0);
           }}>Začít znovu</button>
         </p>
       )}
@@ -151,6 +156,12 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
           <textarea className="field min-h-32" id="description" name="description" required minLength={20} maxLength={3000}
             placeholder="Co je potřeba udělat, materiál, stav objektu, přístup (lešení, parkování)…" />
         </div>
+        <PhotoPicker key={photoKey} folder={photosFolder} onBusy={setUploading} onFolder={(dir) => {
+          setPhotosFolder(dir);
+          // složka musí být v konceptu hned, ne až po další změně formuláře
+          requestAnimationFrame(() => formRef.current && writeDraft(formRef.current));
+        }} />
+        <input type="hidden" name="photos_folder" value={photosFolder} />
       </section>
 
       <section ref={(el) => { sections.current[1] = el; }} hidden={step !== 1} className="card space-y-4 p-5 sm:p-6">
@@ -244,7 +255,7 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
         {step > 0 && <button type="button" className="btn-ghost" onClick={() => go(step - 1)}>← Zpět</button>}
         {step < STEPS.length - 1
           ? <button type="button" className="btn-dark min-w-40" onClick={next}>Pokračovat</button>
-          : <button className="btn-primary min-w-40" disabled={pending}>{pending ? "Odesílám…" : "Odeslat poptávku"}</button>}
+          : <button className="btn-primary min-w-40" disabled={pending || uploading}>{pending ? "Odesílám…" : uploading ? "Nahrávám fotky…" : "Odeslat poptávku"}</button>}
       </div>
       {step === STEPS.length - 1
         ? <p className="text-[13px] text-muted">Na váš e-mail pošleme odkaz. Poptávka se zveřejní po jeho potvrzení a platí 60 dní.</p>

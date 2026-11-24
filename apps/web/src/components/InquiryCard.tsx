@@ -20,6 +20,7 @@ export function InquiryCard({ q }: { q: PublicInquiry }) {
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted">
         <span className="rounded-full bg-paper px-2 py-0.5 font-semibold text-ink">{CATEGORY_LABEL[q.category] ?? q.category}</span>
         {q.is_demo ? <DemoBadge /> : <span>{timeAgo(q.created_at)}</span>}
+        {(q.photos?.length ?? 0) > 0 && <span className="num">· 📷 {q.photos!.length}</span>}
       </div>
       <h3 className="font-display text-[18px] font-bold leading-snug group-hover:text-accent-ink">{q.title}</h3>
       <p className="line-clamp-2 text-[14px] text-muted">{q.description}</p>

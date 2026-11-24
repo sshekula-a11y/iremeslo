@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { DemoBadge } from "@/components/InquiryCard";
+import { photoUrl } from "@/lib/inquiry-photos";
 import { CATEGORY_LABEL, REGION_LABEL, formatQuantity, formatTerm, timeAgo, type InquiryContact, type PublicInquiry } from "@/lib/inquiries";
 
 type ContactAccess = { email_verified: boolean; has_company: boolean; verified: boolean; pending: boolean; not_found: boolean };
@@ -84,6 +85,21 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
 
           <h2 className="mt-5 font-display text-[17px] font-bold">Popis</h2>
           <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">{q.description}</p>
+          {active && (q.photos?.length ?? 0) > 0 && (
+            <>
+              <h2 className="mt-5 font-display text-[17px] font-bold">Fotky</h2>
+              <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {q.photos!.map((name, i) => (
+                  <li key={name}>
+                    <a href={photoUrl(name)} target="_blank" rel="noreferrer" className="block aspect-[4/3] overflow-hidden rounded-xl border border-line bg-paper">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- veřejné úložiště, fotky jsou už zmenšené */}
+                      <img src={photoUrl(name)} alt={`Fotka ${i + 1} k poptávce ${q.title}`} loading="lazy" className="h-full w-full object-cover transition hover:scale-[1.02]" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           {active && <p className="mt-4 text-[13px] text-muted">Poptávka platí do {formatDate(q.expires_at.slice(0, 10))}.</p>}
         </article>
 
