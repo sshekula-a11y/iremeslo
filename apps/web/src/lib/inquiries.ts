@@ -15,6 +15,7 @@ export const INQUIRY_CATEGORIES = [
   ["tesarske", "Tesařské a truhlářské práce"],
   ["zahrada", "Zahrada a terénní úpravy"],
   ["uklid", "Úklid"],
+  ["auto", "Automobilový průmysl"],
   ["jine", "Jiné"],
 ] as const;
 

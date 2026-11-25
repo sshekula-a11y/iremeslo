@@ -660,7 +660,7 @@ select t_eq(:'ok2'::boolean::int, 1, 'obor renovace exteriérů');
 
 -- ---------- profese (018) ----------
 set role anon;
-select t_eq((select count(*)::int from professions), 23, 'veřejně je 23 profesí');
+select t_eq((select count(*)::int from professions), 24, 'veřejně je 24 profesí');
 select t_fails($q$insert into professions (slug, name, category, meta_title, meta_description, intro) values ('x', 'Hack', 'jine', 'Hack hack hack', repeat('x', 60), repeat('x', 60))$q$, 'veřejnost profesi nepřidá');
 set role authenticated;
 select t_login('00000000-0000-0000-0000-00000000000b');
@@ -671,7 +671,7 @@ select admin_save_profession(jsonb_build_object('slug', 'kominik', 'name', 'Komi
   'intro', 'Kominík vyčistí a zkontroluje komín a spalinovou cestu, aby topení bylo bezpečné.',
   'services', jsonb_build_array('Čištění komínů', ' ', 'Kontrola spalinové cesty'), 'faq', jsonb_build_array(jsonb_build_object('q', 'Jak často?', 'a', 'Podle paliva.'), jsonb_build_object('q', '', 'a', 'x')),
   'published', false)) \g /dev/null
-select t_eq((select jsonb_array_length(admin_professions())), 24, 'provozovatel vidí i skryté');
+select t_eq((select jsonb_array_length(admin_professions())), 25, 'provozovatel vidí i skryté');
 reset role;
 select t_eq((select cardinality(services) from professions where slug = 'kominik'), 2, 'prázdné položky seznamu se zahodí');
 select t_eq((select jsonb_array_length(faq) from professions where slug = 'kominik'), 1, 'neúplná otázka se zahodí');
@@ -757,6 +757,12 @@ update app.inquiries set status = 'open' where id = :'finq';
 select t_eq(app.cleanup_inquiry_photos(), 1, 'úklid smaže jen opuštěnou složku starší než den');
 update app.inquiries set expires_at = now() - interval '1 day' where id = :'finq';
 select t_eq(app.cleanup_inquiry_photos(), 6, 'úklid smaže i fotky prošlé poptávky');
+
+-- ---------- obor automobilový průmysl (021) ----------
+set role anon;
+select t_eq((select count(*)::int from professions where slug = 'automobilovy-prumysl' and category = 'auto'), 1, 'stránka Automobilový průmysl');
+reset role;
+select t_eq((select (submit_inquiry('{"category":"auto","title":"Oprava brzd Škoda Octavia","description":"Výměna brzdových destiček a kotoučů vpředu.","city":"Brno","term":"flexible","contact_name":"Aleš","contact_email":"ales@example.cz"}'::jsonb) ->> 'id') is not null)::int, 1, 'poptávka v oboru auto');
 
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'
