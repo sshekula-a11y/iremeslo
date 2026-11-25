@@ -108,8 +108,9 @@ function columnOf(header: string): Col | null {
   const h = norm(header);
   if (!h) return null;
   if (/^(typ|druh|type)$/.test(h)) return "kind";
-  if (/^(ico|ic|ic o|identifikacni cislo|company id|registration number)$/.test(h)) return "ico";
-  if (/^(dic|vat|vat id|danove identifikacni cislo|tax id)$/.test(h)) return "dic";
+  if (/^(ico|ic|ic o|identifikacni cislo|company id|company number|company no|registration number|business id|crn)$/.test(h)) return "ico";
+  if (/^(dic|vat|vat id|vat number|vat no|danove identifikacni cislo|tax id|tax number)$/.test(h)) return "dic";
+  if (/(country|zeme|stat)/.test(h) || /(invoices count|expenses count|pocet)/.test(h)) return null;
   if (/(prijmeni|last name|family name|surname)/.test(h)) return "last";
   if (/^(jmeno|first name|given name|krestni jmeno)$/.test(h)) return "first";
   if (/(kontaktni osoba|contact person)/.test(h)) return "contact_person";
@@ -143,12 +144,23 @@ export function rowsFromTable(table: string[][]): ContactRow[] {
     });
     if (!r.name) r.name = [first, last].filter(Boolean).join(" ");
     if (street2) r.street = [r.street, street2].filter(Boolean).join(", ");
+    if (/^\d{5}$/.test(r.zip)) r.zip = `${r.zip.slice(0, 3)} ${r.zip.slice(3)}`;
+    if (r.city && r.street.toLowerCase().endsWith(`, ${r.city.toLowerCase()}`)) r.street = r.street.slice(0, -(r.city.length + 2)).trim();
     r.ico = r.ico.replace(/\D/g, "");
     if (r.ico && r.kind === "person" && !first && !last) r.kind = "company";
     r.email = r.email.toLowerCase();
+    r.phone = formatPhone(r.phone);
     if (r.name.trim()) out.push(r);
   }
   return out;
+}
+
+/** České číslo do tvaru „+420 602 176 440“ (Excel z něj často udělá 420602176440). */
+export function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "");
+  if (/^(00)?420\d{9}$/.test(d)) { const n = d.slice(-9); return `+420 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`; }
+  if (/^\d{9}$/.test(d) && /^[2-9]/.test(d)) return `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
+  return raw.trim();
 }
 
 export function parseCsv(text: string): string[][] {
@@ -192,7 +204,7 @@ export function parseXlsx(bytes: Uint8Array): string[][] {
   const table: string[][] = [];
   for (const rowXml of sheet.match(/<row\b[\s\S]*?<\/row>/g) ?? []) {
     const row: string[] = [];
-    for (const c of rowXml.match(/<c\b[^>]*(?:\/>|>[\s\S]*?<\/c>)/g) ?? []) {
+    for (const c of rowXml.match(/<c\b[^>]*?\/>|<c\b[^>]*>[\s\S]*?<\/c>/g) ?? []) {
       const ref = c.match(/\br="([A-Z]+)\d+"/)?.[1] ?? "";
       const col = ref ? ref.split("").reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0) - 1 : row.length;
       const t = c.match(/\bt="([^"]+)"/)?.[1];
