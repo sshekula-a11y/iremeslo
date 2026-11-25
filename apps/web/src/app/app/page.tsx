@@ -63,7 +63,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/app">) {
         <Link href="/app/nastaveni#profese" className="card flex items-center justify-between gap-3 border-accent/40 bg-accent-soft p-4 hover:border-accent">
           <span>
             <span className="block font-display text-[17px] font-bold">Vyberte profese své firmy (až 5)</span>
-            <span className="block text-[14px] text-muted">V poptávkách pak uvidíte jen ty z vašich oborů.</span>
+            <span className="block text-[14px] text-muted">Pak vám budeme posílat e-mailem nové poptávky z vašich oborů a v seznamu uvidíte jen ty své.</span>
           </span>
           <span className="text-[20px] text-accent-ink" aria-hidden="true">→</span>
         </Link>

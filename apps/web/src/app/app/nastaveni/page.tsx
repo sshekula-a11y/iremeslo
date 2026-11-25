@@ -6,6 +6,7 @@ import { toHundredths, toInput } from "@/lib/money";
 import { ROLE_LABELS } from "@/lib/labels";
 import { SettingsForm } from "./SettingsForm";
 import { ProfessionPicker } from "./ProfessionPicker";
+import { AlertSettings, type AlertState } from "./AlertSettings";
 import { byCzechName } from "@/lib/professions";
 
 export const metadata: Metadata = { title: "Nastavení firmy" };
@@ -19,10 +20,14 @@ export default async function SettingsPage() {
     .eq("id", company.id)
     .single();
   if (!c) throw new Error("Firmu se nepodařilo načíst.");
-  const [{ data: profs }, { data: mine }] = await Promise.all([
+  const [{ data: profs }, { data: mine }, { data: alerts }] = await Promise.all([
     supabase.from("professions").select("slug, name"),
     supabase.from("company_professions").select("profession_slug").eq("company_id", company.id),
+    supabase.rpc("my_alert_settings", { p_company: company.id }),
   ]);
+  const a = (alerts ?? {}) as { enabled?: boolean; frequency?: AlertState["frequency"]; regions?: string[]; inquiries_30d?: number };
+  const mySlugs = ((mine ?? []) as { profession_slug: string }[]).map((m) => m.profession_slug);
+  const myNames = ((profs ?? []) as { slug: string; name: string }[]).filter((p) => mySlugs.includes(p.slug)).map((p) => p.name).sort((x, y) => x.localeCompare(y, "cs"));
 
   const canEdit = company.role === "owner";
   const pct = (v: string | number) => toInput(toHundredths(v)) || "0";
@@ -49,6 +54,14 @@ export default async function SettingsPage() {
         options={((profs ?? []) as { slug: string; name: string }[]).sort(byCzechName)}
         initial={((mine ?? []) as { profession_slug: string }[]).map((m) => m.profession_slug)}
         canEdit={canEdit}
+      />
+
+      <AlertSettings
+        initial={{ enabled: a.enabled ?? true, frequency: a.frequency ?? "instant", regions: a.regions ?? [] }}
+        professions={myNames}
+        verified={!!c.ico_verified_at}
+        canEdit={canEdit}
+        received30d={a.inquiries_30d ?? 0}
       />
 
       <Link href="/app/nastaveni/faktura" className="card flex items-center justify-between gap-3 p-4 hover:border-ink/30">

@@ -907,5 +907,66 @@ select t_login('00000000-0000-0000-0000-00000000000b');
 select t_eq((select count(*)::int from tax_profiles), 0, 'profil cizí firmy není vidět');
 reset role;
 
+-- ---------- upozornění na nové poptávky (028) ----------
+update companies set read_only = false, ico_verified_at = coalesce(ico_verified_at, now()) where id = :'company_a';
+delete from company_professions where company_id = :'company_a';
+insert into company_professions (company_id, profession_slug) values (:'company_a', 'malir'), (:'company_a', 'fasadnik');
+delete from app.inquiry_alerts_sent;
+-- dřívější poptávky z ostatních testů berme jako už rozeslané
+insert into app.inquiry_alerts_sent (company_id, inquiry_id) select :'company_a', id from app.inquiries;
+delete from net._test_requests;
+select (select u.email from memberships m join auth.users u on u.id = m.user_id where m.company_id = :'company_a' and m.role = 'owner' limit 1) as owner_a \gset
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'fasady', 'jihomoravsky', 'Fasáda řadového domu Brno', 'Nová fasáda řadového domu včetně zateplení.', 'Brno', 'month', 'Eva', 'eva@example.cz', 'alert-test-1')
+returning id as al1 \gset
+select t_eq((app.process_inquiry_alerts('instant') >= 1)::int, 1, 'upozornění se odešle firmám s profesí v oboru');
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a' and body ->> 'html' like '%Fasáda řadového domu Brno%'), 1, 'majitel firmy dostane e-mail s poptávkou');
+select t_eq((select count(*)::int from app.inquiry_alerts_sent where company_id = :'company_a' and inquiry_id = :'al1'), 1, 'odeslání se zapíše');
+delete from net._test_requests;
+select app.process_inquiry_alerts('instant') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'stejnou poptávku firma nedostane dvakrát');
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash, is_demo)
+values ('open', now(), 'fasady', 'jihomoravsky', 'Ukázková fasáda', 'Ukázková poptávka, která se neposílá nikomu.', 'Brno', 'month', 'Eva', 'eva@example.cz', 'alert-test-demo', true);
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'uklid', 'praha', 'Úklid kanceláří Praha', 'Pravidelný úklid kanceláří, dvakrát týdně.', 'Praha', 'month', 'Eva', 'eva@example.cz', 'alert-test-uklid');
+select app.process_inquiry_alerts('instant') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'ukázky a cizí obory se neposílají');
+
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_text(my_alert_settings(:'company_a') ->> 'frequency', 'instant', 'výchozí frekvence je ihned');
+select save_alert_settings(:'company_a', true, 'instant', array['praha']);
+select t_fails('select * from inquiry_alert_settings', 'nastavení (s tokenem k odhlášení) není přímo čitelné');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_fails(format('select my_alert_settings(%L)', :'company_a'), 'cizí nastavení upozornění není vidět');
+select t_fails(format('select save_alert_settings(%L, false, %L, null)', :'company_a', 'daily'), 'cizí nastavení nejde změnit');
+reset role;
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'fasady', 'jihomoravsky', 'Fasáda Znojmo', 'Oprava fasády rodinného domu ve Znojmě.', 'Znojmo', 'month', 'Eva', 'eva@example.cz', 'alert-test-2');
+select app.process_inquiry_alerts('instant') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'poptávka mimo zvolené kraje se neposílá');
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'malovani', 'praha', 'Výmalba bytu Praha 6', 'Výmalba tří pokojů, stropy i stěny.', 'Praha', 'asap', 'Eva', 'eva@example.cz', 'alert-test-3');
+select app.process_inquiry_alerts('instant') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a' and body ->> 'html' like '%Výmalba bytu Praha 6%'), 1, 'poptávka ve zvoleném kraji přijde');
+update inquiry_alert_settings set frequency = 'daily' where company_id = :'company_a';
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'malovani', 'praha', 'Nátěr oken Praha', 'Nátěr dřevěných oken, celkem osm kusů.', 'Praha', 'month', 'Eva', 'eva@example.cz', 'alert-test-4');
+delete from net._test_requests;
+select app.process_inquiry_alerts('instant') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'při denním souhrnu se ihned nic neposílá');
+select app.process_inquiry_alerts('daily') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a' and body ->> 'html' like '%Nátěr oken Praha%'), 1, 'denní souhrn poptávku pošle');
+select substring((select body ->> 'html' from net._test_requests where body -> 'to' ->> 0 = :'owner_a' order by id desc limit 1) from '/upozorneni/odhlasit\?t=([0-9a-f]{36})') as unsub \gset
+set role anon;
+select t_eq((alerts_unsubscribe(:'unsub') is not null)::int, 1, 'odkazem z e-mailu jde upozornění odhlásit bez přihlášení');
+select t_eq((alerts_unsubscribe(repeat('0', 36)) is null)::int, 1, 'vymyšlený odkaz nic neodhlásí');
+reset role;
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now(), 'malovani', 'praha', 'Malování schodiště', 'Malování společných prostor domu, 4 patra.', 'Praha', 'month', 'Eva', 'eva@example.cz', 'alert-test-5');
+delete from net._test_requests;
+select app.process_inquiry_alerts('daily') \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'po odhlášení nic nechodí');
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'
