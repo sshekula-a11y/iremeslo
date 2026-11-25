@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { computeInvoice, DEFAULT_UNITS, formatCzk, lineTotal, type VatRate } from "@iremeslo/core";
+import { computeInvoice, DEFAULT_UNITS, formatCzk, isValidIco, lineTotal, type VatRate } from "@iremeslo/core";
 import { parseInput, toInput } from "@/lib/money";
 import type { AresCompany } from "@/lib/types";
 import { quickInvoice } from "./actions";
@@ -27,6 +27,7 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
   const [clientId, setClientId] = useState(clients.length ? "" : "");
   const [client, setClient] = useState({ kind: "company" as "company" | "person", name: "", ico: "", dic: "", street: "", city: "", zip: "", email: "" });
   const [ares, setAres] = useState<{ loading: boolean; message?: string; ok?: boolean }>({ loading: false });
+  const aresIco = useRef("");
   const setC = (k: keyof typeof client) => (e: React.ChangeEvent<HTMLInputElement>) => setClient((c) => ({ ...c, [k]: e.target.value }));
 
   // Položky a DPH
@@ -48,10 +49,10 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
     }
   }, [items, vatMode, vatRate]);
 
-  async function loadAres() {
+  async function loadAres(icoArg?: string) {
     setAres({ loading: true });
     try {
-      const res = await fetch(`/api/ares/${encodeURIComponent(client.ico.trim())}`);
+      const res = await fetch(`/api/ares/${encodeURIComponent((icoArg ?? client.ico).trim())}`);
       const body = (await res.json()) as AresCompany | { error: string };
       if (!res.ok || "error" in body) return setAres({ loading: false, message: "error" in body ? body.error : "Údaje se nepodařilo načíst." });
       setClient((c) => ({ ...c, kind: "company", ico: body.ico, name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip }));
@@ -114,8 +115,13 @@ export function QuickInvoiceForm({ clients, catalog, vatPayer, defaultVatRate, t
                   <label className="label" htmlFor="q-ico">IČO odběratele</label>
                   <div className="flex gap-2">
                     <input id="q-ico" className="field num" inputMode="numeric" maxLength={8} value={client.ico}
-                      onChange={(e) => setClient((c) => ({ ...c, ico: e.target.value.replace(/\D/g, "") }))} placeholder="např. 25020137" />
-                    <button type="button" className="btn-dark shrink-0" onClick={loadAres} disabled={client.ico.length < 6 || ares.loading}>
+                      onChange={(e) => {
+                      const ico = e.target.value.replace(/\D/g, "").slice(0, 8);
+                      setClient((c) => ({ ...c, ico }));
+                      // po 8. platné číslici načteme odběratele z ARES sami
+                      if (ico.length === 8 && isValidIco(ico) && ico !== aresIco.current) { aresIco.current = ico; void loadAres(ico); }
+                    }} placeholder="např. 25020137" />
+                    <button type="button" className="btn-dark shrink-0" onClick={() => loadAres()} disabled={client.ico.length < 6 || ares.loading}>
                       {ares.loading ? "Hledám…" : "Načíst z ARES"}
                     </button>
                   </div>

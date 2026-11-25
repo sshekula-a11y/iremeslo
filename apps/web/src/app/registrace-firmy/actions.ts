@@ -71,9 +71,10 @@ export async function registerCompany(_prev: RegisterState, form: FormData): Pro
     return { error: "Firmu se nepodařilo založit." };
   }
 
-  // Zápis v rejstříku pro doklady (§ 435 OZ) rovnou z ARES; majitel ho může v nastavení změnit.
-  if (ares.ok && ares.company.registerEntry) {
-    await supabase.from("companies").update({ register_entry: ares.company.registerEntry }).eq("id", String(data));
+  // Zápis v rejstříku pro doklady (§ 435 OZ): z formuláře, jinak rovnou z ARES; majitel ho může v nastavení změnit.
+  const registerEntry = String(form.get("register_entry") ?? "").trim().slice(0, 300) || (ares.ok ? ares.company.registerEntry : null);
+  if (registerEntry) {
+    await supabase.from("companies").update({ register_entry: registerEntry }).eq("id", String(data));
   }
   (await cookies()).set("firma", String(data), { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60 * 60 * 24 * 365 });
   // ?firma=nova → přehled pošle do GA událost company_registered (návrat k poptávce ji vynechá, čísla jsou i v /ssh).

@@ -8,7 +8,7 @@ import type { AresCompany } from "@/lib/types";
 export function CompanyForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(registerCompany, {});
   const [ico, setIco] = useState("");
-  const [values, setValues] = useState({ name: "", dic: "", street: "", city: "", zip: "", vatPayer: false });
+  const [values, setValues] = useState({ name: "", dic: "", street: "", city: "", zip: "", vatPayer: false, registerEntry: "" });
   const [lookup, setLookup] = useState<{ loading: boolean; message?: string; ok?: boolean }>({ loading: false });
   const [trial, setTrial] = useState<{ ico: string; info: TrialInfo } | null>(null);
 
@@ -28,7 +28,7 @@ export function CompanyForm({ next }: { next?: string | null }) {
         setLookup({ loading: false, message: "error" in body ? body.error : "Údaje se nepodařilo načíst." });
         return;
       }
-      setValues({ name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip, vatPayer: body.vatPayer });
+      setValues({ name: body.name, dic: body.dic ?? "", street: body.street, city: body.city, zip: body.zip, vatPayer: body.vatPayer, registerEntry: body.registerEntry ?? "" });
       setIco(body.ico);
       setLookup({ loading: false, ok: true, message: "Údaje jsme načetli z ARES. Zkontrolujte je." });
       void refreshTrial(body.ico);
@@ -91,6 +91,11 @@ export function CompanyForm({ next }: { next?: string | null }) {
           <label className="label" htmlFor="zip">PSČ</label>
           <input className="field num" id="zip" name="zip" inputMode="numeric" value={values.zip} onChange={set("zip")} />
         </div>
+      </div>
+      <div>
+        <label className="label" htmlFor="register_entry">Zápis v rejstříku (na doklady)</label>
+        <input className="field" id="register_entry" name="register_entry" value={values.registerEntry} onChange={set("registerEntry")}
+          placeholder="Doplníme z ARES po zadání IČO" />
       </div>
 
       <div>
