@@ -85,6 +85,7 @@ const s = StyleSheet.create({
   signs: { flexDirection: "row", gap: 40, marginTop: 26 },
   signCol: { flex: 1, alignItems: "center" },
   place: { marginTop: 18 },
+  signNote: { marginTop: 8, color: MUTED, fontSize: 6.5 },
   footer: { position: "absolute", left: 40, right: 40, bottom: 22, flexDirection: "row", justifyContent: "space-between", color: MUTED, fontSize: 7.5, borderTopWidth: 1, borderTopColor: LINE, paddingTop: 6 },
 });
 
@@ -222,22 +223,28 @@ export function DocumentPdf({ v }: { v: DocumentView }) {
 
         {v.signatures && (
           <View wrap={false}>
-            {v.signatures.place && <Text style={s.place}>V ……………………… dne ………………</Text>}
+            {v.signatures.place && <Text style={s.place}>{v.signatures.placeText ?? "V ……………………… dne ………………"}</Text>}
             <View style={s.signs}>
               <View style={s.signCol}>
                 <View style={s.signImages}>
                   {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
                   {v.stampUrl && <Image src={v.stampUrl} style={s.signImage} />}
                   {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
-                  {v.signatureUrl && <Image src={v.signatureUrl} style={s.signImage} />}
+                  {v.signatures.leftSigned ? <Image src={v.signatures.leftSigned.image} style={s.signImage} />
+                    // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt
+                    : v.signatureUrl && <Image src={v.signatureUrl} style={s.signImage} />}
                 </View>
-                <Text style={s.signLine}>{v.signatures.left}{"\n"}{v.supplier.name}</Text>
+                <Text style={s.signLine}>{v.signatures.left}{"\n"}{v.supplier.name}{v.signatures.leftSigned ? `\n${v.signatures.leftSigned.caption}` : ""}</Text>
               </View>
               <View style={s.signCol}>
-                <View style={s.signImages} />
-                <Text style={s.signLine}>{v.signatures.right}{"\n"}{v.customer?.name ?? ""}</Text>
+                <View style={s.signImages}>
+                  {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nemá alt */}
+                  {v.signatures.rightSigned && <Image src={v.signatures.rightSigned.image} style={s.signImage} />}
+                </View>
+                <Text style={s.signLine}>{v.signatures.right}{"\n"}{v.customer?.name ?? ""}{v.signatures.rightSigned ? `\n${v.signatures.rightSigned.caption}` : ""}</Text>
               </View>
             </View>
+            {v.signatures.note && <Text style={s.signNote}>{v.signatures.note}</Text>}
           </View>
         )}
 

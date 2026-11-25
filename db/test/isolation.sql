@@ -797,5 +797,26 @@ select t_fails(format('select issue_document(%L)', :'rp_empty'), 'prázdnou list
 select t_fails(format($q$update documents set snapshot = '{"kind":"x"}' where id = %L$q$, :'dl'), 'vystavený dodací list nejde měnit');
 reset role;
 
+-- ---------- podpis prstem (024) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+\set png 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+select t_eq((select (sign_document(:'dl', 'customer', 'Jan Novák', :'png', 'Brno', 'test')).side = 'customer')::int, 1, 'zákazník podepíše dodací list prstem');
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'dl', 'customer', 'Jiný', :'png'), 'za stejnou stranu podruhé podepsat nejde');
+select t_eq((select (sign_document(:'dl', 'supplier', 'Petr Malíř', :'png')).side = 'supplier')::int, 1, 'podepíše i dodavatel');
+select t_eq((select count(*)::int from document_signatures_of(:'dl') where valid), 2, 'otisk dokladu u obou podpisů sedí');
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'up', 'customer', 'Jan Novák', :'png'), 'upomínka se nepodepisuje');
+insert into documents (company_id, job_id, client_id, type, vat_mode, snapshot) values (:'company_a', :'job_a', :'client_a', 'delivery', 'standard', '{"kind":"delivery"}') returning id as dl_draft \gset
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'dl_draft', 'customer', 'Jan Novák', :'png'), 'koncept podepsat nejde');
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'rp', 'customer', 'Jan Novák', 'data:image/jpeg;base64,xx'), 'podpis musí být obrázek PNG');
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'rp', 'customer', 'J', :'png'), 'jméno podepisujícího je povinné');
+select t_fails(format($q$update document_signatures set signer_name = 'Podvrh' where document_id = %L$q$, :'dl'), 'podpis nejde změnit');
+select t_fails(format('delete from document_signatures where document_id = %L', :'dl'), 'podpis nejde smazat');
+select t_fails(format($q$insert into document_signatures (company_id, document_id, side, signer_name, image, doc_hash, signature_hash) values (%L, %L, 'customer', 'Podvrh', %L, 'x', 'x')$q$, :'company_a', :'rp', :'png'), 'podpis jde zapsat jen přes sign_document');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq((select count(*)::int from document_signatures), 0, 'podpisy cizí firmy nejsou vidět');
+select t_fails(format('select sign_document(%L, %L, %L, %L)', :'rp', 'customer', 'Cizí', :'png'), 'cizí doklad podepsat nejde');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

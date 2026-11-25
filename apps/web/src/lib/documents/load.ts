@@ -38,6 +38,14 @@ export const DOC_STATUS_LABELS: Record<string, string> = {
 export const INVOICE_TYPES = ["invoice", "invoice_non_payer", "advance", "ddpp"] as const;
 export const AGREEMENT_TYPES = ["contract", "handover", "delivery", "cash_in", "cash_out", "reminder", "claim", "amendment"] as const;
 
+/** Listiny, které jde podepsat prstem (stejný seznam hlídá databáze v sign_document). */
+export const SIGNABLE_TYPES = ["contract", "handover", "delivery", "cash_in", "cash_out", "claim", "amendment"] as const;
+
+export interface DocumentSignature { side: "supplier" | "customer"; signerName: string; place: string | null; signedAt: string; valid: boolean }
+
+const PRAGUE_TIME = new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const PRAGUE_DAY = new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric", year: "numeric" });
+
 export interface RelatedDocument { id: string; type: string; number: string; status: string }
 
 export interface LoadedDocument {
@@ -54,6 +62,8 @@ export interface LoadedDocument {
   payments: { paid_on: string; amount: string; method: string }[];
   /** záloha → její DDPP; DDPP → jeho záloha; záloha → faktura, na které je odečtená */
   related: RelatedDocument[];
+  /** podpisy prstem (bez obrázků – ty jsou ve view) */
+  signatures: DocumentSignature[];
 }
 
 /** QR Platba jako obrázek (PNG data URL) – vykreslí se stejně v náhledu i v PDF. */
@@ -133,6 +143,27 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
     view = invoiceView(snap, { ...meta, qrDataUrl: await qrPayment(snap, d.number, d.due_date) });
   }
 
+  // Podpisy prstem: obrázek a popisek do podpisového pole, místo a datum, poznámka s otiskem dokladu.
+  const signatures: DocumentSignature[] = [];
+  if ((SIGNABLE_TYPES as readonly string[]).includes(d.type) && view.signatures) {
+    const { data: sigs } = await supabase.rpc("document_signatures_of", { p_document: d.id });
+    const rows = (sigs ?? []) as { side: "supplier" | "customer"; signer_name: string; place: string | null; image: string; signed_at: string; doc_hash: string; valid: boolean }[];
+    if (rows.length) {
+      const sv = { ...view.signatures };
+      for (const r of rows) {
+        signatures.push({ side: r.side, signerName: r.signer_name, place: r.place, signedAt: r.signed_at, valid: r.valid });
+        const signed = { image: r.image, caption: `${r.signer_name} · ${PRAGUE_TIME.format(new Date(r.signed_at))}` };
+        if (r.side === "supplier") sv.leftSigned = signed; else sv.rightSigned = signed;
+      }
+      const last = [...rows].sort((a, b) => a.signed_at.localeCompare(b.signed_at)).at(-1)!;
+      const place = rows.find((r) => r.side === "customer")?.place ?? last.place;
+      if (sv.place) sv.placeText = `Místo a datum podpisu: ${place ? `${place}, ` : ""}${PRAGUE_DAY.format(new Date(last.signed_at))}`;
+      sv.note = `Podepsáno elektronicky prstem v aplikaci iRemeslo.cz (prostý elektronický podpis). Otisk dokladu SHA-256: ${rows[0].doc_hash.slice(0, 32)}…`
+        + (rows.every((r) => r.valid) ? "" : " POZOR: otisk nesouhlasí s dokladem.");
+      view = { ...view, signatures: sv };
+    }
+  }
+
   // Navázané doklady
   const related: RelatedDocument[] = [];
   if (d.type === "advance") {
@@ -169,6 +200,7 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
     view,
     payments: ((d as unknown as { payments: LoadedDocument["payments"] }).payments ?? []).map((p) => ({ ...p, amount: String(p.amount) })),
     related,
+    signatures,
   };
 }
 

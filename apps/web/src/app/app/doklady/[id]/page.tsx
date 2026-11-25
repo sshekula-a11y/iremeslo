@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { InvoiceSnapshot } from "@iremeslo/core";
 import { requireStaff } from "@/lib/data";
-import { DOC_STATUS_LABELS, DOC_TYPE_LABELS, loadDocument } from "@/lib/documents/load";
+import { DOC_STATUS_LABELS, DOC_TYPE_LABELS, SIGNABLE_TYPES, loadDocument } from "@/lib/documents/load";
 import { czk, formatDate } from "@/lib/format";
 import { addDays, todayInPrague } from "@/lib/calendar";
 import { DocumentPaper } from "@/components/DocumentPaper";
 import { PdfDownload } from "@/components/PdfDownload";
 import { DocStatusBadge, docState } from "@/components/DocStatusBadge";
 import { IssueDdppButton, MarkPaidForm } from "./PaymentPanel";
+import { SignPanel, type SignSlot } from "./SignPanel";
 
 export const metadata: Metadata = { title: "Doklad" };
 
@@ -31,6 +32,19 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
   const payerAdvance = doc.type === "advance" && snap.vatPayer && snap.vatMode === "standard";
   const ddpp = doc.related.find((r) => r.type === "ddpp");
   const paidOn = doc.payments.map((p) => p.paid_on).sort().at(-1);
+
+  // Podpis prstem: jen u listin s podpisovým polem a jen vystavených (ne stornovaných).
+  const sv = doc.view.signatures;
+  const signable = !!sv && (SIGNABLE_TYPES as readonly string[]).includes(doc.type) && doc.status !== "canceled";
+  const party = snap as unknown as { supplier?: { name?: string; city?: string; ico?: string | null }; customer?: { name?: string; ico?: string | null } | null };
+  const signedBy = (side: "supplier" | "customer") => {
+    const x = doc.signatures.find((g) => g.side === side);
+    return x ? { name: x.signerName, at: formatDate(x.signedAt.slice(0, 10)) } : null;
+  };
+  const slots: SignSlot[] = sv ? [
+    { side: "supplier", label: sv.left, defaultName: party.supplier?.ico && !/s\.\s?r\.\s?o|a\.\s?s\.|spol\./i.test(party.supplier?.name ?? "") ? party.supplier?.name ?? "" : "", signed: signedBy("supplier") },
+    ...(sv.right ? [{ side: "customer" as const, label: sv.right, defaultName: party.customer && !party.customer.ico ? party.customer.name ?? "" : "", signed: signedBy("customer") }] : []),
+  ] : [];
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -126,11 +140,12 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
         {doc.type === "quote"
           ? "Vystavený doklad už nejde měnit. Když se cena změní, upravte zakázku a vystavte novou nabídku."
           : doc.type === "contract"
-            ? "Vystavená smlouva už nejde měnit. Stáhněte PDF, vytiskněte ho dvakrát a nechte podepsat. Změny řešte dodatkem nebo novou smlouvou."
+            ? "Vystavená smlouva už nejde měnit. Podepište ji s objednatelem prstem níže, nebo stáhněte PDF, vytiskněte ho dvakrát a podepište na papíře. Změny řešte dodatkem nebo novou smlouvou."
             : doc.type === "handover"
-              ? "Protokol vytiskněte a při předání díla vyplňte a podepište s objednatelem."
+              ? "Při předání díla protokol podepište s objednatelem prstem níže, nebo ho vytiskněte, vyplňte a podepište na papíře."
               : "Vystavený doklad už nejde měnit ani smazat."}
       </p>
+      {signable && <SignPanel documentId={doc.id} slots={slots} defaultPlace={party.supplier?.city ?? ""} />}
       <DocumentPaper v={doc.view} />
     </div>
   );

@@ -35,8 +35,21 @@ export interface DocumentView {
   /** prázdné řádky k ručnímu vyplnění (předávací protokol) */
   blanks?: { label: string; lines: number }[];
   /** podpisy obou stran; vlevo razítko a podpis dodavatele z nastavení */
-  signatures?: { left: string; right: string; place: boolean };
+  signatures?: {
+    left: string;
+    right: string;
+    place: boolean;
+    /** podpis prstem (obrázek PNG jako data URL) a popisek pod ním */
+    leftSigned?: SignedBy;
+    rightSigned?: SignedBy;
+    /** „V Brně dne 25. 11. 2026“ – vyplněno z podpisu */
+    placeText?: string;
+    /** poznámka o elektronickém podpisu a otisku dokladu */
+    note?: string;
+  };
 }
+
+export interface SignedBy { image: string; caption: string }
 
 export interface DocumentMeta {
   number: string;

@@ -169,22 +169,30 @@ export function DocumentPaper({ v }: { v: DocumentView }) {
         {v.notes.length > 0 && <div className="space-y-1">{v.notes.map((n, i) => <p key={i} className="whitespace-pre-line">{n}</p>)}</div>}
         {v.signatures && (
           <div className="pt-2">
-            {v.signatures.place && <p className="mb-6 text-[13px]">V ……………………… dne ………………</p>}
+            {v.signatures.place && <p className="mb-6 text-[13px]">{v.signatures.placeText ?? "V ……………………… dne ………………"}</p>}
             <div className="grid grid-cols-2 gap-6 sm:gap-12">
               <div className="text-center">
                 <div className="flex h-20 items-end justify-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {v.stampUrl && <img src={v.stampUrl} alt="Razítko" className="max-h-20 max-w-28 object-contain" />}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {v.signatureUrl && <img src={v.signatureUrl} alt="Podpis" className="max-h-20 max-w-28 object-contain" />}
+                  {v.signatures.leftSigned ? <img src={v.signatures.leftSigned.image} alt="Podpis prstem" className="max-h-20 max-w-36 object-contain" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    : v.signatureUrl && <img src={v.signatureUrl} alt="Podpis" className="max-h-20 max-w-28 object-contain" />}
                 </div>
-                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.left}<br />{v.supplier.name}</p>
+                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.left}<br />{v.supplier.name}
+                  {v.signatures.leftSigned && <><br /><span className="text-[11px]">{v.signatures.leftSigned.caption}</span></>}</p>
               </div>
               <div className="text-center">
-                <div className="h-20" />
-                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.right}<br />{v.customer?.name}</p>
+                <div className="flex h-20 items-end justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {v.signatures.rightSigned && <img src={v.signatures.rightSigned.image} alt="Podpis prstem" className="max-h-20 max-w-36 object-contain" />}
+                </div>
+                <p className="mt-1 border-t border-ink/40 pt-1 text-[12px] text-muted">{v.signatures.right}<br />{v.customer?.name}
+                  {v.signatures.rightSigned && <><br /><span className="text-[11px]">{v.signatures.rightSigned.caption}</span></>}</p>
               </div>
             </div>
+            {v.signatures.note && <p className="mt-3 text-[11px] text-muted">{v.signatures.note}</p>}
           </div>
         )}
         {!v.signatures && (v.stampUrl || v.signatureUrl) && (
