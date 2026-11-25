@@ -16,7 +16,8 @@
     "test:db": "bash scripts/test-db.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "npm run dev -w web",
-    "build": "npm run build -w web"
+    "build": "npm run build -w web",
+    "test:isdoc": "bash scripts/test-isdoc.sh"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",
