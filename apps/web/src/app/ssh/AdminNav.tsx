@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/ssh/poptavky", label: "Poptávky" },
   { href: "/ssh/profese", label: "Profese" },
   { href: "/ssh/emaily", label: "E-maily" },
+  { href: "/ssh/ai", label: "AI" },
 ];
 
 export function AdminNav() {

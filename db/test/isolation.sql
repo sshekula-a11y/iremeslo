@@ -864,5 +864,37 @@ select t_text(get_sign_request(:'tok3') ->> 'state', 'expired', 'prošlý odkaz 
 select t_fails(format('select sign_by_token(%L, %L, %L)', :'tok3', 'Jan Novák', :'png'), 'prošlým odkazem podepsat nejde');
 reset role;
 
+-- ---------- výdaje a limity AI (026) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+insert into expenses (company_id, supplier_name, supplier_ico, issue_date, total, vat_base, vat, category, job_id, file_path, source)
+values (:'company_a', 'Hornbach Praha', '27645312', '2026-11-20', 1210, 1000, 210, 'material', :'job_a', :'company_a' || '/expenses/abc.jpg', 'ai');
+select t_eq((select count(*)::int from expenses), 1, 'firma si uloží výdaj z účtenky');
+select t_fails(format($q$insert into expenses (company_id, supplier_name, issue_date, total, file_path) values (%L, 'X', '2026-11-20', 1, %L)$q$, :'company_a', :'company_b' || '/expenses/x.jpg'), 'účtenka jen ze složky vlastní firmy');
+select t_fails(format($q$insert into expenses (company_id, supplier_name, issue_date, total) values (%L, 'X', '2026-11-20', 1)$q$, :'company_b'), 'výdaj do cizí firmy nejde');
+select t_fails(format($q$insert into expenses (company_id, supplier_name, issue_date, total, category) values (%L, 'X', '2026-11-20', 1, 'luxus')$q$, :'company_a'), 'neznámá kategorie výdaje');
+select t_eq((ai_quota(:'company_a') ->> 'receipts_used')::int, 0, 'na začátku měsíce je limit AI nevyčerpaný');
+select ai_reserve(:'company_a', 'receipt') as rid \gset
+select ai_finish(:'rid', true, 1500, 300, 'claude-opus-5-5');
+select ai_reserve(:'company_a', 'receipt') as rid2 \gset
+select ai_finish(:'rid2', false, 0, 0, 'claude-opus-5-5');
+select t_eq((ai_quota(:'company_a') ->> 'receipts_used')::int, 1, 'nepovedené volání AI se do limitu nepočítá');
+reset role;
+update app.settings set value = '1' where key = 'ai_receipts_month';
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_fails(format('select ai_reserve(%L, %L)', :'company_a', 'receipt'), 'po vyčerpání měsíčního limitu AI odmítne');
+select t_eq((ai_reserve(:'company_a', 'chat') > 0)::int, 1, 'limit chatu je samostatný');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq((select count(*)::int from expenses), 0, 'výdaje cizí firmy nejsou vidět');
+select t_fails(format('select ai_reserve(%L, %L)', :'company_a', 'chat'), 'AI cizí firmy použít nejde');
+select t_fails(format('select ai_quota(%L)', :'company_a'), 'limit cizí firmy není vidět');
+select t_fails('select admin_ai_overview()', 'přehled AI jen pro administrátora');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq(jsonb_array_length(admin_ai_overview() -> 'companies'), 1, 'administrátor vidí spotřebu AI po firmách');
+select admin_set_ai_limits(150, 300);
+select t_eq((admin_ai_overview() ->> 'receipts_limit')::int, 150, 'administrátor nastaví limity AI');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

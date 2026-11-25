@@ -202,3 +202,14 @@ export async function deleteProfession(_: AdminState, form: FormData): Promise<A
   revalidatePath("/ssh/profese");
   redirect("/ssh/profese");
 }
+
+export async function saveAiLimits(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const receipts = Number(form.get("receipts"));
+  const chat = Number(form.get("chat"));
+  if (!Number.isInteger(receipts) || !Number.isInteger(chat) || receipts < 0 || chat < 0 || receipts > 100000 || chat > 100000) return { error: "Zadejte celá čísla 0–100 000." };
+  const { error } = await supabase.rpc("admin_set_ai_limits", { p_receipts: receipts, p_chat: chat });
+  if (error) return fail(error, "Limity se nepodařilo uložit.");
+  revalidatePath("/ssh/ai");
+  return { ok: true, message: "Limity uloženy." };
+}
