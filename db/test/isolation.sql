@@ -818,5 +818,51 @@ select t_eq((select count(*)::int from document_signatures), 0, 'podpisy cizí f
 select t_fails(format('select sign_document(%L, %L, %L, %L)', :'rp', 'customer', 'Cizí', :'png'), 'cizí doklad podepsat nejde');
 reset role;
 
+-- ---------- podpis na dálku přes odkaz (025) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select (create_sign_request(:'rp', 'zakaznik@example.cz') ->> 'link') as sign_link \gset
+select t_eq((:'sign_link' like '%/podpis/%')::int, 1, 'řemeslník vytvoří odkaz k podpisu');
+select split_part(:'sign_link', '/podpis/', 2) as sign_token \gset
+select t_text(sign_request_status(:'rp') ->> 'state', 'active', 'stav odkazu je aktivní');
+select t_fails(format('select create_sign_request(%L, %L)', :'dl', 'x@example.cz'), 'už podepsaný doklad nejde poslat k podpisu');
+select t_fails(format('select create_sign_request(%L, %L)', :'rp', 'neni-email'), 'neplatný e-mail');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_fails(format('select create_sign_request(%L)', :'rp'), 'cizí doklad poslat k podpisu nejde');
+select t_eq((sign_request_status(:'rp') is null)::int, 1, 'stav cizího odkazu není vidět');
+reset role;
+set role anon;
+select t_text(get_sign_request(:'sign_token') ->> 'state', 'open', 'zákazník odkaz otevře bez přihlášení');
+select t_text(get_sign_request(:'sign_token') #>> '{document,number}', 'RP-2026-001', '… a vidí listinu');
+select t_text(get_sign_request(repeat('0', 48)) ->> 'state', 'invalid', 'vymyšlený odkaz nic neukáže');
+select t_text(get_sign_request('abc') ->> 'state', 'invalid', 'nesmyslný odkaz nic neukáže');
+select t_fails(format('select sign_by_token(%L, %L, %L)', repeat('0', 48), 'Jan Novák', :'png'), 'podpis s vymyšleným odkazem nejde');
+select t_eq((sign_by_token(:'sign_token', 'Jana Dvořáková', :'png', 'Brno', 'test') ->> 'ok')::boolean::int, 1, 'zákazník podepíše přes odkaz');
+select t_fails(format('select sign_by_token(%L, %L, %L)', :'sign_token', 'Jana Dvořáková', :'png'), 'odkaz jde použít jen jednou');
+select t_text(get_sign_request(:'sign_token') ->> 'state', 'signed', 'po podpisu odkaz ukazuje podepsaný stav');
+select t_fails('select * from app.sign_requests', 'tabulka odkazů není veřejná');
+reset role;
+select t_eq((select count(*)::int from document_signatures where document_id = :'rp' and side = 'customer' and signed_by is null), 1, 'podpis přes odkaz je uložený za zákazníka');
+select t_eq((select count(*)::int from app.sign_requests where document_id = :'rp' and used_at is not null), 1, 'odkaz je po podpisu spotřebovaný');
+select t_eq((select count(*)::int from app.email_log where kind in ('sign_request', 'sign_done')), 2, 'odešle se e-mail zákazníkovi i řemeslníkovi');
+-- zrušení a vypršení
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select split_part(create_sign_request(:'ppd') ->> 'link', '/podpis/', 2) as tok2 \gset
+select cancel_sign_request(:'ppd');
+reset role;
+set role anon;
+select t_text(get_sign_request(:'tok2') ->> 'state', 'invalid', 'zrušený odkaz neplatí');
+reset role;
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select split_part(create_sign_request(:'ppd') ->> 'link', '/podpis/', 2) as tok3 \gset
+reset role;
+update app.sign_requests set expires_at = now() - interval '1 minute' where document_id = :'ppd' and canceled_at is null;
+set role anon;
+select t_text(get_sign_request(:'tok3') ->> 'state', 'expired', 'prošlý odkaz ukáže, že vypršel');
+select t_fails(format('select sign_by_token(%L, %L, %L)', :'tok3', 'Jan Novák', :'png'), 'prošlým odkazem podepsat nejde');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

@@ -9,7 +9,8 @@ import { DocumentPaper } from "@/components/DocumentPaper";
 import { PdfDownload } from "@/components/PdfDownload";
 import { DocStatusBadge, docState } from "@/components/DocStatusBadge";
 import { IssueDdppButton, MarkPaidForm } from "./PaymentPanel";
-import { SignPanel, type SignSlot } from "./SignPanel";
+import { SignPanel, type SignLinkStatus, type SignSlot } from "./SignPanel";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Doklad" };
 
@@ -36,7 +37,13 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
   // Podpis prstem: jen u listin s podpisovým polem a jen vystavených (ne stornovaných).
   const sv = doc.view.signatures;
   const signable = !!sv && (SIGNABLE_TYPES as readonly string[]).includes(doc.type) && doc.status !== "canceled";
-  const party = snap as unknown as { supplier?: { name?: string; city?: string; ico?: string | null }; customer?: { name?: string; ico?: string | null } | null };
+  const party = snap as unknown as { supplier?: { name?: string; city?: string; ico?: string | null }; customer?: { name?: string; ico?: string | null; email?: string | null } | null };
+  let link: SignLinkStatus | null = null;
+  if (signable && sv?.right) {
+    const { data } = await (await createClient()).rpc("sign_request_status", { p_document: doc.id });
+    const r = data as { state: SignLinkStatus["state"]; sent_to: string | null; expires_at: string; opened_at: string | null } | null;
+    if (r) link = { state: r.state, sentTo: r.sent_to, expires: formatDate(r.expires_at.slice(0, 10)), opened: r.opened_at ? formatDate(r.opened_at.slice(0, 10)) : null };
+  }
   const signedBy = (side: "supplier" | "customer") => {
     const x = doc.signatures.find((g) => g.side === side);
     return x ? { name: x.signerName, at: formatDate(x.signedAt.slice(0, 10)) } : null;
@@ -145,7 +152,7 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
               ? "Při předání díla protokol podepište s objednatelem prstem níže, nebo ho vytiskněte, vyplňte a podepište na papíře."
               : "Vystavený doklad už nejde měnit ani smazat."}
       </p>
-      {signable && <SignPanel documentId={doc.id} slots={slots} defaultPlace={party.supplier?.city ?? ""} />}
+      {signable && <SignPanel documentId={doc.id} docTitle={`${DOC_TYPE_LABELS[doc.type]} ${doc.number}`} slots={slots} defaultPlace={party.supplier?.city ?? ""} customerEmail={party.customer?.email ?? ""} link={link} />}
       <DocumentPaper v={doc.view} />
     </div>
   );

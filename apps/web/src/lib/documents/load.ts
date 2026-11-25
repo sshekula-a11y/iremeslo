@@ -85,6 +85,51 @@ async function qrPayment(s: InvoiceSnapshot, number: string, dueDate: string | n
   }
 }
 
+export interface SignatureRow { side: "supplier" | "customer"; signer_name: string; place: string | null; image: string; signed_at: string; doc_hash: string; valid: boolean }
+
+/** Vloží podpisy prstem do podpisových polí dokladu (náhled i PDF). */
+export function withSignatures(view: DocumentView, rows: SignatureRow[]): { view: DocumentView; signatures: DocumentSignature[] } {
+  const signatures: DocumentSignature[] = rows.map((r) => ({ side: r.side, signerName: r.signer_name, place: r.place, signedAt: r.signed_at, valid: r.valid }));
+  if (!view.signatures || !rows.length) return { view, signatures };
+  const sv = { ...view.signatures };
+  for (const r of rows) {
+    const signed = { image: r.image, caption: `${r.signer_name} · ${PRAGUE_TIME.format(new Date(r.signed_at))}` };
+    if (r.side === "supplier") sv.leftSigned = signed; else sv.rightSigned = signed;
+  }
+  const last = [...rows].sort((a, b) => a.signed_at.localeCompare(b.signed_at)).at(-1)!;
+  const place = rows.find((r) => r.side === "customer")?.place ?? last.place;
+  if (sv.place) sv.placeText = `Místo a datum podpisu: ${place ? `${place}, ` : ""}${PRAGUE_DAY.format(new Date(last.signed_at))}`;
+  sv.note = `Podepsáno elektronicky prstem v aplikaci iRemeslo.cz (prostý elektronický podpis). Otisk dokladu SHA-256: ${rows[0].doc_hash.slice(0, 32)}…`
+    + (rows.every((r) => r.valid) ? "" : " POZOR: otisk nesouhlasí s dokladem.");
+  return { view: { ...view, signatures: sv }, signatures };
+}
+
+type ViewMeta = Parameters<typeof quoteView>[1];
+
+/** Uložený obsah dokladu → model k vykreslení (stejný pro aplikaci i veřejnou stránku podpisu). */
+export async function buildView(type: string, snapshot: unknown, number: string, dueDate: string | null, meta: ViewMeta): Promise<DocumentView> {
+  if (type === "quote") {
+    return quoteView(snapshot as QuoteSnapshot, meta);
+  } else if (type === "contract") {
+    return contractView(snapshot as ContractSnapshot, meta);
+  } else if (type === "handover") {
+    return handoverView(snapshot as HandoverSnapshot, meta);
+  } else if (type === "delivery") {
+    return deliveryView(snapshot as DeliverySnapshot, meta);
+  } else if (type === "cash_in" || type === "cash_out") {
+    return cashView(snapshot as CashSnapshot, meta);
+  } else if (type === "reminder") {
+    return reminderView(snapshot as ReminderSnapshot, meta);
+  } else if (type === "claim") {
+    return claimView(snapshot as ClaimSnapshot, meta);
+  } else if (type === "amendment") {
+    return amendmentView(snapshot as AmendmentSnapshot, meta);
+  } else {
+    const snap = snapshot as InvoiceSnapshot;
+    return invoiceView(snap, { ...meta, qrDataUrl: await qrPayment(snap, number, dueDate) });
+  }
+}
+
 export async function loadDocument(companyId: string, id: string): Promise<LoadedDocument> {
   const supabase = await createClient();
   const [{ data: d }, { data: firm }] = await Promise.all([
@@ -121,47 +166,13 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
     stampUrl: url(firm?.stamp_path),
     signatureUrl: url(firm?.signature_path),
   };
-  let view: DocumentView;
-  if (isQuote) {
-    view = quoteView(d.snapshot as QuoteSnapshot, meta);
-  } else if (d.type === "contract") {
-    view = contractView(d.snapshot as ContractSnapshot, meta);
-  } else if (d.type === "handover") {
-    view = handoverView(d.snapshot as HandoverSnapshot, meta);
-  } else if (d.type === "delivery") {
-    view = deliveryView(d.snapshot as DeliverySnapshot, meta);
-  } else if (d.type === "cash_in" || d.type === "cash_out") {
-    view = cashView(d.snapshot as CashSnapshot, meta);
-  } else if (d.type === "reminder") {
-    view = reminderView(d.snapshot as ReminderSnapshot, meta);
-  } else if (d.type === "claim") {
-    view = claimView(d.snapshot as ClaimSnapshot, meta);
-  } else if (d.type === "amendment") {
-    view = amendmentView(d.snapshot as AmendmentSnapshot, meta);
-  } else {
-    const snap = d.snapshot as InvoiceSnapshot;
-    view = invoiceView(snap, { ...meta, qrDataUrl: await qrPayment(snap, d.number, d.due_date) });
-  }
+  let view = await buildView(d.type, d.snapshot, d.number, d.due_date, meta);
 
   // Podpisy prstem: obrázek a popisek do podpisového pole, místo a datum, poznámka s otiskem dokladu.
-  const signatures: DocumentSignature[] = [];
+  let signatures: DocumentSignature[] = [];
   if ((SIGNABLE_TYPES as readonly string[]).includes(d.type) && view.signatures) {
     const { data: sigs } = await supabase.rpc("document_signatures_of", { p_document: d.id });
-    const rows = (sigs ?? []) as { side: "supplier" | "customer"; signer_name: string; place: string | null; image: string; signed_at: string; doc_hash: string; valid: boolean }[];
-    if (rows.length) {
-      const sv = { ...view.signatures };
-      for (const r of rows) {
-        signatures.push({ side: r.side, signerName: r.signer_name, place: r.place, signedAt: r.signed_at, valid: r.valid });
-        const signed = { image: r.image, caption: `${r.signer_name} · ${PRAGUE_TIME.format(new Date(r.signed_at))}` };
-        if (r.side === "supplier") sv.leftSigned = signed; else sv.rightSigned = signed;
-      }
-      const last = [...rows].sort((a, b) => a.signed_at.localeCompare(b.signed_at)).at(-1)!;
-      const place = rows.find((r) => r.side === "customer")?.place ?? last.place;
-      if (sv.place) sv.placeText = `Místo a datum podpisu: ${place ? `${place}, ` : ""}${PRAGUE_DAY.format(new Date(last.signed_at))}`;
-      sv.note = `Podepsáno elektronicky prstem v aplikaci iRemeslo.cz (prostý elektronický podpis). Otisk dokladu SHA-256: ${rows[0].doc_hash.slice(0, 32)}…`
-        + (rows.every((r) => r.valid) ? "" : " POZOR: otisk nesouhlasí s dokladem.");
-      view = { ...view, signatures: sv };
-    }
+    ({ view, signatures } = withSignatures(view, (sigs ?? []) as SignatureRow[]));
   }
 
   // Navázané doklady

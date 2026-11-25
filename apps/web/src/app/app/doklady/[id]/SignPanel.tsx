@@ -1,197 +1,161 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { signDocument } from "./sign-action";
+import { SignatureDialog } from "@/components/SignatureDialog";
+import { cancelSignLink, createSignLink, signDocument } from "./sign-action";
 
 type Side = "supplier" | "customer";
 export interface SignSlot { side: Side; label: string; defaultName: string; signed: { name: string; at: string } | null }
+export interface SignLinkStatus { state: "active" | "signed" | "canceled" | "expired"; sentTo: string | null; expires: string; opened: string | null }
 
-/** Podpisy dokladu: stav obou stran a tlačítko, které otevře plochu pro podpis prstem. */
-export function SignPanel({ documentId, slots, defaultPlace }: { documentId: string; slots: SignSlot[]; defaultPlace: string }) {
+/** Podpisy dokladu: stav obou stran, podpis prstem tady na místě, nebo odkaz zákazníkovi na dálku. */
+export function SignPanel({ documentId, docTitle, slots, defaultPlace, customerEmail, link }: {
+  documentId: string; docTitle: string; slots: SignSlot[]; defaultPlace: string; customerEmail: string; link: SignLinkStatus | null;
+}) {
+  const router = useRouter();
   const [open, setOpen] = useState<SignSlot | null>(null);
+  const [remote, setRemote] = useState(false);
   const allSigned = slots.every((s) => s.signed);
+  const customer = slots.find((s) => s.side === "customer");
 
   return (
     <section className="card space-y-3 p-4" aria-labelledby="podpisy">
       <div>
         <h2 id="podpisy" className="font-semibold">Podpis prstem</h2>
         <p className="text-[14px] text-muted">
-          {allSigned ? "Doklad je podepsaný oběma stranami. Podpisy jsou v náhledu i v PDF." : "Podepište na telefonu nebo tabletu – podpis se vloží do dokladu i do PDF."}
+          {allSigned ? "Doklad je podepsaný oběma stranami. Podpisy jsou v náhledu i v PDF." : "Podepište tady na telefonu nebo tabletu, nebo pošlete zákazníkovi odkaz a podepíše na svém telefonu."}
         </p>
       </div>
       <ul className="grid gap-2 sm:grid-cols-2">
         {slots.map((s) => (
-          <li key={s.side} className="flex min-h-14 items-center justify-between gap-3 rounded-[10px] bg-paper px-3 py-2 ring-1 ring-line">
+          <li key={s.side} className="flex min-h-14 flex-wrap items-center justify-between gap-2 rounded-[10px] bg-paper px-3 py-2 ring-1 ring-line">
             <div className="min-w-0">
               <p className="text-[13px] text-muted">{s.label}</p>
-              {s.signed ? <p className="truncate font-semibold text-ok">✓ {s.signed.name} <span className="font-normal text-muted">· {s.signed.at}</span></p> : <p className="font-semibold">Nepodepsáno</p>}
+              {s.signed ? <p className="truncate font-semibold text-ok">✓ {s.signed.name} <span className="font-normal text-muted">· {s.signed.at}</span></p>
+                : s.side === "customer" && link?.state === "active" ? <p className="font-semibold">Čeká na podpis přes odkaz</p>
+                : <p className="font-semibold">Nepodepsáno</p>}
             </div>
-            {!s.signed && <button type="button" className="btn-dark min-h-10 shrink-0 px-3 text-[14px]" onClick={() => setOpen(s)}>Podepsat</button>}
+            {!s.signed && (
+              <div className="flex gap-2">
+                <button type="button" className="btn-dark min-h-10 shrink-0 px-3 text-[14px]" onClick={() => setOpen(s)}>Podepsat zde</button>
+                {s.side === "customer" && !remote && (
+                  <button type="button" className="btn-ghost min-h-10 shrink-0 px-3 text-[14px]" onClick={() => setRemote(true)}>Poslat odkaz</button>
+                )}
+              </div>
+            )}
           </li>
         ))}
       </ul>
-      {open && <SignDialog documentId={documentId} slot={open} defaultPlace={defaultPlace} onClose={() => setOpen(null)} />}
+
+      {customer && !customer.signed && link?.state === "active" && !remote && (
+        <p className="text-[14px] text-muted">
+          Odkaz {link.sentTo ? <>poslaný na <strong className="text-ink">{link.sentTo}</strong> </> : ""}platí do {link.expires}.
+          {link.opened ? ` Zákazník ho otevřel ${link.opened}.` : " Zákazník ho zatím neotevřel."}{" "}
+          <button type="button" className="font-semibold text-accent-ink hover:underline" onClick={() => setRemote(true)}>Poslat znovu</button>
+          {" · "}
+          <CancelLink documentId={documentId} />
+        </p>
+      )}
+
+      {customer && !customer.signed && remote && (
+        <RemoteLink documentId={documentId} docTitle={docTitle} defaultEmail={customerEmail} hadLink={link?.state === "active"} onClose={() => { setRemote(false); router.refresh(); }} />
+      )}
+
+      {open && (
+        <SignatureDialog
+          title={`Podpis – ${open.label.toLowerCase()}`}
+          defaultName={open.defaultName}
+          defaultPlace={defaultPlace}
+          onSubmit={(name, place, png) => signDocument(documentId, open.side, name, place, png)}
+          onClose={() => setOpen(null)}
+          onDone={() => { setOpen(null); router.refresh(); }}
+        />
+      )}
     </section>
   );
 }
 
-const INK = "#1b2a5e";
-
-function SignDialog({ documentId, slot, defaultPlace, onClose }: { documentId: string; slot: SignSlot; defaultPlace: string; onClose: () => void }) {
+function CancelLink({ documentId }: { documentId: string }) {
   const router = useRouter();
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const last = useRef<{ x: number; y: number } | null>(null);
-  const box = useRef({ minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
-  const [inked, setInked] = useState(false);
-  const [name, setName] = useState(slot.defaultName);
-  const [place, setPlace] = useState(defaultPlace);
-  const [agree, setAgree] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  return (
+    <button type="button" className="font-semibold text-warn hover:underline" disabled={pending}
+      onClick={() => start(async () => { await cancelSignLink(documentId); router.refresh(); })}>
+      {pending ? "Ruším…" : "Zrušit odkaz"}
+    </button>
+  );
+}
 
-  const setup = useCallback(() => {
-    const c = canvas.current;
-    if (!c) return;
-    const r = c.getBoundingClientRect();
-    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-    c.width = Math.round(r.width * dpr);
-    c.height = Math.round(r.height * dpr);
-    const ctx = c.getContext("2d")!;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = INK;
-    ctx.fillStyle = INK;
-    ctx.lineWidth = 2.6;
-    box.current = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-    setInked(false);
-  }, []);
+/** Vytvoří odkaz k podpisu: pošle ho e-mailem, nebo ho řemeslník zkopíruje či sdílí (SMS, WhatsApp…). */
+function RemoteLink({ documentId, docTitle, defaultEmail, hadLink, onClose }: { documentId: string; docTitle: string; defaultEmail: string; hadLink: boolean; onClose: () => void }) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [url, setUrl] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [canShare] = useState(() => typeof navigator !== "undefined" && "share" in navigator);
+  const [pending, start] = useTransition();
+  const message = (u: string) => `Dobrý den, posílám ${docTitle} k podpisu. Otevřete odkaz v telefonu a podepište prstem: ${u}`;
 
-  useEffect(() => {
-    setup();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    // otočení telefonu změní velikost plochy – začneme znovu, jinak by se podpis zdeformoval
-    window.addEventListener("resize", setup);
-    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); window.removeEventListener("resize", setup); };
-  }, [setup, onClose]);
-
-  const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  };
-  const mark = (p: { x: number; y: number }) => {
-    const b = box.current;
-    b.minX = Math.min(b.minX, p.x); b.minY = Math.min(b.minY, p.y); b.maxX = Math.max(b.maxX, p.x); b.maxY = Math.max(b.maxY, p.y);
-  };
-  const down = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    drawing.current = true;
-    const p = point(e);
-    last.current = p;
-    mark(p);
-    const ctx = e.currentTarget.getContext("2d")!;
-    ctx.beginPath(); ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2); ctx.fill();
-  };
-  const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current || !last.current) return;
-    const ctx = e.currentTarget.getContext("2d")!;
-    const events = typeof e.nativeEvent.getCoalescedEvents === "function" ? e.nativeEvent.getCoalescedEvents() : [e.nativeEvent];
-    const r = e.currentTarget.getBoundingClientRect();
-    for (const ev of events.length ? events : [e.nativeEvent]) {
-      const p = { x: ev.clientX - r.left, y: ev.clientY - r.top };
-      const pressure = ev.pointerType === "pen" && ev.pressure > 0 ? ev.pressure : 0.5;
-      ctx.lineWidth = 1.6 + pressure * 2.2;
-      ctx.beginPath(); ctx.moveTo(last.current.x, last.current.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-      last.current = p;
-      mark(p);
-    }
-    const b = box.current;
-    if (!inked && b.maxX - b.minX + (b.maxY - b.minY) > 40) setInked(true);
-  };
-  const up = () => { drawing.current = false; last.current = null; };
-
-  /** Ořízne podpis na jeho obrys (s okrajem) a zmenší na nejvýš 600 px – PNG pak má desítky kB. */
-  const exportPng = (): string | null => {
-    const c = canvas.current;
-    const b = box.current;
-    if (!c || !Number.isFinite(b.minX)) return null;
-    const dpr = c.width / c.getBoundingClientRect().width;
-    const pad = 8;
-    const sx = Math.max(0, (b.minX - pad) * dpr), sy = Math.max(0, (b.minY - pad) * dpr);
-    const sw = Math.min(c.width - sx, (b.maxX - b.minX + pad * 2) * dpr), sh = Math.min(c.height - sy, (b.maxY - b.minY + pad * 2) * dpr);
-    const scale = Math.min(1, 600 / sw, 240 / sh);
-    const out = document.createElement("canvas");
-    out.width = Math.max(1, Math.round(sw * scale));
-    out.height = Math.max(1, Math.round(sh * scale));
-    out.getContext("2d")!.drawImage(c, sx, sy, sw, sh, 0, 0, out.width, out.height);
-    return out.toDataURL("image/png");
-  };
-
-  const submit = () => {
-    setError(null);
-    if (!inked) return setError("Podepište se prstem do plochy.");
-    if (name.trim().length < 2) return setError("Vyplňte jméno a příjmení podepisujícího.");
-    if (!agree) return setError("Potvrďte, že podepisující souhlasí s obsahem dokladu.");
-    const png = exportPng();
-    if (!png) return setError("Podpis se nepodařilo načíst. Zkuste to znovu.");
+  const create = (withEmail: boolean) => {
+    setError(null); setInfo(null);
     start(async () => {
-      const res = await signDocument(documentId, slot.side, name, place, png);
+      const res = await createSignLink(documentId, withEmail ? email : "");
       if (!res.ok) { setError(res.error); return; }
-      onClose();
-      router.refresh();
+      setUrl(res.link);
+      setInfo(withEmail ? (res.emailed ? `Odkaz jsme poslali na ${email.trim()}.` : "E-mail se nepodařilo odeslat – pošlete odkaz jinak (SMS, WhatsApp).") : null);
     });
+  };
+  const copy = async () => {
+    if (!url) return;
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { setError("Odkaz se nepodařilo zkopírovat – označte ho a zkopírujte ručně."); }
+  };
+  const share = async () => {
+    if (!url) return;
+    try { await navigator.share({ title: docTitle, text: message(url) }); } catch { /* zrušeno */ }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-ink/50 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="sign-title">
-      <div className="flex w-full max-w-2xl flex-col gap-3 overflow-y-auto bg-white p-4 sm:rounded-[14px] sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 id="sign-title" className="font-display text-[20px] font-extrabold">Podpis – {slot.label.toLowerCase()}</h2>
-            <p className="text-[14px] text-muted">Podepište se prstem nebo perem do bílé plochy. Na telefonu je pohodlnější ho otočit na šířku.</p>
-          </div>
-          <button type="button" className="btn-ghost min-h-10 px-3" onClick={onClose} aria-label="Zavřít">✕</button>
-        </div>
-
-        <div className="relative">
-          <canvas
-            ref={canvas}
-            className="block h-[220px] w-full touch-none rounded-[10px] bg-white ring-2 ring-line sm:h-[260px]"
-            style={{ cursor: "crosshair" }}
-            onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onPointerLeave={up}
-            aria-label="Plocha pro podpis prstem"
-          />
-          <div className="pointer-events-none absolute inset-x-6 bottom-10 border-b border-dashed border-ink/30" aria-hidden="true" />
-          {!inked && <p className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-[15px] text-muted/70">Podepište se zde</p>}
-          <button type="button" className="btn-ghost absolute right-2 top-2 min-h-9 bg-white/90 px-3 text-[14px]" onClick={setup}>Smazat</button>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="label" htmlFor="sign-name">Jméno a příjmení podepisujícího</label>
-            <input id="sign-name" className="field" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
-          </div>
-          <div>
-            <label className="label" htmlFor="sign-place">Místo podpisu</label>
-            <input id="sign-place" className="field" value={place} onChange={(e) => setPlace(e.target.value)} maxLength={80} />
-          </div>
-        </div>
-        <label className="flex items-start gap-2 text-[14px]">
-          <input type="checkbox" className="mt-1 size-4" checked={agree} onChange={(e) => { setAgree(e.target.checked); setError(null); }} />
-          <span>Podepisující se s dokladem seznámil a souhlasí s jeho obsahem. Podpis se uloží s časem a otiskem dokladu a nejde ho později změnit.</span>
-        </label>
-        {error && <p role="alert" className="rounded-[10px] bg-warn-soft px-3 py-2 text-[14px] text-warn">{error}</p>}
-        <div className="flex flex-wrap justify-end gap-2">
-          <button type="button" className="btn-ghost" onClick={onClose}>Zrušit</button>
-          <button type="button" className="btn-primary" disabled={pending} onClick={submit}>{pending ? "Ukládám…" : "Potvrdit podpis"}</button>
-        </div>
+    <div className="space-y-3 rounded-[10px] bg-paper p-3 ring-1 ring-line">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold">Podpis na dálku</p>
+        <button type="button" className="text-[14px] text-muted hover:text-ink" onClick={onClose}>Zavřít</button>
       </div>
+      {!url ? (
+        <>
+          <p className="text-[14px] text-muted">
+            Zákazník dostane odkaz, listinu si přečte a podepíše prstem na svém telefonu – bez registrace. Odkaz platí 14 dní a jde použít jednou. Až podepíše, přijde vám e-mail.
+            {hadLink && " Dřívější odkaz tím přestane platit."}
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-0 flex-1 basis-56">
+              <label className="label" htmlFor="sign-email">E-mail zákazníka</label>
+              <input id="sign-email" type="email" inputMode="email" autoComplete="off" className="field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="zakaznik@email.cz" />
+            </div>
+            <button type="button" className="btn-primary" disabled={pending || !email.trim()} onClick={() => create(true)}>{pending ? "Posílám…" : "Poslat e-mailem"}</button>
+          </div>
+          <button type="button" className="text-[14px] font-semibold text-accent-ink hover:underline" disabled={pending} onClick={() => create(false)}>
+            Jen vytvořit odkaz (pošlu ho SMS nebo WhatsAppem)
+          </button>
+        </>
+      ) : (
+        <>
+          {info && <p role="status" className="text-[14px] font-semibold text-ok">{info}</p>}
+          <div>
+            <label className="label" htmlFor="sign-url">Odkaz k podpisu</label>
+            <input id="sign-url" readOnly className="field num text-[13px]" value={url} onFocus={(e) => e.target.select()} />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn-dark min-h-10 px-3 text-[14px]" onClick={copy}>{copied ? "Zkopírováno ✓" : "Kopírovat odkaz"}</button>
+            <a className="btn-ghost min-h-10 px-3 text-[14px]" href={`sms:?&body=${encodeURIComponent(message(url))}`}>Poslat SMS</a>
+            <a className="btn-ghost min-h-10 px-3 text-[14px]" href={`https://wa.me/?text=${encodeURIComponent(message(url))}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            {canShare && <button type="button" className="btn-ghost min-h-10 px-3 text-[14px]" onClick={share}>Sdílet…</button>}
+          </div>
+          <p className="text-[13px] text-muted">Odkaz si uložte teď – z bezpečnostních důvodů ho později znovu nezobrazíme (můžete ale vytvořit nový).</p>
+        </>
+      )}
+      {error && <p role="alert" className="rounded-[10px] bg-warn-soft px-3 py-2 text-[14px] text-warn">{error}</p>}
     </div>
   );
 }
