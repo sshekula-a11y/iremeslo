@@ -43,7 +43,7 @@ function party(p: Party): string {
     + `<CityName>${esc(p.city ?? "")}</CityName><PostalZone>${esc((p.zip ?? "").replace(/\s/g, ""))}</PostalZone>`
     + "<Country><IdentificationCode>CZ</IdentificationCode><Name>Česká republika</Name></Country>"
     + "</PostalAddress>"
-    + (dic ? `<PartyTaxScheme><CompanyID>${esc(dic)}</CompanyID><TaxScheme>VAT</TaxScheme></PartyTaxScheme>` : "")
+    + `<PartyTaxScheme><CompanyID>${esc(dic ?? "")}</CompanyID><TaxScheme>${dic ? "VAT" : ""}</TaxScheme></PartyTaxScheme>`
     + (p.registerEntry ? `<RegisterIdentification><Preformatted>${esc(p.registerEntry)}</Preformatted></RegisterIdentification>` : "")
     + (p.email || p.phone ? `<Contact>${el("Telephone", p.phone)}${el("ElectronicMail", p.email)}</Contact>` : "")
     + "</Party>";
@@ -64,7 +64,7 @@ export function buildIsdoc(d: IsdocInput): string {
       + `<LineExtensionTaxAmount>${money(lineVat)}</LineExtensionTaxAmount>`
       + `<UnitPrice>${money(l.unitPrice)}</UnitPrice>`
       + `<UnitPriceTaxInclusive>${money(l.unitPrice + unitVat)}</UnitPriceTaxInclusive>`
-      + `<ClassifiedTaxCategory><Percent>${rate}</Percent><VATCalculationMethod>0</VATCalculationMethod></ClassifiedTaxCategory>`
+      + `<ClassifiedTaxCategory><Percent>${rate}</Percent><VATCalculationMethod>0</VATCalculationMethod><VATApplicable>${vat}</VATApplicable></ClassifiedTaxCategory>`
       + `<Item><Description>${esc(l.description)}</Description></Item>`
       + "</InvoiceLine>";
   }).join("");
@@ -81,7 +81,7 @@ export function buildIsdoc(d: IsdocInput): string {
       + `<AlreadyClaimedTaxInclusiveAmount>${money(c.gross)}</AlreadyClaimedTaxInclusiveAmount>`
       + `<DifferenceTaxableAmount>${money(r.base - c.base)}</DifferenceTaxableAmount><DifferenceTaxAmount>${money(r.vat - c.vat)}</DifferenceTaxAmount>`
       + `<DifferenceTaxInclusiveAmount>${money(r.total - c.gross)}</DifferenceTaxInclusiveAmount>`
-      + `<TaxCategory><Percent>${vat ? r.rate : 0}</Percent></TaxCategory>`
+      + `<TaxCategory><Percent>${vat ? r.rate : 0}</Percent><VATApplicable>${vat}</VATApplicable></TaxCategory>`
       + "</TaxSubTotal>";
   }).join("");
   const sum = (k: "base" | "vat" | "total") => recap.reduce((a, r) => a + r[k], 0);
@@ -96,13 +96,14 @@ export function buildIsdoc(d: IsdocInput): string {
   return '<?xml version="1.0" encoding="UTF-8"?>\n'
     + '<Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.2">'
     + `<DocumentType>${DOC_TYPE[d.type]}</DocumentType>`
+    + "<TargetConsolidator></TargetConsolidator><ClientOnTargetConsolidator></ClientOnTargetConsolidator>"
     + `<ID>${esc(d.number)}</ID>`
     + `<UUID>${d.id.toUpperCase()}</UUID>`
     + "<IssuingSystem>iRemeslo.cz</IssuingSystem>"
     + `<IssueDate>${d.issueDate}</IssueDate>`
     + (vat && d.taxableDate ? `<TaxPointDate>${d.taxableDate}</TaxPointDate>` : "")
     + `<VATApplicable>${vat ? "true" : "false"}</VATApplicable>`
-    + "<ElectronicPossibilityAgreementReference></ElectronicPossibilityAgreementReference>"
+    + "<ElectronicPossibilityAgreementReference>Dokument není k dispozici</ElectronicPossibilityAgreementReference>"
     + (notes ? `<Note>${esc(notes)}</Note>` : "")
     + "<LocalCurrencyCode>CZK</LocalCurrencyCode><CurrRate>1</CurrRate><RefCurrRate>1</RefCurrRate>"
     + `<AccountingSupplierParty>${party(s.supplier)}</AccountingSupplierParty>`
@@ -124,9 +125,9 @@ export function buildIsdoc(d: IsdocInput): string {
         + `<PaidAmount>${money(s.amountDue)}</PaidAmount><PaymentMeansCode>42</PaymentMeansCode>`
         + "<Details>"
         + el("PaymentDueDate", d.dueDate)
-        + el("ID", account?.trim()) + el("BankCode", bank?.trim())
-        + el("IBAN", p.iban?.replace(/\s/g, "")) + el("BIC", p.bic)
-        + el("VariableSymbol", vs)
+        + `<ID>${esc(account?.trim() ?? "")}</ID><BankCode>${esc(bank?.trim() ?? "")}</BankCode><Name></Name>`
+        + `<IBAN>${esc(p.iban?.replace(/\s/g, "") ?? "")}</IBAN><BIC>${esc(p.bic ?? "")}</BIC>`
+        + `<VariableSymbol>${esc(vs)}</VariableSymbol><ConstantSymbol></ConstantSymbol>`
         + "</Details></Payment></PaymentMeans>"
       : "")
     + "</Invoice>\n";

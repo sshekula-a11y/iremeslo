@@ -5,7 +5,7 @@ import { unzipSync } from "fflate";
 import type { ParsedInvoice } from "@/lib/documents/pdf-import";
 import { parseInvoiceFile, saveImportedInvoice } from "./actions";
 
-type Row = { file: File; inv: ParsedInvoice; duplicate: boolean; include: boolean; status?: "ok" | "error"; message?: string };
+type Row = { file: File; pdf?: File; inv: ParsedInvoice; duplicate: boolean; include: boolean; status?: "ok" | "error"; message?: string };
 type Failed = { name: string; error: string };
 
 const OK_EXT = /\.(pdf|isdoc|xml)$/i;
@@ -37,18 +37,20 @@ export function ImportInvoices({ canWrite }: { canWrite: boolean }) {
       catch { setFailed((x) => [...x, { name: f.name, error: "Soubor se nepodařilo rozbalit." }]); }
     }
     if (!files.length) { setFailed((x) => [...x, { name: "—", error: "Nenašli jsme žádné PDF ani ISDOC." }]); return; }
-    // ISDOC má přednost; PDF se stejným názvem se k němu jen připojí
-    const isdocNames = new Set(files.filter((f) => !/\.pdf$/i.test(f.name)).map((f) => f.name.replace(/\.\w+$/, "")));
+    // ISDOC má přednost; PDF se stejným názvem se k němu připojí
+    const base = (n: string) => n.replace(/\.\w+$/, "").toLowerCase();
+    const isdocNames = new Set(files.filter((f) => !/\.pdf$/i.test(f.name)).map((f) => base(f.name)));
+    const pdfByName = new Map(files.filter((f) => /\.pdf$/i.test(f.name)).map((f) => [base(f.name), f]));
     const next: Row[] = [];
     let i = 0;
     for (const file of files) {
       i++;
-      if (/\.pdf$/i.test(file.name) && isdocNames.has(file.name.replace(/\.\w+$/, ""))) continue;
+      if (/\.pdf$/i.test(file.name) && isdocNames.has(base(file.name))) continue;
       setProgress(`Čtu ${i} z ${files.length}: ${file.name}`);
       const fd = new FormData(); fd.append("file", file);
       try {
         const res = await parseInvoiceFile(fd);
-        if (res.ok) next.push({ file, inv: res.invoice, duplicate: res.duplicate, include: !res.duplicate });
+        if (res.ok) next.push({ file, pdf: /\.pdf$/i.test(file.name) ? file : pdfByName.get(base(file.name)), inv: res.invoice, duplicate: res.duplicate, include: !res.duplicate });
         else setFailed((x) => [...x, { name: file.name, error: res.error }]);
       } catch { setFailed((x) => [...x, { name: file.name, error: "Soubor se nepodařilo přečíst." }]); }
     }
@@ -68,7 +70,7 @@ export function ImportInvoices({ canWrite }: { canWrite: boolean }) {
       setProgress(`Ukládám ${n} z ${chosen.length}…`);
       const fd = new FormData();
       fd.append("data", JSON.stringify(r.inv));
-      if (/\.pdf$/i.test(r.file.name)) fd.append("file", r.file);
+      if (r.pdf) fd.append("file", r.pdf);
       const res = await saveImportedInvoice(fd).catch(() => ({ ok: false as const, error: "Spojení selhalo." }));
       setRows((list) => list.map((x, j) => (j === i ? { ...x, status: res.ok ? "ok" : "error", message: res.ok ? undefined : res.error } : x)));
       if (res.ok) { ok++; if (res.clientCreated) clients++; } else err++;
@@ -129,7 +131,8 @@ export function ImportInvoices({ canWrite }: { canWrite: boolean }) {
                       <td className="whitespace-nowrap px-2 py-1">
                         {r.status === "ok" ? <span className="text-ok">Uloženo</span>
                           : r.status === "error" ? <span className="text-warn">{r.message}</span>
-                          : r.duplicate ? <span className="text-muted">Už je uložená</span> : <span className="text-muted">{r.inv.source || "Nová"}</span>}
+                          : r.duplicate ? <span className="text-muted">Už je uložená</span>
+                          : <span className="text-muted">{/\.pdf$/i.test(r.file.name) ? "PDF" : r.pdf ? "ISDOC + PDF" : "ISDOC"}</span>}
                       </td>
                     </tr>
                   );

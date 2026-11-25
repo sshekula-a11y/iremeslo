@@ -11,7 +11,8 @@ export function parseIsdoc(xml: string): ParsedInvoice | null {
   const total = Number(tag(monetary, "PayableAmount") || tag(monetary, "TaxInclusiveAmount"));
   const docType = tag(xml, "DocumentType");
   return {
-    kind: docType === "4" ? "advance" : "invoice",
+    // 4 = zálohová faktura; FakturaOnline dává zálohám 5 (daňový doklad k platbě)
+    kind: docType === "4" || docType === "5" ? "advance" : "invoice",
     number: tag(xml, "ID"),
     issueDate: tag(xml, "IssueDate"),
     dueDate: tag(xml, "PaymentDueDate"),
