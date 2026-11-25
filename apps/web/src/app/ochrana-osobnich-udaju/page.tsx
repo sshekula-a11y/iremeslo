@@ -72,6 +72,11 @@ export default function PrivacyPage() {
             My je pro vás pouze zpracováváme (jako zpracovatel podle čl. 28 GDPR): ukládáme je, zobrazujeme vám a vašim kolegům
             a použijeme je jen k provozu aplikace. Data každé firmy jsou v databázi oddělená a jiná firma k nim nemá přístup.
           </p>
+          <p>
+            Totéž platí pro <strong>podpisy listin prstem</strong>: když zákazník podepíše smlouvu, protokol nebo jinou listinu (na místě
+            nebo přes odkaz od řemeslníka), uložíme obrázek podpisu, jméno, místo, čas podpisu, otisk dokladu a údaj o prohlížeči.
+            Podpis je součástí dokladu, nedá se změnit a uchovává se po stejnou dobu jako doklad. Odkaz k podpisu platí 14 dní a jde použít jednou.
+          </p>
         </Part>
 
         <Part title="Komu údaje předáváme">

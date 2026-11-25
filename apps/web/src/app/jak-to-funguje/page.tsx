@@ -34,7 +34,7 @@ const STEPS: Step[] = [
   {
     id: "firma",
     title: "Založte firmu – stačí IČO",
-    lead: "Zaregistrujete se e-mailem a zadáte IČO. Název, adresu, DIČ i to, jestli jste plátce DPH, načteme z ARES.",
+    lead: "Zaregistrujete se e-mailem a zadáte IČO. Název, adresu, DIČ, zápis v rejstříku i to, jestli jste plátce DPH, načteme z ARES.",
     points: [
       "Hotovo za minutu, 30 dní zdarma, bez platební karty",
       "Funguje pro OSVČ i s.r.o., plátce i neplátce DPH",
@@ -87,9 +87,12 @@ const STEPS: Step[] = [
 
 const MORE = [
   { title: "Faktury a zálohy", text: "Fakturu vystavíte ze zakázky jedním tlačítkem: s QR Platbou, rekapitulací DPH a odečtem zaplacených záloh. Ke každé záloze se po zaplacení sám vystaví daňový doklad." },
-  { title: "Přehled plateb", text: "Kolik vám dluží a co je po splatnosti, vidíte hned na přehledu. Zaplacenou fakturu označíte jedním klepnutím." },
+  { title: "Přehled plateb a upomínky", text: "Kolik vám dluží a co je po splatnosti, vidíte hned na přehledu. K neuhrazené faktuře vystavíte upomínku nebo předžalobní výzvu." },
+  { title: "Smlouvy a další listiny", text: "Smlouva o dílo s dodatkem, předávací protokol, dodací list se soupisem prací, reklamační protokol a pokladní doklady – s číslem a v PDF." },
+  { title: "Podpis prstem", text: "Zákazník podepíše na vašem telefonu, nebo mu pošlete odkaz e-mailem, SMS či WhatsAppem a podepíše na svém. Podpis se uloží s časem a otiskem dokladu." },
+  { title: "Pro účetní a přechod z jiného programu", text: "Vydané faktury stáhnete v ZIP jako PDF a ISDOC pro účetní. Faktury z FakturaOnline a jiných programů i kontakty (vCard, Excel) převezmete." },
   { title: "Ceník", text: "Uložte si práce a materiál, které děláte nejčastěji. V zakázce začnete psát název a cena s jednotkou se doplní." },
-  { title: "Zákazníci a zaměstnanci", text: "Adresář zákazníků a vaši zaměstnanci s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
+  { title: "Zákazníci a zaměstnanci", text: "Adresář zákazníků (firmu doplníte z ARES podle IČO) a vaši zaměstnanci s hodinovou a denní sazbou, ze které se počítají náklady zakázky." },
   { title: "Pracovníci v terénu", text: "Pracovník vidí jen zakázky, na kterých pracuje: adresu, termín a telefon na zákazníka. Ceny ani zisk ne." },
 ];
 

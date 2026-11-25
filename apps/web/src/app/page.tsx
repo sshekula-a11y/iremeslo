@@ -37,7 +37,7 @@ const JSON_LD = {
 /** Čtyři nejčastější otázky: dvě zákaznické, dvě řemeslnické. */
 const faq = [
   ...FAQ_CUSTOMERS.filter((f) => ["Je zadání poptávky zdarma?", "Kdo uvidí můj kontakt?"].includes(f.q)),
-  ...FAQ_TRADESMEN.filter((f) => ["Kolik to stojí?", "Funguje to na mobilu?"].includes(f.q)),
+  ...FAQ_TRADESMEN.filter((f) => ["Kolik to stojí?", "Funguje to na mobilu?", "Může zákazník podepsat na mobilu?"].includes(f.q)),
 ];
 
 function Steps({ label, steps }: { label: string; steps: { title: string; text: string }[] }) {
@@ -97,7 +97,7 @@ export default async function Home() {
               <h2 id="jsem" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Jsem řemeslník</h2>
               <p className="mt-2 text-[15px] text-white/80">
                 iRemeslo.cz je virtuální kancelář, která především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury,
-                smlouvy o dílo, předávací protokoly i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
+                smlouvy o dílo, předávací protokoly a další listiny s podpisem prstem i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
               </p>
               <p className="mt-3 text-[13px] font-semibold text-accent">30 dní zdarma · bez platební karty</p>
               <div className="mt-auto flex flex-wrap gap-3 pt-5">

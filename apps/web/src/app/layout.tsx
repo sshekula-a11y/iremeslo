@@ -10,7 +10,7 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: { default: "iRemeslo.cz je vaše virtuální kancelář + veřejné poptávky", template: "%s · iRemeslo.cz" },
   description:
-    "iRemeslo.cz je vaše virtuální kancelář + veřejné poptávky. Pro řemeslníky: zakázky, cenové nabídky, faktury, smlouvy o dílo a nové poptávky na jednom místě. Zákazníci zadávají poptávky zdarma a bez registrace.",
+    "iRemeslo.cz je vaše virtuální kancelář + veřejné poptávky. Pro řemeslníky: zakázky, cenové nabídky, faktury, smlouvy o dílo s podpisem prstem a nové poptávky na jednom místě. Zákazníci zadávají poptávky zdarma a bez registrace.",
   applicationName: "iRemeslo.cz",
   metadataBase: new URL(SITE_URL),
   // Náhled při sdílení (Facebook, WhatsApp, LinkedIn…). Obrázek je app/opengraph-image.png.

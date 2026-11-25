@@ -10,7 +10,7 @@ import { PRICE_FROM } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Pro řemeslníky – zakázky, nabídky a faktury na jednom místě",
-  description: `Virtuální kancelář pro řemeslníky: poptávky od zákazníků, kalkulace s marží, cenové nabídky v PDF, faktury, smlouva o dílo a kalendář. 30 dní zdarma, pak od ${PRICE_FROM} Kč měsíčně bez DPH.`,
+  description: `Virtuální kancelář pro řemeslníky: poptávky od zákazníků, kalkulace s marží, cenové nabídky v PDF, faktury s ISDOC, smlouva o dílo, podpis prstem a kalendář. 30 dní zdarma, pak od ${PRICE_FROM} Kč měsíčně bez DPH.`,
   alternates: { canonical: "/pro-remeslniky" },
 };
 
@@ -36,7 +36,7 @@ export default function TradesmenPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-white/80 sm:text-[19px]">
             iRemeslo.cz je virtuální kancelář pro vaši firmu: poptávky od zákazníků, kalkulace, cenové nabídky, faktury,
-            smlouvy o dílo i kalendář – vše na jednom místě, na telefonu i na počítači.
+            smlouvy o dílo a další listiny s podpisem prstem i kalendář – vše na jednom místě, na telefonu i na počítači.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/prihlaseni?rezim=registrace" className="btn-primary">Vyzkoušet 30 dní zdarma</Link>
