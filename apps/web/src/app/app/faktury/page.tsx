@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActionMenu } from "@/components/ActionMenu";
 import { formatCzk } from "@iremeslo/core";
 import { requireStaff } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
@@ -70,11 +71,16 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-[26px] font-extrabold">Faktury</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/app/nastaveni/faktura" className="px-2 text-[14px] font-medium text-muted hover:text-ink">Vzhled faktury</Link>
-          <Link href="/app/faktury/nova" className="btn-ghost">Ze zakázky</Link>
-          <Link href="/app/faktury/import" className="btn-ghost">Převzít z jiného programu</Link>
-          <Link href="/app/faktury/export" className="btn-ghost">Export pro účetní</Link>
-          <Link href="/app/faktury/rychla" className="btn-primary">+ Vystavit fakturu</Link>
+          <ActionMenu label="Další" items={[
+            { href: "/app/faktury/import", label: "Převzít z jiného programu", hint: "ZIP s PDF nebo ISDOC (FakturaOnline, Fakturoid…)" },
+            { href: "/app/faktury/export", label: "Export pro účetní", hint: "ZIP s PDF a ISDOC za období" },
+            { href: "/app/doklady", label: "Všechny doklady a listiny", hint: "nabídky, smlouvy, upomínky, pokladní doklady" },
+            { href: "/app/nastaveni/faktura", label: "Vzhled faktury", hint: "barva, logo, razítko a podpis" },
+          ]} />
+          <ActionMenu primary label="+ Vystavit fakturu" items={[
+            { href: "/app/faktury/rychla", label: "Rychlá faktura", hint: "vyplníte zákazníka a položky – hotovo" },
+            { href: "/app/faktury/nova", label: "Ze zakázky", hint: "položky a zálohy se převezmou ze zakázky" },
+          ]} />
         </div>
       </div>
 

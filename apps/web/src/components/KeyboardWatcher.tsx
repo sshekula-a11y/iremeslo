@@ -24,7 +24,8 @@ export function KeyboardWatcher() {
       else delete root.dataset.kb;
     };
     // Při přeskoku z políčka na políčko přijde focusout dřív než focusin – počkáme, ať lišty neblikají.
-    const onOut = () => window.setTimeout(update, 80);
+    // Lišta se vrací se zpožděním, aby se klepnutí na tlačítko u dolního okraje nezachytilo o vracející se menu.
+    const onOut = () => window.setTimeout(update, 400);
     document.addEventListener("focusin", update);
     document.addEventListener("focusout", onOut);
     return () => {

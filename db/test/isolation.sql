@@ -896,5 +896,16 @@ select admin_set_ai_limits(150, 300);
 select t_eq((admin_ai_overview() ->> 'receipts_limit')::int, 150, 'administrátor nastaví limity AI');
 reset role;
 
+-- ---------- daňový profil (027) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+insert into tax_profiles (company_id, legal_form, flat_rate, regime) values (:'company_a', 'osvc', 80, 'flat_tax');
+select t_eq((select count(*)::int from tax_profiles), 1, 'firma si uloží daňový profil');
+select t_fails(format($q$insert into tax_profiles (company_id) values (%L)$q$, :'company_b'), 'profil cizí firmy nejde založit');
+select t_fails(format($q$update tax_profiles set flat_rate = 50 where company_id = %L$q$, :'company_a'), 'neplatný výdajový paušál');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq((select count(*)::int from tax_profiles), 0, 'profil cizí firmy není vidět');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

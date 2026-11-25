@@ -18,7 +18,8 @@ export function EmailBar({ status }: { status: EmailStatus | null }) {
       <form action={action} className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2 text-[13px]">
         <p className="min-w-0 flex-1">
           <strong>Potvrďte svůj e-mail.</strong>{" "}
-          Odkaz jsme vám poslali na <span className="break-all font-semibold">{status.email}</span>. Faktury bude možné vystavovat až po potvrzení.
+          <span className="sm:hidden">Bez potvrzení nevystavíte fakturu.</span>
+          <span className="hidden sm:inline">Odkaz jsme vám poslali na <span className="break-all font-semibold">{status.email}</span>. Faktury bude možné vystavovat až po potvrzení.</span>
         </p>
         <button className="min-h-9 shrink-0 rounded-lg border border-ink/15 bg-white px-3 font-semibold hover:border-ink/40 disabled:opacity-60" disabled={pending}>
           {pending ? "Odesílám…" : "Poslat znovu"}

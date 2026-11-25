@@ -44,7 +44,7 @@ export default async function ClientsPage() {
 
       <aside>
         <Link href="/app/zakaznici/import-export" className="btn-ghost mb-3 w-full">Import a export (vCard, Excel, ZIP)</Link>
-        <form action={addClient} className="card space-y-3 p-4">
+        <form action={addClient} id="novy-zakaznik" className="card scroll-mt-20 space-y-3 p-4">
           <h2 className="font-display text-[17px] font-bold">Nový zákazník</h2>
           <NewClientFields />
           <label className="flex items-start gap-2 text-[13px] text-muted">
