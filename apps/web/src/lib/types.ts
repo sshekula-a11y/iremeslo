@@ -7,4 +7,6 @@ export interface AresCompany {
   city: string;
   zip: string;
   vatPayer: boolean;
+  /** Údaj o zápisu v rejstříku pro doklady (z ARES), nebo null, když ho nezjistíme. */
+  registerEntry?: string | null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useRef, useState } from "react";
 import { czAccountToIban, formatIban } from "@iremeslo/core";
 import { saveCompany, type SettingsState } from "./actions";
 
@@ -44,8 +44,7 @@ export function SettingsForm({ initial, canEdit }: { initial: CompanySettings; c
           <Field id="phone" label="Telefon" defaultValue={initial.phone} type="tel" />
           <Field id="email" label="E-mail" defaultValue={initial.email} type="email" />
           <Field id="web" label="Web" defaultValue={initial.web} placeholder="www.example.cz" />
-          <Field id="register_entry" label="Zápis v rejstříku" defaultValue={initial.registerEntry}
-            placeholder="např. C 12345 vedená u KS v Brně" className="sm:col-span-2" />
+          <RegisterEntryField initial={initial.registerEntry} canEdit={canEdit} />
         </Section>
 
         <Section title="DPH a platby">
@@ -117,6 +116,45 @@ function Field({ id, label, hint, num, className = "", ...rest }: {
       <label className="label" htmlFor={id}>{label}</label>
       <input className={`field ${num ? "num" : ""}`} id={id} name={id} {...rest} />
       {hint && <p className="mt-1 text-[13px] text-muted">{hint}</p>}
+    </div>
+  );
+}
+
+/** Zápis v rejstříku s tlačítkem „Doplnit z ARES“ (spisová značka, nebo zápis v živnostenském rejstříku). */
+function RegisterEntryField({ initial, canEdit }: { initial: string; canEdit: boolean }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const load = async () => {
+    const ico = (ref.current?.form?.elements.namedItem("ico") as HTMLInputElement | null)?.value.trim() ?? "";
+    if (!/^\d{6,8}$/.test(ico)) return setMsg({ ok: false, text: "Nejdřív vyplňte IČO." });
+    setLoading(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/ares/${encodeURIComponent(ico)}`);
+      const j = (await res.json()) as { registerEntry?: string | null; error?: string };
+      if (!res.ok) return setMsg({ ok: false, text: j.error ?? "ARES teď neodpovídá." });
+      if (!j.registerEntry) return setMsg({ ok: false, text: "ARES zápis v rejstříku pro toto IČO neuvádí. Vyplňte ho ručně." });
+      if (ref.current) ref.current.value = j.registerEntry;
+      setMsg({ ok: true, text: "Doplněno z ARES. Nezapomeňte nastavení uložit." });
+    } catch {
+      setMsg({ ok: false, text: "ARES teď neodpovídá. Vyplňte údaj ručně." });
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="sm:col-span-2">
+      <label className="label" htmlFor="register_entry">Zápis v rejstříku</label>
+      <div className="flex gap-2">
+        <input ref={ref} className="field" id="register_entry" name="register_entry" defaultValue={initial}
+          placeholder="např. Zapsáno v obchodním rejstříku vedeném Krajským soudem v Brně, oddíl C, vložka 12345" />
+        {canEdit && (
+          <button type="button" className="btn-ghost shrink-0" onClick={load} disabled={loading}>{loading ? "Hledám…" : "Doplnit z ARES"}</button>
+        )}
+      </div>
+      {msg ? <p className={`mt-1 text-[13px] ${msg.ok ? "text-ok" : "text-warn"}`} role="status">{msg.text}</p>
+        : <p className="mt-1 text-[13px] text-muted">Povinný údaj na dokladech. Živnostníkům stačí „Zapsán v živnostenském rejstříku“.</p>}
     </div>
   );
 }
