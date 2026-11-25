@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@iremeslo/core"],
   // Styly zpracovává postcss.config.mjs (Tailwind + rozbalení @layer pro starší Safari).
   poweredByHeader: false,
+  // pdf.js (čtení převzatých faktur v PDF) běží na serveru jako běžný balíček Node, ne přes bundler.
+  serverExternalPackages: ["pdfjs-dist"],
+  // převzaté faktury se na server posílají po jedné (PDF bývá do pár MB)
+  experimental: { serverActions: { bodySizeLimit: "12mb" } },
   // „Klienti“ se přejmenovali na „Zákazníci“ – staré odkazy a záložky dál fungují.
   async redirects() {
     return [{ source: "/app/klienti", destination: "/app/zakaznici", permanent: true }];

@@ -764,5 +764,18 @@ select t_eq((select count(*)::int from professions where slug = 'automobilovy-pr
 reset role;
 select t_eq((select (submit_inquiry('{"category":"auto","title":"Oprava brzd Škoda Octavia","description":"Výměna brzdových destiček a kotoučů vpředu.","city":"Brno","term":"flexible","contact_name":"Aleš","contact_email":"ales@example.cz"}'::jsonb) ->> 'id') is not null)::int, 1, 'poptávka v oboru auto');
 
+-- ---------- importované faktury (022) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+insert into imported_invoices (company_id, kind, number, issue_date, customer_name, total, source, pdf_path)
+values (:'company_a', 'invoice', '2026110001', '2026-11-03', 'Marek Smýkal', 94740, 'FakturaOnline.cz', :'company_a' || '/imports/11111111-1111-4111-8111-111111111111.pdf');
+select t_eq((select count(*)::int from imported_invoices where company_id = :'company_a'), 1, 'firma si uloží převzatou fakturu');
+select t_fails(format($q$insert into imported_invoices (company_id, kind, number, customer_name, total) values (%L, 'invoice', '2026110001', 'Duplicita', 1)$q$, :'company_a'), 'stejné číslo dvakrát nejde');
+select t_fails(format($q$insert into imported_invoices (company_id, kind, number, customer_name, total, pdf_path) values (%L, 'invoice', 'X1', 'Cizí PDF', 1, %L)$q$, :'company_a', :'company_b' || '/imports/11111111-1111-4111-8111-111111111111.pdf'), 'PDF jen ze složky vlastní firmy');
+select t_fails(format($q$insert into imported_invoices (company_id, kind, number, customer_name, total) values (%L, 'invoice', 'X2', 'Cizí firma', 1)$q$, :'company_b'), 'do cizí firmy nejde zapisovat');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq((select count(*)::int from imported_invoices), 0, 'převzaté faktury cizí firmy nejsou vidět');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

@@ -8,6 +8,7 @@ import { czk, formatDate } from "@/lib/format";
 import { todayInPrague } from "@/lib/calendar";
 import { DOC_TYPE_LABELS } from "@/lib/documents/load";
 import { DocStatusBadge, docState } from "@/components/DocStatusBadge";
+import { ImportedPdfLink } from "./ImportedPdfLink";
 
 export const metadata: Metadata = { title: "Faktury" };
 
@@ -56,6 +57,14 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
   const overdueRows = (open ?? []).filter((d) => d.due_date && d.due_date < today);
   const overdue = overdueRows.reduce((s, d) => s + toHundredths(d.total_due), 0);
 
+  // Faktury převzaté z jiného programu (archiv s PDF)
+  const { data: imported } = await supabase
+    .from("imported_invoices")
+    .select("id, kind, number, issue_date, due_date, customer_name, total, source, pdf_path")
+    .eq("company_id", company.id)
+    .order("issue_date", { ascending: false })
+    .limit(500);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -63,6 +72,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/app/nastaveni/faktura" className="px-2 text-[14px] font-medium text-muted hover:text-ink">Vzhled faktury</Link>
           <Link href="/app/faktury/nova" className="btn-ghost">Ze zakázky</Link>
+          <Link href="/app/faktury/import" className="btn-ghost">Převzít z jiného programu</Link>
           <Link href="/app/faktury/export" className="btn-ghost">Export pro účetní</Link>
           <Link href="/app/faktury/rychla" className="btn-primary">+ Vystavit fakturu</Link>
         </div>
@@ -105,6 +115,26 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/app/fak
           </Link>
         ))}
       </div>
+
+      {(imported?.length ?? 0) > 0 && (
+        <section className="space-y-2 pt-4" aria-labelledby="prevzate">
+          <h2 id="prevzate" className="font-display text-[19px] font-bold">Převzaté z jiného programu ({imported!.length})</h2>
+          <div className="card divide-y divide-line">
+            {imported!.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="font-semibold"><span className="num">{r.number}</span> <span className="font-normal text-muted">· {r.kind === "advance" ? "Zálohová faktura" : "Faktura"}{r.source ? ` · ${r.source}` : ""}</span></p>
+                  <p className="truncate text-[13px] text-muted">{r.customer_name} · vystaveno {formatDate(r.issue_date)}{r.due_date ? ` · splatnost ${formatDate(r.due_date)}` : ""}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="num font-semibold">{czk(String(r.total))}</span>
+                  {r.pdf_path && <ImportedPdfLink id={r.id} />}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
