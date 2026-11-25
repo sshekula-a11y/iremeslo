@@ -1,21 +1,21 @@
 import { formatDate } from "@/lib/format";
 
-/** Kategorie veřejných poptávek (stejné hodnoty hlídá databáze, migrace 012 a 017). */
+/** Obory poptávek podle abecedy, „Jiné“ na konci (stejné hodnoty hlídá databáze, migrace 012, 017 a 021). */
 export const INQUIRY_CATEGORIES = [
-  ["malovani", "Malování a natěračství"],
-  ["fasady", "Fasády a zateplení"],
+  ["auto", "Automobilový průmysl"],
   ["cisteni", "Čištění střech, fasád a dlažeb"],
+  ["elektro", "Elektroinstalace"],
+  ["fasady", "Fasády a zateplení"],
+  ["malovani", "Malování a natěračství"],
+  ["obklady", "Obklady a dlažby"],
+  ["podlahy", "Podlahy"],
   ["renovace", "Renovace exteriérů nemovitostí"],
   ["strechy", "Střechy a klempířství"],
-  ["podlahy", "Podlahy"],
-  ["obklady", "Obklady a dlažby"],
-  ["zednicke", "Zednické práce a rekonstrukce"],
-  ["instalace", "Voda, topení, plyn"],
-  ["elektro", "Elektroinstalace"],
   ["tesarske", "Tesařské a truhlářské práce"],
-  ["zahrada", "Zahrada a terénní úpravy"],
   ["uklid", "Úklid"],
-  ["auto", "Automobilový průmysl"],
+  ["instalace", "Voda, topení, plyn"],
+  ["zahrada", "Zahrada a terénní úpravy"],
+  ["zednicke", "Zednické práce a rekonstrukce"],
   ["jine", "Jiné"],
 ] as const;
 

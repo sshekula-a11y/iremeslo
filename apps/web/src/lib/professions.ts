@@ -23,9 +23,13 @@ export function publicDb() {
   return createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 }
 
+/** Řazení podle české abecedy (Č za C, Ř za R, Ch za H). */
+const collator = new Intl.Collator("cs", { sensitivity: "base" });
+export const byCzechName = (a: { name: string }, b: { name: string }) => collator.compare(a.name, b.name);
+
 export async function listProfessions(): Promise<Profession[]> {
-  const { data } = await publicDb().from("professions").select("*").order("sort").order("name");
-  return (data ?? []) as Profession[];
+  const { data } = await publicDb().from("professions").select("*");
+  return ((data ?? []) as Profession[]).sort(byCzechName);
 }
 
 export async function getProfession(slug: string): Promise<Profession | null> {

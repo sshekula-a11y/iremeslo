@@ -6,6 +6,7 @@ import { toHundredths, toInput } from "@/lib/money";
 import { ROLE_LABELS } from "@/lib/labels";
 import { SettingsForm } from "./SettingsForm";
 import { ProfessionPicker } from "./ProfessionPicker";
+import { byCzechName } from "@/lib/professions";
 
 export const metadata: Metadata = { title: "Nastavení firmy" };
 
@@ -19,7 +20,7 @@ export default async function SettingsPage() {
     .single();
   if (!c) throw new Error("Firmu se nepodařilo načíst.");
   const [{ data: profs }, { data: mine }] = await Promise.all([
-    supabase.from("professions").select("slug, name").order("sort").order("name"),
+    supabase.from("professions").select("slug, name"),
     supabase.from("company_professions").select("profession_slug").eq("company_id", company.id),
   ]);
 
@@ -45,7 +46,7 @@ export default async function SettingsPage() {
       )}
 
       <ProfessionPicker
-        options={(profs ?? []) as { slug: string; name: string }[]}
+        options={((profs ?? []) as { slug: string; name: string }[]).sort(byCzechName)}
         initial={((mine ?? []) as { profession_slug: string }[]).map((m) => m.profession_slug)}
         canEdit={canEdit}
       />
