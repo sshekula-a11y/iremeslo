@@ -29,6 +29,8 @@ export default async function JobPage({ params }: PageProps<"/app/zakazky/[id]">
           <h2 className="text-[14px] font-semibold text-muted">Doklady a fakturace</h2>
           <div className="flex flex-wrap gap-2">
             <Link href={`/app/doklady/nova?zakazka=${id}&typ=smlouva`} className="btn-ghost min-h-9 px-3 text-[14px]">Smlouva o dílo</Link>
+            <Link href={`/app/listiny/nova?typ=dodaci-list&zakazka=${id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Dodací list</Link>
+            <Link href={`/app/listiny/nova?typ=reklamace&zakazka=${id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Reklamace</Link>
             {!invoiced && <>
               <Link href={`/app/doklady/nova?zakazka=${id}&typ=zaloha`} className="btn-ghost min-h-9 px-3 text-[14px]">Vystavit zálohu</Link>
               <Link href={`/app/doklady/nova?zakazka=${id}&typ=faktura`} className="btn-dark min-h-9 px-3 text-[14px]">Vystavit fakturu</Link>

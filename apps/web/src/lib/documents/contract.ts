@@ -97,11 +97,11 @@ export function buildHandover(c: ContractSnapshot, contractNumber: string): Hand
   };
 }
 
-const kc = (n: number) => formatCzk(n);
-const months = (n: number) => (n === 1 ? "1 měsíc" : n >= 2 && n <= 4 ? `${n} měsíce` : `${n} měsíců`);
-const days = (n: number) => (n === 1 ? "1 den" : n >= 2 && n <= 4 ? `${n} dny` : `${n} dní`);
+export const kc = (n: number) => formatCzk(n);
+export const months = (n: number) => (n === 1 ? "1 měsíc" : n >= 2 && n <= 4 ? `${n} měsíce` : `${n} měsíců`);
+export const days = (n: number) => (n === 1 ? "1 den" : n >= 2 && n <= 4 ? `${n} dny` : `${n} dní`);
 
-function partyLines(p: Party): string[] {
+export function partyLines(p: Party): string[] {
   const address = [p.street, [p.zip, p.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   return [
     address,
@@ -111,7 +111,7 @@ function partyLines(p: Party): string[] {
   ].filter((l) => l.trim() !== "");
 }
 
-function base(m: DocumentMeta) {
+export function base(m: DocumentMeta) {
   const theme = THEMES[(m.theme in THEMES ? m.theme : "oranzova") as ThemeKey];
   return { accent: theme.accent, accentText: theme.accentText };
 }
@@ -123,7 +123,7 @@ function termText(from: string | null, to: string | null): string {
   return "Termín zahájení a dokončení díla si smluvní strany sjednají písemně.";
 }
 
-const EMPTY_TABLE: Pick<DocumentView, "columns" | "rows" | "totals" | "recap" | "payment"> = {
+export const EMPTY_TABLE: Pick<DocumentView, "columns" | "rows" | "totals" | "recap" | "payment"> = {
   columns: { description: "", qty: "", unit: "", unitPrice: "", total: "" },
   rows: [],
   totals: [],

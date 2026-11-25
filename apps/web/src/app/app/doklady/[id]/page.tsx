@@ -14,7 +14,8 @@ export const metadata: Metadata = { title: "Doklad" };
 
 const FILE_PREFIX: Record<string, string> = {
   quote: "Nabidka", invoice: "Faktura", invoice_non_payer: "Faktura", advance: "Zalohova-faktura", ddpp: "Danovy-doklad",
-  contract: "Smlouva-o-dilo", handover: "Predavaci-protokol",
+  contract: "Smlouva-o-dilo", handover: "Predavaci-protokol", delivery: "Dodaci-list", cash_in: "Prijmovy-pokladni-doklad",
+  cash_out: "Vydajovy-pokladni-doklad", reminder: "Upominka", claim: "Reklamacni-protokol", amendment: "Dodatek",
 };
 const METHOD_LABELS: Record<string, string> = { bank: "převodem", cash: "hotově", card: "kartou", other: "jinak" };
 
@@ -36,13 +37,26 @@ export default async function DocumentPage({ params, searchParams }: PageProps<"
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
           {doc.jobId && <Link href={`/app/zakazky/${doc.jobId}`} className="text-[14px] text-muted hover:text-ink">← Zakázka</Link>}
-          <h1 className="font-display text-[24px] font-extrabold">{DOC_TYPE_LABELS[doc.type]} <span className="num">{doc.number}</span></h1>
+          <h1 className="font-display text-[24px] font-extrabold">{doc.type === "reminder" && (snap as unknown as { level?: string }).level === "final" ? "Předžalobní výzva" : DOC_TYPE_LABELS[doc.type]} <span className="num">{doc.number}</span></h1>
           {payable ? <DocStatusBadge state={state} /> : (
             <span className="rounded-full bg-paper px-2.5 py-1 text-[12px] font-semibold text-muted ring-1 ring-line">{DOC_STATUS_LABELS[doc.status] ?? doc.status}</span>
           )}
         </div>
         <PdfDownload view={doc.view} fileName={`${FILE_PREFIX[doc.type] ?? "Doklad"}-${doc.number}.pdf`} />
       </div>
+
+      {/* Navazující listiny */}
+      {(payable || doc.type === "contract") && (
+        <nav className="flex flex-wrap gap-2" aria-label="Navazující listiny">
+          {payable && doc.status !== "paid" && <>
+            <Link href={`/app/listiny/nova?typ=upominka&doklad=${doc.id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Upomínka</Link>
+            <Link href={`/app/listiny/nova?typ=vyzva&doklad=${doc.id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Předžalobní výzva</Link>
+            <Link href={`/app/listiny/nova?typ=prijmovy-doklad&doklad=${doc.id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Příjmový pokladní doklad</Link>
+          </>}
+          {doc.type === "contract" && <Link href={`/app/listiny/nova?typ=dodatek&doklad=${doc.id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Dodatek ke smlouvě</Link>}
+          <Link href={`/app/listiny/nova?typ=reklamace&doklad=${doc.id}`} className="btn-ghost min-h-9 px-3 text-[14px]">Reklamace</Link>
+        </nav>
+      )}
 
       {justIssued && (
         // Po rychlé faktuře: hlavní je PDF pro zákazníka; další funkce jen nabídneme.

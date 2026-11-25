@@ -777,5 +777,25 @@ select t_login('00000000-0000-0000-0000-00000000000b');
 select t_eq((select count(*)::int from imported_invoices), 0, 'převzaté faktury cizí firmy nejsou vidět');
 reset role;
 
+-- ---------- další listiny (023) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+insert into documents (company_id, job_id, client_id, type, vat_mode, snapshot) values (:'company_a', :'job_a', :'client_a', 'delivery', 'standard', '{"kind":"delivery"}') returning id as dl \gset
+select t_text(issue_document(:'dl', '2026-11-25'), 'DL-2026-001', 'dodací list má řadu DL');
+insert into documents (company_id, type, vat_mode, snapshot, total_due) values (:'company_a', 'cash_in', 'standard', '{"kind":"cash_in"}', 1500) returning id as ppd \gset
+select t_text(issue_document(:'ppd', '2026-11-25'), 'PPD-2026-001', 'příjmový pokladní doklad bez zákazníka');
+insert into documents (company_id, type, vat_mode, snapshot, total_due) values (:'company_a', 'cash_out', 'standard', '{"kind":"cash_out"}', 300) returning id as vpd \gset
+select t_text(issue_document(:'vpd', '2026-11-25'), 'VPD-2026-001', 'výdajový pokladní doklad má vlastní řadu');
+insert into documents (company_id, client_id, type, vat_mode, snapshot) values (:'company_a', :'client_a', 'reminder', 'standard', '{"kind":"reminder"}') returning id as up_bad \gset
+select t_fails(format('select issue_document(%L)', :'up_bad'), 'upomínka bez faktury nejde vystavit');
+insert into documents (company_id, client_id, type, vat_mode, snapshot, related_document_id) values (:'company_a', :'client_a', 'reminder', 'standard', '{"kind":"reminder"}', :'inv1') returning id as up \gset
+select t_text(issue_document(:'up', '2026-11-25'), 'UP-2026-001', 'upomínka k faktuře má řadu UP');
+insert into documents (company_id, job_id, client_id, type, vat_mode, snapshot) values (:'company_a', :'job_a', :'client_a', 'claim', 'standard', '{"kind":"claim"}') returning id as rp \gset
+select t_text(issue_document(:'rp', '2026-11-25'), 'RP-2026-001', 'reklamační protokol má řadu RP');
+insert into documents (company_id, client_id, type, vat_mode, snapshot) values (:'company_a', :'client_a', 'claim', 'standard', '{}') returning id as rp_empty \gset
+select t_fails(format('select issue_document(%L)', :'rp_empty'), 'prázdnou listinu nejde vystavit');
+select t_fails(format($q$update documents set snapshot = '{"kind":"x"}' where id = %L$q$, :'dl'), 'vystavený dodací list nejde měnit');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

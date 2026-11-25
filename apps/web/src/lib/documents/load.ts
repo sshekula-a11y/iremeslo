@@ -5,6 +5,10 @@ import { buildSpayd, variableSymbol, type InvoiceSnapshot, type QuoteSnapshot } 
 import { createClient } from "@/lib/supabase/server";
 import { invoiceView, quoteView, type DocumentView } from "./view";
 import { contractView, handoverView, type ContractSnapshot, type HandoverSnapshot } from "./contract";
+import {
+  amendmentView, cashView, claimView, deliveryView, reminderView,
+  type AmendmentSnapshot, type CashSnapshot, type ClaimSnapshot, type DeliverySnapshot, type ReminderSnapshot,
+} from "./extra";
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
   quote: "Cenová nabídka",
@@ -15,6 +19,12 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   credit_note: "Opravný doklad",
   contract: "Smlouva o dílo",
   handover: "Předávací protokol",
+  delivery: "Dodací list",
+  cash_in: "Příjmový pokladní doklad",
+  cash_out: "Výdajový pokladní doklad",
+  reminder: "Upomínka",
+  claim: "Reklamační protokol",
+  amendment: "Dodatek ke smlouvě",
 };
 
 export const DOC_STATUS_LABELS: Record<string, string> = {
@@ -26,7 +36,7 @@ export const DOC_STATUS_LABELS: Record<string, string> = {
 };
 
 export const INVOICE_TYPES = ["invoice", "invoice_non_payer", "advance", "ddpp"] as const;
-export const AGREEMENT_TYPES = ["contract", "handover"] as const;
+export const AGREEMENT_TYPES = ["contract", "handover", "delivery", "cash_in", "cash_out", "reminder", "claim", "amendment"] as const;
 
 export interface RelatedDocument { id: string; type: string; number: string; status: string }
 
@@ -39,7 +49,7 @@ export interface LoadedDocument {
   issueDate: string | null;
   dueDate: string | null;
   totalDue: string;
-  snapshot: QuoteSnapshot | InvoiceSnapshot | ContractSnapshot | HandoverSnapshot;
+  snapshot: QuoteSnapshot | InvoiceSnapshot | ContractSnapshot | HandoverSnapshot | DeliverySnapshot | CashSnapshot | ReminderSnapshot | ClaimSnapshot | AmendmentSnapshot;
   view: DocumentView;
   payments: { paid_on: string; amount: string; method: string }[];
   /** záloha → její DDPP; DDPP → jeho záloha; záloha → faktura, na které je odečtená */
@@ -108,6 +118,16 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
     view = contractView(d.snapshot as ContractSnapshot, meta);
   } else if (d.type === "handover") {
     view = handoverView(d.snapshot as HandoverSnapshot, meta);
+  } else if (d.type === "delivery") {
+    view = deliveryView(d.snapshot as DeliverySnapshot, meta);
+  } else if (d.type === "cash_in" || d.type === "cash_out") {
+    view = cashView(d.snapshot as CashSnapshot, meta);
+  } else if (d.type === "reminder") {
+    view = reminderView(d.snapshot as ReminderSnapshot, meta);
+  } else if (d.type === "claim") {
+    view = claimView(d.snapshot as ClaimSnapshot, meta);
+  } else if (d.type === "amendment") {
+    view = amendmentView(d.snapshot as AmendmentSnapshot, meta);
   } else {
     const snap = d.snapshot as InvoiceSnapshot;
     view = invoiceView(snap, { ...meta, qrDataUrl: await qrPayment(snap, d.number, d.due_date) });
@@ -127,7 +147,7 @@ export async function loadDocument(companyId: string, id: string): Promise<Loade
       for (const r of invs ?? []) related.push(r as RelatedDocument);
     }
   }
-  if (d.type === "contract") {
+  if (d.type === "contract" || d.type === "invoice" || d.type === "invoice_non_payer") {
     const { data: pp } = await supabase.from("documents").select("id, type, number, status").eq("company_id", companyId).eq("related_document_id", d.id).not("number", "is", null);
     for (const r of pp ?? []) related.push(r as RelatedDocument);
   }
