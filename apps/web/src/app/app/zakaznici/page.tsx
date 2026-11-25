@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireStaff } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { addClient } from "./actions";
@@ -42,6 +43,7 @@ export default async function ClientsPage() {
       </section>
 
       <aside>
+        <Link href="/app/zakaznici/import-export" className="btn-ghost mb-3 w-full">Import a export (vCard, Excel, ZIP)</Link>
         <form action={addClient} className="card space-y-3 p-4">
           <h2 className="font-display text-[17px] font-bold">Nový zákazník</h2>
           <NewClientFields />
