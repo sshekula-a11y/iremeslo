@@ -15,6 +15,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/app/zakazky", label: "Zakázky" },
       { href: "/app/kalendar", label: "Kalendář" },
       { href: "/poptavky", label: "Poptávky zákazníků" },
+      { href: "/app/nabidky", label: "Odeslané nabídky" },
       { href: "/app/cenik", label: "Ceník prací a materiálu" },
     ],
   },

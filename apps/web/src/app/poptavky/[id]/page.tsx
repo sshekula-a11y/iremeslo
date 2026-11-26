@@ -7,6 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { DemoBadge } from "@/components/InquiryCard";
 import { photoUrl } from "@/lib/inquiry-photos";
+import { requireCompany } from "@/lib/data";
+import { todayInPrague } from "@/lib/calendar";
+import { OfferPanel, type MyOffer } from "./OfferPanel";
 import { CATEGORY_LABEL, REGION_LABEL, formatQuantity, formatTerm, timeAgo, type InquiryContact, type PublicInquiry } from "@/lib/inquiries";
 
 type ContactAccess = { email_verified: boolean; has_company: boolean; verified: boolean; pending: boolean; not_found: boolean };
@@ -46,6 +49,17 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
   const { data: accessData } = loggedIn ? await supabase.rpc("my_contact_access") : { data: null };
   const access = (accessData as ContactAccess | null) ?? null;
   const verified = !!access?.email_verified && !!access?.verified;
+
+  // Nabídka mé firmy (jen přihlášená firma s ověřeným IČO, ne u ukázek)
+  let offerData: { offer: MyOffer | null; count: number } | null = null;
+  let firm: Awaited<ReturnType<typeof requireCompany>> | null = null;
+  if (active && verified && !q.is_demo) {
+    firm = await requireCompany();
+    if (firm.role !== "worker") {
+      const { data } = await supabase.rpc("my_offer_for", { p_company: firm.id, p_inquiry: id });
+      offerData = (data as { offer: MyOffer | null; count: number } | null) ?? { offer: null, count: 0 };
+    }
+  }
 
   let contact: InquiryContact | null = null;
   let contactError: string | null = null;
@@ -146,6 +160,10 @@ export default async function InquiryPage({ params, searchParams }: PageProps<"/
             )}
             {q.views > 0 && <p className="mt-4 border-t border-line pt-3 text-[13px] text-muted">Kontakt si zobrazil{q.views === 1 ? " 1 řemeslník" : q.views < 5 ? `i ${q.views} řemeslníci` : "o " + q.views + " řemeslníků"}.</p>}
           </section>
+        )}
+
+        {offerData && firm && (
+          <OfferPanel inquiryId={id} offer={offerData.offer} count={Number(offerData.count)} vatPayer={firm.vatPayer} today={todayInPrague()} />
         )}
 
         <aside className="card flex flex-wrap items-center justify-between gap-3 border-dashed p-5">

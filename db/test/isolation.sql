@@ -968,5 +968,54 @@ delete from net._test_requests;
 select app.process_inquiry_alerts('daily') \g /dev/null
 select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = :'owner_a'), 0, 'po odhlášení nic nechodí');
 
+-- ---------- nabídky v systému (029) ----------
+set app.ares = 'on';
+update companies set read_only = false, ico_verified_at = coalesce(ico_verified_at, now()) where id in (:'company_a', :'company_b');
+reset app.ares;
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, street, term, contact_name, contact_phone, contact_email, token_hash)
+values ('open', now(), 'malovani', 'praha', 'Výmalba kanceláře 80 m2', 'Výmalba kanceláře, bílá, strop i stěny.', 'Praha', 'Dlouhá 5', 'month', 'Olga Zadavatelka', '+420 777 000 111', 'olga@example.cz', 'offer-test-1')
+returning id as oinq \gset
+delete from net._test_requests;
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select (send_offer(:'company_a', :'oinq', 18500, current_date + 7, '3 dny', 'Výmalbu zvládneme za tři dny včetně zakrytí nábytku.') ->> 'id')::uuid as offer_a \gset
+select t_text(my_offer_for(:'company_a', :'oinq') #>> '{offer,status}', 'sent', 'řemeslník pošle nabídku');
+select t_fails(format('select send_offer(%L, %L, 0, null, null, %L)', :'company_a', :'oinq', 'Nulová cena by neprošla.'), 'nabídka bez ceny nejde');
+select t_fails(format('select send_offer(%L, %L, 100, null, null, %L)', :'company_b', :'oinq', 'Za cizí firmu nabídku neposílám.'), 'nabídku za cizí firmu poslat nejde');
+select t_eq((send_offer(:'company_a', :'oinq', 17900, current_date + 7, '3 dny', 'Upravená cena po prohlídce fotek, včetně materiálu.') ->> 'new')::boolean::int, 0, 'nabídku jde upravit');
+reset role;
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = 'olga@example.cz'), 1, 'zákazník dostane e-mail jen u první nabídky firmy');
+select substring((select body ->> 'html' from net._test_requests where body -> 'to' ->> 0 = 'olga@example.cz' limit 1) from '/poptavky/sprava\?t=([0-9a-f]{64})') as otok \gset
+select t_eq(length(:'otok'), 64, 'e-mail obsahuje odkaz na porovnání nabídek');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000b');
+select (send_offer(:'company_b', :'oinq', 21000, null, '1 týden', 'Nabízíme výmalbu s dvouletou zárukou na práci.') ->> 'id')::uuid as offer_b \gset
+select t_eq((my_offer_for(:'company_b', :'oinq') ->> 'count')::int, 2, 'firma vidí počet nabídek, ne cizí ceny');
+select t_fails('select * from app.inquiry_offers', 'tabulka nabídek není přímo čitelná');
+reset role;
+set role anon;
+select t_eq(jsonb_array_length(inquiry_offers(:'otok')), 2, 'zákazník vidí obě nabídky odkazem z e-mailu');
+select t_text(inquiry_offers(:'otok') -> 0 ->> 'price', '17900.00', 'nejlevnější nabídka je první');
+select t_eq(((inquiry_offers(:'otok') -> 0 ->> 'phone') is null)::int, 1, 'kontakt na firmu je skrytý do výběru');
+select t_eq((inquiry_offers(repeat('0', 64)) is null)::int, 1, 'vymyšlený odkaz nabídky neukáže');
+select t_text(confirm_inquiry(:'otok') ->> 'ok', 'true', 'odkaz z e-mailu o nabídce otevře správu poptávky');
+reset role;
+delete from net._test_requests;
+set role anon;
+select t_text(decide_offer(:'otok', :'offer_a', 'accept') ->> 'ok', 'true', 'zákazník vybere nabídku');
+select t_fails(format('select decide_offer(%L, %L, %L)', :'otok', :'offer_b', 'accept'), 'druhou nabídku už vybrat nejde');
+reset role;
+select t_text((select status from app.inquiries where id = :'oinq'), 'closed', 'výběrem se poptávka uzavře');
+select t_text((select status from app.inquiry_offers where id = :'offer_b'), 'declined', 'ostatní nabídky se odmítnou');
+select t_eq((select count(*)::int from net._test_requests where body ->> 'subject' like 'Zákazník vybral vaši nabídku%' and body ->> 'html' like '%+420 777 000 111%'), 1, 'vybraná firma dostane kontakt na zákazníka');
+select t_eq((select count(*)::int from net._test_requests where body ->> 'html' like '%vybral jinou nabídku%'), 1, 'ostatní firmy dostanou odmítnutí');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_text(my_offers(:'company_a') -> 0 #>> '{contact,phone}', '+420 777 000 111', 'vybraná firma vidí kontakt v aplikaci');
+select t_login('00000000-0000-0000-0000-00000000000b');
+select t_eq(((my_offers(:'company_b') -> 0 -> 'contact') = 'null'::jsonb)::int, 1, 'odmítnutá firma kontakt nevidí');
+select t_fails(format('select my_offers(%L)', :'company_a'), 'cizí nabídky nejsou vidět');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'
