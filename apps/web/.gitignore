@@ -41,3 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /src/app/nahled/
+
+# soubory pro čtení účtenek – kopíruje scripts/copy-ocr-assets.mjs při sestavení
+/public/ocr

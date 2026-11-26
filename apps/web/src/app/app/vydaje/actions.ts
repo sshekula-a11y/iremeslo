@@ -7,6 +7,11 @@ import { createClient } from "@/lib/supabase/server";
 import { AiError, withAiQuota } from "@/lib/ai/claude";
 import { extractReceipt } from "@/lib/ai/receipt";
 import { EXPENSE_CATEGORIES, PAID_METHODS } from "@/lib/expenses";
+import { parseReceiptText, type ReceiptGuess } from "@iremeslo/core";
+import { lookupAres } from "@/lib/ares";
+import { toLines } from "@/lib/documents/pdf-import";
+import { pdfText } from "@/lib/documents/pdf-text";
+import { todayInPrague } from "@/lib/calendar";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MEDIA: Record<string, "image/jpeg" | "image/png" | "image/webp" | "application/pdf"> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", pdf: "application/pdf" };
@@ -147,4 +152,60 @@ export async function expenseFileUrl(id: string): Promise<string | null> {
   if (!data?.file_path) return null;
   const { data: s } = await supabase.storage.from("files").createSignedUrl(data.file_path, 300);
   return s?.signedUrl ?? null;
+}
+
+
+/** Odhad z textu dokladu → pole formuláře (společné pro PDF na serveru i fotku přečtenou v telefonu). */
+function guessToFields(g: ReceiptGuess): Partial<ExpenseFields> {
+  const f: Partial<ExpenseFields> = { kind: g.kind };
+  if (g.supplierIco) f.supplierIco = g.supplierIco;
+  if (g.docNumber) f.docNumber = g.docNumber.slice(0, 60);
+  if (g.issueDate) f.issueDate = g.issueDate;
+  if (g.total !== null) f.total = money(g.total);
+  if (g.vatBase !== null) f.vatBase = money(g.vatBase);
+  if (g.vat !== null) f.vat = money(g.vat);
+  if (g.paidMethod) f.paidMethod = g.paidMethod;
+  if (g.category) f.category = g.category;
+  return f;
+}
+
+/** Název dodavatele z ARES podle IČO (když ARES neodpovídá, pole zůstane prázdné). */
+export async function supplierFromIco(ico: string): Promise<{ name: string | null }> {
+  await requireStaff();
+  if (!/^\d{8}$/.test(ico)) return { name: null };
+  const r = await lookupAres(ico);
+  return { name: r.ok ? r.company.name : null };
+}
+
+/**
+ * Čtení dokladu bez AI: PDF přečte server (text z PDF je přesný), fotku čte telefon sám
+ * (rozpoznání textu v prohlížeči) a sem pošle jen text. Výsledek doplní název dodavatele z ARES.
+ */
+export async function readReceiptLocal(input: { path?: string; text?: string }): Promise<{ ok: true; fields: Partial<ExpenseFields>; found: string[] } | { ok: false; error: string }> {
+  const company = await requireStaff();
+  let text = typeof input.text === "string" ? input.text.slice(0, 20000) : "";
+  if (input.path) {
+    const m = input.path.match(new RegExp(`^${company.id}/expenses/[0-9a-f-]{36}\\.pdf$`));
+    if (!m) return { ok: false, error: "Neplatný soubor." };
+    const supabase = await createClient();
+    const { data: blob } = await supabase.storage.from("files").download(input.path);
+    if (!blob) return { ok: false, error: "Soubor se nepodařilo načíst." };
+    try {
+      const pages = await pdfText(new Uint8Array(await blob.arrayBuffer()), 2);
+      text = pages.map((items) => toLines(items).map((l) => l.text).join("\n")).join("\n");
+    } catch {
+      return { ok: false, error: "PDF se nepodařilo přečíst." };
+    }
+    if (text.replace(/\s/g, "").length < 20) return { ok: false, error: "PDF je naskenovaný obrázek bez textu – údaje vyplňte ručně, nebo nahrajte fotku." };
+  }
+  if (!text.trim()) return { ok: false, error: "Na dokladu se nepodařilo přečíst text." };
+  const guess = parseReceiptText(text, todayInPrague(), company.ico);
+  const fields = guessToFields(guess);
+  if (guess.supplierIco) {
+    const r = await lookupAres(guess.supplierIco);
+    if (r.ok) fields.supplierName = r.company.name.slice(0, 200);
+  }
+  // ARES neodpověděl nebo IČO chybí: název z textu dokladu
+  if (!fields.supplierName && guess.supplierName) fields.supplierName = guess.supplierName;
+  return { ok: true, fields, found: guess.found };
 }

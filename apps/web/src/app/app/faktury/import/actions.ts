@@ -4,25 +4,13 @@ import { revalidatePath } from "next/cache";
 import { isValidIco } from "@iremeslo/core";
 import { requireStaff } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
-import { parseInvoiceLines, toLines, type ParsedInvoice, type TextItem } from "@/lib/documents/pdf-import";
+import { parseInvoiceLines, toLines, type ParsedInvoice } from "@/lib/documents/pdf-import";
+import { pdfText } from "@/lib/documents/pdf-text";
 import { parseIsdoc } from "@/lib/documents/isdoc-import";
 
 export type ParseResult = { ok: true; invoice: ParsedInvoice; duplicate: boolean } | { ok: false; error: string };
 
 const MAX_BYTES = 10 * 1024 * 1024;
-
-async function pdfText(bytes: Uint8Array): Promise<TextItem[]> {
-  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const task = getDocument({ data: bytes, useSystemFonts: false, disableFontFace: true });
-  try {
-    const doc = await task.promise;
-    const page = await doc.getPage(1);
-    const tc = await page.getTextContent();
-    return tc.items.flatMap((i) => ("str" in i ? [{ str: i.str, x: i.transform[4] as number, y: i.transform[5] as number, w: i.width }] : []));
-  } finally {
-    await task.destroy();
-  }
-}
 
 /** Přečte jednu fakturu (PDF nebo ISDOC) a řekne, jestli už ve firmě je. Nic neukládá. */
 export async function parseInvoiceFile(form: FormData): Promise<ParseResult> {
@@ -34,7 +22,7 @@ export async function parseInvoiceFile(form: FormData): Promise<ParseResult> {
   const name = file.name.toLowerCase();
   let invoice: ParsedInvoice | null = null;
   try {
-    if (name.endsWith(".pdf")) invoice = parseInvoiceLines(toLines(await pdfText(bytes)), file.name);
+    if (name.endsWith(".pdf")) invoice = parseInvoiceLines(toLines((await pdfText(bytes))[0] ?? []), file.name);
     else if (name.endsWith(".isdoc") || name.endsWith(".xml")) invoice = parseIsdoc(new TextDecoder().decode(bytes));
   } catch {
     return { ok: false, error: "Soubor se nepodařilo přečíst." };

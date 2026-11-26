@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import "./scripts/copy-ocr-assets.mjs"; // soubory pro čtení účtenek z fotky do public/ocr (při každém sestavení i vývoji)
 
 const nextConfig: NextConfig = {
   // Sdílený balíček s výpočty (TypeScript bez sestavení)

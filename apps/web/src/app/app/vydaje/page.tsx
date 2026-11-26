@@ -34,7 +34,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/vyd
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-[24px] font-extrabold">Výdaje</h1>
-          <p className="text-[14px] text-muted">Účtenky a přijaté faktury. Vyfoťte účtenku a AI účetní ji přečte.</p>
+          <p className="text-[14px] text-muted">Účtenky a přijaté faktury. Vyfoťte účtenku nebo nahrajte PDF – údaje se přečtou samy.</p>
         </div>
         <Link href="/app/vydaje/novy" className="btn-primary">Přidat výdaj</Link>
       </div>

@@ -53,7 +53,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NEW_ITEMS: (NavItem & { icon: IconName })[] = [
   { href: "/app/faktury/rychla", label: "Faktura", icon: "file", hint: "rychle, bez zakázky" },
   { href: "/app/zakazky/nova", label: "Zakázka", icon: "briefcase", hint: "kalkulace, nabídka, smlouva" },
-  { href: "/app/vydaje/novy", label: "Výdaj – vyfotit účtenku", icon: "camera", hint: "AI přečte údaje" },
+  { href: "/app/vydaje/novy", label: "Výdaj – vyfotit účtenku", icon: "camera", hint: "údaje se přečtou samy" },
   { href: "/app/listiny/nova?typ=prijmovy-doklad", label: "Příjmový pokladní doklad", icon: "cash" },
   { href: "/app/listiny/nova?typ=vydajovy-doklad", label: "Výdajový pokladní doklad", icon: "cash" },
   { href: "/app/zakaznici#novy-zakaznik", label: "Zákazník", icon: "users" },

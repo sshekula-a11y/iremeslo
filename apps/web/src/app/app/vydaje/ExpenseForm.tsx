@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { EXPENSE_CATEGORIES, PAID_METHODS } from "@/lib/expenses";
-import { deleteExpense, discardUpload, readReceipt, saveExpense, type ExpenseFields } from "./actions";
+import { deleteExpense, discardUpload, readReceipt, readReceiptLocal, saveExpense, type ExpenseFields } from "./actions";
+import { recognizeText, scanPaymentQr } from "@/lib/receipt-ocr";
 
 export interface JobOption { id: string; label: string }
 
@@ -38,7 +39,9 @@ export function ExpenseForm({ companyId, expenseId, initial, hasFile, jobs, ai, 
   const [f, setF] = useState<ExpenseFields>(initial ?? { ...EMPTY, issueDate: today });
   const [path, setPath] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ url: string; pdf: boolean } | null>(null);
-  const [phase, setPhase] = useState<"idle" | "upload" | "reading">("idle");
+  const [phase, setPhase] = useState<"idle" | "upload" | "reading" | "ocr">("idle");
+  const [progress, setProgress] = useState(0);
+  const [localFound, setLocalFound] = useState<string[] | null>(null);
   const [aiNote, setAiNote] = useState<string | null>(null);
   const [aiFilled, setAiFilled] = useState(false);
   const [used, setUsed] = useState(ai.used);
@@ -48,12 +51,16 @@ export function ExpenseForm({ companyId, expenseId, initial, hasFile, jobs, ai, 
   const saved = useRef(false);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
+  // Odchod ze stránky bez uložení: nahraný soubor smažeme, ať v úložišti nezůstávají nepoužité účtenky.
+  const pathRef = useRef<string | null>(null);
+  useEffect(() => { pathRef.current = path; }, [path]);
+  useEffect(() => () => { if (pathRef.current && !saved.current) void discardUpload(pathRef.current); }, []);
 
   const set = <K extends keyof ExpenseFields>(k: K, v: ExpenseFields[K]) => setF((p) => ({ ...p, [k]: v }));
   const canAi = ai.enabled && used < ai.limit;
 
   async function pick(file: File) {
-    setError(null); setAiNote(null); setAiFilled(false);
+    setError(null); setAiNote(null); setAiFilled(false); setLocalFound(null);
     if (file.size > 25 * 1024 * 1024) { setError("Soubor je příliš velký."); return; }
     setPhase("upload");
     try {
@@ -65,19 +72,46 @@ export function ExpenseForm({ companyId, expenseId, initial, hasFile, jobs, ai, 
       if (path) void discardUpload(path);
       setPath(p);
       setPreview({ url: URL.createObjectURL(prepared.blob), pdf: prepared.ext === "pdf" });
-      if (!canAi) { setPhase("idle"); return; }
-      setPhase("reading");
-      const r = await readReceipt(p);
-      setPhase("idle");
-      if (!r.ok) { setError(r.error); return; }
-      setUsed((u) => u + 1);
-      setF((prev) => {
+      const fill = (fields: Partial<ExpenseFields>) => setF((prev) => {
         const next = { ...prev };
-        for (const [k, v] of Object.entries(r.fields)) if (v !== undefined && v !== "") (next as Record<string, string>)[k] = v as string;
+        for (const [k, v] of Object.entries(fields)) if (v !== undefined && v !== "") (next as Record<string, string>)[k] = v as string;
         return next;
       });
-      setAiFilled(true);
-      setAiNote(r.readable ? r.note || null : "Doklad se nepodařilo spolehlivě přečíst – údaje prosím doplňte nebo opravte.");
+
+      // 1) AI (je-li zapnutá a v limitu) – nejpřesnější
+      if (canAi) {
+        setPhase("reading");
+        const r = await readReceipt(p);
+        if (r.ok) {
+          setPhase("idle");
+          setUsed((u) => u + 1);
+          fill(r.fields);
+          setAiFilled(true);
+          setAiNote(r.readable ? r.note || null : "Doklad se nepodařilo spolehlivě přečíst – údaje prosím doplňte nebo opravte.");
+          return;
+        }
+        if (r.error.includes("limit")) setAiNote(r.error);
+      }
+
+      // 2) Bez AI: PDF přečte server, fotku telefon (QR Platba + rozpoznání textu)
+      setPhase("ocr"); setProgress(0);
+      let res: Awaited<ReturnType<typeof readReceiptLocal>>;
+      let qr: Awaited<ReturnType<typeof scanPaymentQr>> = null;
+      if (prepared.ext === "pdf") {
+        res = await readReceiptLocal({ path: p });
+      } else {
+        qr = await scanPaymentQr(prepared.blob);
+        const text = await recognizeText(prepared.blob, setProgress);
+        res = await readReceiptLocal({ text });
+      }
+      setPhase("idle");
+      const found = res.ok ? [...res.found] : [];
+      if (res.ok) fill(res.fields);
+      if (qr?.amount) { fill({ total: qr.amount.toFixed(2).replace(".", ","), kind: "invoice", paidMethod: "bank" }); if (!found.includes("částka")) found.push("částka (QR)"); }
+      if (qr?.vs) fill({ docNumber: qr.vs });
+      if (!res.ok && !qr) { setError(res.error); return; }
+      if (res.ok && res.fields.supplierName) found.unshift("dodavatel");
+      setLocalFound(found);
     } catch {
       setPhase("idle");
       setError("Soubor se nepodařilo zpracovat. Zkuste jinou fotku nebo PDF.");
@@ -115,18 +149,19 @@ export function ExpenseForm({ companyId, expenseId, initial, hasFile, jobs, ai, 
             <p className="text-[14px] text-muted">
               {ai.enabled
                 ? canAi ? "Vyfoťte účtenku nebo nahrajte PDF faktury – AI účetní údaje přečte a vyplní. Vy je jen zkontrolujete." : `Limit čtení účtenek na tento měsíc je vyčerpaný (${used} z ${ai.limit}). Soubor uložíme, údaje doplňte ručně.`
-                : "Vyfoťte účtenku nebo nahrajte PDF – uložíme ji k výdaji. Čtení údajů pomocí AI zatím není zapnuté."}
+                : "Vyfoťte účtenku nebo nahrajte PDF faktury – údaje se pokusíme přečíst automaticky. Vy je jen zkontrolujete a doplníte."}
             </p>
           </div>
           {ai.enabled && <span className="num rounded-full bg-paper px-2.5 py-1 text-[12px] text-muted ring-1 ring-line">AI tento měsíc: {used} / {ai.limit}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" className="btn-primary" disabled={busy} onClick={() => input.current?.click()}>
-            {phase === "upload" ? "Nahrávám…" : phase === "reading" ? "AI čte účtenku…" : path || hasFile ? "Nahrát jinou" : "Vyfotit nebo nahrát účtenku"}
+            {phase === "upload" ? "Nahrávám…" : phase === "reading" ? "AI čte účtenku…" : phase === "ocr" ? `Čtu doklad… ${progress ? `${progress} %` : ""}` : path || hasFile ? "Nahrát jinou" : "Vyfotit nebo nahrát účtenku"}
           </button>
           <input ref={input} type="file" accept="image/*,application/pdf" className="sr-only" tabIndex={-1} aria-hidden="true"
             onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void pick(file); }} />
           {phase === "reading" && <span className="text-[14px] text-muted" role="status">Obvykle to trvá 5–15 sekund.</span>}
+          {phase === "ocr" && <span className="text-[14px] text-muted" role="status">Poprvé to trvá déle – telefon si stahuje češtinu pro čtení textu.</span>}
           {hasFile && !path && <span className="text-[14px] text-muted">Účtenka je uložená u výdaje.</span>}
         </div>
         {preview && (
@@ -138,6 +173,13 @@ export function ExpenseForm({ companyId, expenseId, initial, hasFile, jobs, ai, 
         {aiFilled && (
           <p role="status" className="rounded-[10px] bg-ok-soft px-3 py-2 text-[14px] text-ok">
             Údaje vyplnila AI účetní – před uložením je zkontrolujte.{aiNote ? ` ${aiNote}` : ""}
+          </p>
+        )}
+        {localFound && (
+          <p role="status" className={`rounded-[10px] px-3 py-2 text-[14px] ${localFound.length ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}>
+            {localFound.length
+              ? <>Přečteno: <strong>{localFound.join(", ")}</strong>. Zkontrolujte prosím údaje a doplňte, co chybí.</>
+              : "Z dokladu se nepodařilo nic spolehlivě přečíst – vyplňte údaje prosím ručně. Pomůže ostřejší fotka bez stínu."}
           </p>
         )}
         {!aiFilled && aiNote && <p role="status" className="rounded-[10px] bg-warn-soft px-3 py-2 text-[14px] text-warn">{aiNote}</p>}

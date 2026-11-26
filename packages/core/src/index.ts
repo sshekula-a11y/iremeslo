@@ -8,3 +8,4 @@ export * from "./ico.ts";
 export * from "./spayd.ts";
 export * from "./document.ts";
 export * from "./tax.ts";
+export * from "./receipt.ts";
