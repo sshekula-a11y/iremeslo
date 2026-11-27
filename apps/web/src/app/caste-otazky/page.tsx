@@ -4,7 +4,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_CUSTOMERS, FAQ_TRADESMEN, faqJsonLd } from "@/lib/faq";
-import { OPERATOR } from "@/lib/operator";
 
 export const metadata: Metadata = {
   title: "Časté otázky",
@@ -37,8 +36,8 @@ export default function FaqPage() {
         </section>
 
         <p className="mt-12 text-[15px] text-muted">
-          Nenašli jste odpověď? Napište nám na{" "}
-          <a href={`mailto:${OPERATOR.email}`} className="font-semibold text-accent-ink underline">{OPERATOR.email}</a>.
+          Nenašli jste odpověď?{" "}
+          <Link href="/kontakt" className="font-semibold text-accent-ink underline">Napište nám</Link> – odpovídáme obvykle do jednoho pracovního dne.
         </p>
       </div>
       <SiteFooter />

@@ -213,3 +213,13 @@ export async function saveAiLimits(_: AdminState, form: FormData): Promise<Admin
   revalidatePath("/ssh/ai");
   return { ok: true, message: "Limity uloženy." };
 }
+
+export async function setContactHandled(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const id = Number(form.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return { error: "Neplatná zpráva." };
+  const { error } = await supabase.rpc("admin_contact_handled", { p_id: id, p_handled: form.get("handled") === "true" });
+  if (error) return fail(error, "Zprávu se nepodařilo upravit.");
+  revalidatePath("/ssh/zpravy");
+  return { ok: true, message: "Uloženo." };
+}

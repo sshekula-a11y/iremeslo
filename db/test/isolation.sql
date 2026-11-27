@@ -1017,5 +1017,25 @@ select t_eq(((my_offers(:'company_b') -> 0 -> 'contact') = 'null'::jsonb)::int, 
 select t_fails(format('select my_offers(%L)', :'company_a'), 'cizí nabídky nejsou vidět');
 reset role;
 
+-- ---------- kontaktní formulář (030) ----------
+delete from net._test_requests;
+set role anon;
+select t_eq(send_contact_message('Jan Zájemce', 'jan@example.cz', 'remeslnik', 'Dobrý den, jak převedu faktury z Pohody?', 'iphash1')::int, 1, 'zpráva z kontaktního formuláře projde bez přihlášení');
+select t_fails($q$select send_contact_message('J', 'jan@example.cz', 'jine', 'Krátká zpráva.')$q$, 'jméno je povinné');
+select t_fails($q$select send_contact_message('Jan', 'neni-email', 'jine', 'Zpráva bez platného e-mailu.')$q$, 'neplatný e-mail neprojde');
+select t_fails($q$select send_contact_message('Jan', 'jan@example.cz', 'spam', 'Neznámé téma zprávy.')$q$, 'neznámé téma neprojde');
+select t_fails('select * from app.contact_messages', 'zprávy nejsou veřejně čitelné');
+select send_contact_message('Jan Zájemce', 'jan@example.cz', 'jine', 'Druhá zpráva od stejného odesílatele.', 'iphash1') \g /dev/null
+select send_contact_message('Jan Zájemce', 'jan@example.cz', 'jine', 'Třetí zpráva od stejného odesílatele.', 'iphash1') \g /dev/null
+select t_fails($q$select send_contact_message('Jan Zájemce', 'jan@example.cz', 'jine', 'Čtvrtá zpráva za hodinu je moc.', 'iphash1')$q$, 'limit zpráv z jednoho e-mailu');
+reset role;
+select t_eq((select count(*)::int from net._test_requests where body ->> 'reply_to' = 'jan@example.cz' and body -> 'to' ->> 0 = 'info@iremeslo.cz'), 3, 'provozovatel dostane zprávu s odpovědí na odesílatele');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_fails('select admin_contact_messages()', 'zprávy vidí jen administrátor');
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq(jsonb_array_length(admin_contact_messages()), 3, 'administrátor vidí přijaté zprávy');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

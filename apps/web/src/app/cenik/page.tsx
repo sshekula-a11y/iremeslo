@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { OPERATOR } from "@/lib/operator";
 import { PLANS, PRICE_FROM, kc } from "@/lib/pricing";
 
 export const metadata: Metadata = {
@@ -33,7 +32,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Jak zaplatím?",
-    a: <>Napište nám na <a href={`mailto:${OPERATOR.email}`} className="font-semibold text-accent-ink underline">{OPERATOR.email}</a>, jaký tarif a období chcete. Pošleme fakturu a zaplatíte převodem předem. Platební kartu nepotřebujete.</>,
+    a: <><Link href="/kontakt?tema=predplatne" className="font-semibold text-accent-ink underline">Napište nám</Link>, jaký tarif a období chcete. Pošleme fakturu a zaplatíte převodem předem. Platební kartu nepotřebujete.</>,
   },
   {
     q: "Platím něco navíc?",
@@ -41,7 +40,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Můžu předplatné zrušit?",
-    a: `Kdykoli, e-mailem na ${OPERATOR.email}. Služba poběží do konce zaplaceného období. Potom máte ještě 30 dní na stažení dokladů a dat, pak je smažeme (kromě údajů, které musíme uchovat podle zákona).`,
+    a: <>Kdykoli – stačí nám <Link href="/kontakt?tema=predplatne" className="font-semibold text-accent-ink underline">napsat</Link>. Služba poběží do konce zaplaceného období. Potom máte ještě 30 dní na stažení dokladů a dat, pak je smažeme (kromě údajů, které musíme uchovat podle zákona).</>,
   },
   {
     q: "Co když nás bude víc než 5?",

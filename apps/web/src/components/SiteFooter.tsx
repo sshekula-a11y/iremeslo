@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { OPERATOR } from "@/lib/operator";
 import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
 const link = "hover:text-ink hover:underline";
@@ -27,8 +26,7 @@ export function SiteFooter() {
         <Col title="Podpora">
           <Link href="/caste-otazky" className={link}>Časté otázky</Link>
           <Link href="/jak-to-funguje" className={link}>Jak to funguje</Link>
-          <Link href="/kontakt" className={link}>Kontakt</Link>
-          <a href={`mailto:${OPERATOR.email}`} className={link}>{OPERATOR.email}</a>
+          <Link href="/kontakt" className={link}>Napište nám</Link>
         </Col>
         <Col title="Právní">
           <Link href="/obchodni-podminky" className={link}>Obchodní podmínky</Link>
