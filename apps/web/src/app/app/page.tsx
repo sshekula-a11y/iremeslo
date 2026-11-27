@@ -5,7 +5,8 @@ import { JOB_STATUSES, type JobStatus } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
-import { formatCzk } from "@iremeslo/core";
+import { formatCzk, formatPercent } from "@iremeslo/core";
+import { loadJobProfits, totals } from "@/lib/profit";
 import { toHundredths } from "@/lib/money";
 import { todayInPrague } from "@/lib/calendar";
 
@@ -40,6 +41,12 @@ export default async function Dashboard({ searchParams }: PageProps<"/app">) {
       .in("type", ["invoice", "invoice_non_payer", "advance"])
       .in("status", ["issued", "sent"]),
   ]);
+  // Tento měsíc: obrat a zisk z odsouhlasených zakázek (stejné výpočty jako stránka Ziskovost).
+  const month = todayIso.slice(0, 7);
+  const monthEnd = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString().slice(0, 10);
+  const thisMonth = totals(await loadJobProfits(company, `${month}-01`, monthEnd));
+  const kc0 = (n: number) => `${new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(Math.round(n / 100))} Kč`;
+  const monthName = new Intl.DateTimeFormat("cs-CZ", { month: "long", timeZone: "Europe/Prague" }).format(new Date(`${month}-15T12:00:00Z`));
   const { count: professionCount } = await supabase
     .from("company_professions").select("profession_slug", { count: "exact", head: true }).eq("company_id", company.id);
   const unpaid = (open ?? []).reduce((sum, d) => sum + toHundredths(d.total_due), 0);
@@ -75,6 +82,22 @@ export default async function Dashboard({ searchParams }: PageProps<"/app">) {
         <Stat label="Čeká na platbu" value={formatCzk(unpaid)} href="/app/faktury?f=nezaplacene" />
         <Stat label="Po splatnosti" value={formatCzk(overdue)} href="/app/faktury?f=po-splatnosti" bad={overdue > 0} />
       </div>
+
+      <section className="card" aria-labelledby="mesic">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4 py-3">
+          <h2 id="mesic" className="font-display text-[17px] font-bold first-letter:uppercase">{monthName}: kolik vyděláváte</h2>
+          <Link href="/app/ziskovost" className="text-[14px] font-semibold text-accent-ink hover:underline">Ziskovost zakázek →</Link>
+        </div>
+        {thisMonth.count > 0 ? (
+          <dl className="grid grid-cols-3 gap-3 px-4 py-3">
+            <div className="min-w-0"><dt className="text-[13px] text-muted">Obrat</dt><dd className="num truncate font-display text-[18px] font-extrabold sm:text-[22px]">{kc0(thisMonth.net)}</dd></div>
+            <div className="min-w-0"><dt className="text-[13px] text-muted">Zisk</dt><dd className={`num truncate font-display text-[18px] font-extrabold sm:text-[22px] ${thisMonth.profit < 0 ? "text-warn" : "text-ok"}`}>{kc0(thisMonth.profit)}</dd></div>
+            <div className="min-w-0"><dt className="text-[13px] text-muted">Marže</dt><dd className="num truncate font-display text-[18px] font-extrabold sm:text-[22px]">{thisMonth.marginBp === null ? "–" : formatPercent(thisMonth.marginBp)}</dd></div>
+          </dl>
+        ) : (
+          <p className="px-4 py-3 text-[14px] text-muted">Tento měsíc zatím nemáte odsouhlasenou zakázku. Jakmile ji označíte jako Schváleno, uvidíte tu obrat, zisk a marži.</p>
+        )}
+      </section>
 
       <section className="card">
         <h2 className="border-b border-line px-4 py-3 font-display text-[17px] font-bold">Tento týden</h2>

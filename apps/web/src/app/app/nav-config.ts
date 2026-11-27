@@ -31,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: "penize", label: "Peníze a daně", icon: "wallet", items: [
       { href: "/app/vydaje", label: "Výdaje a účtenky" },
       { href: "/app/pokladna", label: "Pokladna" },
+      { href: "/app/ziskovost", label: "Ziskovost zakázek" },
       { href: "/app/ucetni", label: "Daně a odvody", hint: "AI účetní" },
     ],
   },
