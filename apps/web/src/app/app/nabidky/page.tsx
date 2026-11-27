@@ -74,7 +74,7 @@ export default async function OffersPage() {
                   <div className="flex flex-wrap gap-2">
                     {o.contact.phone && <a href={`tel:${o.contact.phone.replace(/\s/g, "")}`} className="btn-dark min-h-10 px-3 text-[14px]">Zavolat {o.contact.phone}</a>}
                     <a href={`mailto:${o.contact.email}?subject=${encodeURIComponent(`Vaše poptávka: ${o.title}`)}`} className="btn-ghost min-h-10 px-3 text-[14px]">Napsat e-mail</a>
-                    <Link href="/app/zakazky/nova" className="btn-primary min-h-10 px-3 text-[14px]">Založit zakázku</Link>
+                    <Link href={`/app/zakazky/nova?nabidka=${o.id}`} className="btn-primary min-h-10 px-3 text-[14px]">Založit zakázku</Link>
                   </div>
                 </div>
               )}

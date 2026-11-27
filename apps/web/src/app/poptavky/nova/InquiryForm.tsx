@@ -1,10 +1,12 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { INQUIRY_CATEGORIES, INQUIRY_TERMS, INQUIRY_UNITS, REGIONS, regionFromZip } from "@/lib/inquiries";
 import { pushEvent } from "@/lib/consent";
 import { PhotoPicker } from "./PhotoPicker";
-import { submitInquiry, type InquiryState } from "./actions";
+import { createClient } from "@/lib/supabase/client";
+import { inquiryError, validateInquiry } from "./validate";
 
 const STEPS = ["Co poptáváte", "Kde a kdy", "Kontakt"] as const;
 /** Rozepsaná poptávka v prohlížeči (jen na tomto zařízení; souhlas a past na roboty se neukládají). */
@@ -32,7 +34,10 @@ function clearDraft() {
 
 /** Poptávka ve třech krocích: Co → Kde a kdy → Kontakt. Rozepsané údaje se průběžně ukládají v prohlížeči. */
 export function InquiryForm({ today, defaultCategory = "" }: { today: string; defaultCategory?: string }) {
-  const [state, action, pending] = useActionState<InquiryState, FormData>(submitInquiry, {});
+  const router = useRouter();
+  const [state, setState] = useState<{ error?: string }>({});
+  const [pending, setPending] = useState(false);
+  const [openedAt] = useState(() => Date.now());
   const [step, setStep] = useState(0);
   const [term, setTerm] = useState("flexible");
   const [termFrom, setTermFrom] = useState("");
@@ -122,8 +127,18 @@ export function InquiryForm({ today, defaultCategory = "" }: { today: string; de
         if (bad) { setStep(i); requestAnimationFrame(() => bad.reportValidity()); return; }
       }
       const data = new FormData(e.currentTarget);
-      clearDraft();
-      startTransition(() => action(data));
+      // Past na roboty: vyplněné skryté pole nebo odeslání do 3 s od otevření – tváříme se, že je hotovo.
+      if (String(data.get("web") ?? "") !== "" || Date.now() - openedAt < 3000) { router.push("/poptavky/odeslano"); return; }
+      const check = validateInquiry(data, today);
+      if ("error" in check) { setState({ error: check.error }); return; }
+      setPending(true);
+      setState({});
+      createClient().rpc("submit_inquiry", { p: check.payload }).then(({ error }) => {
+        if (error) { setPending(false); setState({ error: inquiryError(error.message) }); return; }
+        clearDraft();
+        // Bez e-mailu v adrese – adresy stránek zaznamenává Google Analytics.
+        router.push("/poptavky/odeslano");
+      }, () => { setPending(false); setState({ error: "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu." }); });
     }}>
       <section ref={(el) => { sections.current[0] = el; }} hidden={step !== 0} className="card space-y-4 p-5 sm:p-6">
         <h2 className="font-display text-[19px] font-bold">Co poptáváte</h2>

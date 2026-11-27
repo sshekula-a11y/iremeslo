@@ -1037,5 +1037,44 @@ select t_login('00000000-0000-0000-0000-0000000000ad');
 select t_eq(jsonb_array_length(admin_contact_messages()), 3, 'administrátor vidí přijaté zprávy');
 reset role;
 
+-- ---------- poptávky: limity, e-mail o zveřejnění, připomenutí (031) ----------
+set role anon;
+select set_config('request.headers', '{"cf-connecting-ip":"203.0.113.9"}', false) \g /dev/null
+select t_eq((select count(*)::int from (select submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba pokoje ' || g,
+  'description','Výmalba jednoho pokoje, bílá barva, strop.','city','Brno','term','flexible','contact_name','Pavel',
+  'contact_email','pavel' || g || '@example.cz')) from generate_series(1, 5) g) x), 5, 'pět poptávek z jedné adresy projde');
+select t_fails($q$select submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba pokoje 6','description','Výmalba jednoho pokoje, bílá barva, strop.','city','Brno','term','flexible','contact_name','Pavel','contact_email','pavel6@example.cz'))$q$, 'šestá poptávka za hodinu z jedné adresy neprojde ani s jiným e-mailem');
+select set_config('request.headers', '{"cf-connecting-ip":"198.51.100.7"}', false) \g /dev/null
+select t_eq((submit_inquiry(jsonb_build_object('category','malovani','title','Výmalba chodby','description','Výmalba chodby a schodiště v domě.',
+  'city','Brno','term','flexible','contact_name','Eva','contact_email','eva-jina@example.cz')) ->> 'id' is not null)::int, 1, 'ostatní poptávku zadají dál');
+select set_config('request.headers', '', false) \g /dev/null
+reset role;
+select t_eq((select count(*)::int from app.inquiries where src_hash is not null and contact_email like 'pavel%@example.cz'), 5, 'ukládá se otisk adresy');
+select t_eq((select count(*)::int from app.inquiries where src_hash like '%203.0.113%'), 0, 'samotná IP se neukládá');
+delete from app.inquiries where contact_email like 'pavel%@example.cz' or contact_email = 'eva-jina@example.cz';
+
+insert into app.inquiries (status, confirmed_at, category, region, title, description, city, term, contact_name, contact_email, token_hash)
+values ('open', now() - interval '20 minutes', 'malovani', 'praha', 'Výmalba kuchyně', 'Výmalba kuchyně a spíže, bílá.', 'Praha', 'flexible', 'Hana', 'hana@example.cz', 'fu-1')
+returning id as fu \gset
+insert into app.inquiry_alerts_sent (company_id, inquiry_id) values (:'company_a', :'fu'), (:'company_b', :'fu');
+delete from net._test_requests;
+select app.process_inquiry_followups() \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = 'hana@example.cz' and body ->> 'subject' like 'Poptávka je zveřejněná%'
+  and body ->> 'html' like '%2 firmám%' and body ->> 'html' ~ '/poptavky/sprava\?t=[0-9a-f]{64}'), 1, 'zadavatel dostane e-mail o zveřejnění s počtem firem');
+select app.process_inquiry_followups() \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = 'hana@example.cz'), 1, 'e-mail o zveřejnění přijde jen jednou');
+update app.inquiries set confirmed_at = now() - interval '8 days' where id = :'fu';
+select app.process_inquiry_followups() \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = 'hana@example.cz' and body ->> 'subject' like 'Poptávka po týdnu%'), 1, 'připomenutí po týdnu bez nabídek');
+update app.inquiries set confirmed_at = now() - interval '15 days' where id = :'fu';
+insert into app.inquiry_offers (inquiry_id, company_id, price, vat_note, message, valid_until)
+values (:'fu', :'company_a', 9000, 'with_vat', 'Výmalbu kuchyně zvládneme za jeden den.', current_date + 14);
+select app.process_inquiry_followups() \g /dev/null
+select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->> 0 = 'hana@example.cz' and body ->> 'subject' like 'Je poptávka stále aktuální%'
+  and body ->> 'html' like '%má 1 nabídku%'), 1, 'připomenutí po 14 dnech s počtem nabídek');
+update app.inquiries set status = 'closed', remind14_at = null where id = :'fu';
+select t_eq(app.process_inquiry_followups(), 0, 'uzavřené poptávce už nepíšeme');
+reset role;
+
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

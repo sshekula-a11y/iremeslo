@@ -1,11 +1,10 @@
-"use server";
-
-import { redirect } from "next/navigation";
+/**
+ * Kontrola poptávky před odesláním. Formulář volá databázi přímo z prohlížeče – limit poptávek se tak počítá
+ * podle skutečné adresy návštěvníka (u volání přes server webu by všichni sdíleli adresu serveru).
+ * Databáze stejná pravidla hlídá znovu (omezení tabulky a funkce submit_inquiry).
+ */
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, REGION_LABEL } from "@/lib/inquiries";
-
-export type InquiryState = { error?: string };
 
 const schema = z.object({
   category: z.string().refine((v) => !!CATEGORY_LABEL[v], "Vyberte obor."),
@@ -27,33 +26,29 @@ const schema = z.object({
   contact_email: z.string().trim().toLowerCase().email("Zadejte platný e-mail – pošleme na něj odkaz k potvrzení."),
 });
 
-export async function submitInquiry(_prev: InquiryState, form: FormData): Promise<InquiryState> {
-  // Skryté pole pro roboty: člověk ho nevidí, robot ho vyplní.
-  if (String(form.get("web") ?? "") !== "") redirect("/poptavky/odeslano");
-  if (form.get("consent") !== "on") return { error: "Pro zveřejnění poptávky je potřeba souhlas s podmínkami." };
+export type InquiryCheck = { error: string } | { payload: Record<string, string> };
 
+export function validateInquiry(form: FormData, today: string): InquiryCheck {
+  if (form.get("consent") !== "on") return { error: "Pro zveřejnění poptávky je potřeba souhlas s podmínkami." };
   const raw = Object.fromEntries(Object.keys(schema.shape).map((k) => [k, String(form.get(k) ?? "")]));
   const p = schema.safeParse(raw);
   if (!p.success) return { error: p.error.issues[0]?.message ?? "Zkontrolujte údaje." };
   const v = p.data;
   if (v.term === "date") {
-    const today = new Date().toISOString().slice(0, 10);
     if (!v.term_from && !v.term_date) return { error: "Zadejte datum zahájení nebo dokončení." };
     if ((v.term_from && v.term_from < today) || (v.term_date && v.term_date < today)) return { error: "Zadejte termín v budoucnosti." };
     if (v.term_from && v.term_date && v.term_date < v.term_from) return { error: "Dokončení nesmí být před zahájením." };
   }
   if (v.unit && v.unit !== "pausal" && !v.quantity) return { error: "K jednotce doplňte rozsah, např. 500 m²." };
+  return { payload: { ...v, quantity: v.unit === "pausal" ? "" : v.quantity, unit: v.quantity || v.unit === "pausal" ? v.unit : "" } };
+}
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("submit_inquiry", {
-    p: { ...v, quantity: v.unit === "pausal" ? "" : v.quantity, unit: v.quantity || v.unit === "pausal" ? v.unit : "" },
-  });
-  if (error) {
-    if (error.message.includes("příliš mnoho")) return { error: "Poptávek je teď příliš mnoho. Zkuste to prosím za chvíli." };
-    if (error.message.includes("e-mail")) return { error: "Zadejte platný e-mail." };
-    if (error.message.includes("fotky")) return { error: "Fotky se nepodařilo připojit. Odeberte je a přidejte znovu." };
-    return { error: "Poptávku se nepodařilo odeslat. Zkontrolujte údaje a zkuste to znovu." };
-  }
-  // Bez e-mailu v adrese – adresy stránek zaznamenává Google Analytics.
-  redirect("/poptavky/odeslano");
+/** Chyba z databáze → česká hláška pro zadavatele. */
+export function inquiryError(message: string): string {
+  if (message.includes("jednoho místa")) return "Z vašeho připojení už přišlo několik poptávek. Další zkuste prosím za hodinu.";
+  if (message.includes("příliš mnoho")) return "Poptávek je teď příliš mnoho. Zkuste to prosím za chvíli.";
+  if (message.includes("e-mail")) return "Zadejte platný e-mail.";
+  if (message.includes("fotky")) return "Fotky se nepodařilo připojit. Odeberte je a přidejte znovu.";
+  if (message.includes("termín") || message.includes("datum") || message.includes("dokončení")) return message.charAt(0).toUpperCase() + message.slice(1) + ".";
+  return "Poptávku se nepodařilo odeslat. Zkontrolujte údaje a zkuste to znovu.";
 }
