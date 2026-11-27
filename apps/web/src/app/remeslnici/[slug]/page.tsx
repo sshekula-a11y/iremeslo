@@ -19,7 +19,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/remeslnici/[slug]">): Promise<Metadata> {
   const p = await getProfession((await params).slug);
   if (!p) return { title: "Obor nenalezen" };
-  return { title: p.meta_title, description: p.meta_description, alternates: { canonical: `/remeslnici/${p.slug}` } };
+  return { title: { absolute: p.meta_title }, description: p.meta_description, alternates: { canonical: `/remeslnici/${p.slug}` } };
 }
 
 /** Stránka profese: co řemeslník dělá, co ovlivňuje cenu, aktuální poptávky z oboru a otázky. */

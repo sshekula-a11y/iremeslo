@@ -35,8 +35,18 @@ export const CUSTOMER_STEPS = [
 
 /** Komu svěřujete data. */
 export const TRUST = [
-  "Česká firma, podpora e-mailem v češtině",
+  "Česká firma, podpora v češtině",
   "Data v EU (Frankfurt), oddělená pro každou firmu",
   "Faktury a doklady podle zákona o DPH, číslované bez mezer",
   "Analytické a reklamní cookies jen s vaším souhlasem",
+];
+
+/** Bezpečnost dat – jen ověřitelná fakta (stejná jako v zásadách ochrany osobních údajů). */
+export const SECURITY = [
+  { title: "Data v EU", text: "Databáze a soubory jsou v datovém centru ve Frankfurtu. Spojení je vždy šifrované (HTTPS), hesla ukládáme jen v zašifrované podobě." },
+  { title: "Každá firma zvlášť", text: "Data firem od sebe odděluje přímo databáze. Že jedna firma nevidí data druhé, hlídá sada automatických testů." },
+  { title: "Práva pro zaměstnance", text: "Pracovník v aplikaci vidí své zakázky a termíny, ne ceny ani zisk. Kdo bude mít jakou roli, určujete vy." },
+  { title: "Do dat nenahlížíme", text: "Provozovatel do vašich zakázek a dokladů nenahlíží. Podporu poskytujeme jen na vaši žádost." },
+  { title: "Data si kdykoli odnesete", text: "Faktury v ZIP (PDF + ISDOC) pro účetní, zákazníky do Excelu nebo vCard. Žádné uzamčení v programu." },
+  { title: "Cookies jen se souhlasem", text: "Analytické a reklamní nástroje se načtou, jen když souhlasíte. Kontakty a obsah dokladů jim neposíláme." },
 ];

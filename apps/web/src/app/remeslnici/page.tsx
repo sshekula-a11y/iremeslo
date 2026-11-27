@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
 import { CATEGORY_LABEL } from "@/lib/inquiries";
 import { listProfessions } from "@/lib/professions";
 
@@ -17,6 +18,7 @@ export default async function ProfessionsIndex() {
   const list = await listProfessions();
   return (
     <main>
+      <JsonLd trail={[["Řemeslníci", "/remeslnici"]]} />
       <SiteHeader />
       <div className="mx-auto max-w-5xl px-5 py-10 sm:py-14">
         <h1 className="font-display text-[32px] font-extrabold leading-tight sm:text-[40px]">Řemeslníci podle oboru</h1>

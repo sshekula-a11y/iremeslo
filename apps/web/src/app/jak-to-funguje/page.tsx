@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_TRADESMEN } from "@/lib/faq";
 import { CUSTOMER_STEPS } from "@/lib/marketing";
@@ -106,6 +107,7 @@ const FAQ_PICK = ["Kolik to stojí?", "Funguje to na mobilu?", "Hodí se i pro n
 export default function HowItWorksPage() {
   return (
     <main>
+      <JsonLd trail={[["Jak to funguje", "/jak-to-funguje"]]} />
       <SiteHeader current="jak-to-funguje" />
 
       <header className="bg-ink text-white">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
 import { OPERATOR } from "@/lib/operator";
 import { ContactForm } from "./ContactForm";
 
@@ -17,6 +18,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/kontakt"
   const topic = typeof t === "string" && ["remeslnik", "zakaznik", "predplatne", "jine"].includes(t) ? t : "remeslnik";
   return (
     <main>
+      <JsonLd trail={[["Kontakt", "/kontakt"]]} />
       <SiteHeader />
       <div className="mx-auto max-w-3xl space-y-6 px-5 py-10">
         <div>

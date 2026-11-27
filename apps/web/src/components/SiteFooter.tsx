@@ -31,6 +31,7 @@ export function SiteFooter() {
         <Col title="Právní">
           <Link href="/obchodni-podminky" className={link}>Obchodní podmínky</Link>
           <Link href="/ochrana-osobnich-udaju" className={link}>Ochrana osobních údajů</Link>
+          <Link href="/bezpecnost-dat" className={link}>Bezpečnost dat</Link>
           <CookieSettingsLink className={`text-left ${link}`} />
         </Col>
       </div>

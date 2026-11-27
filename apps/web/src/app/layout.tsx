@@ -8,9 +8,9 @@ import { CtaTracker } from "@/components/CtaTracker";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { default: "iRemeslo.cz je vaše virtuální kancelář + veřejné poptávky", template: "%s · iRemeslo.cz" },
+  title: { default: "iRemeslo.cz – program pro řemeslníky a poptávky zdarma", template: "%s · iRemeslo.cz" },
   description:
-    "iRemeslo.cz je vaše virtuální kancelář + veřejné poptávky. Pro řemeslníky: zakázky, cenové nabídky, faktury, smlouvy o dílo s podpisem prstem a nové poptávky na jednom místě. Zákazníci zadávají poptávky zdarma a bez registrace.",
+    "Zakázky s kalkulací, nabídky, faktury a smlouvy s podpisem prstem v telefonu. Zákazníci zadávají poptávky zdarma. 30 dní zdarma, pak od 199 Kč.",
   applicationName: "iRemeslo.cz",
   metadataBase: new URL(SITE_URL),
   // Náhled při sdílení (Facebook, WhatsApp, LinkedIn…). Obrázek je app/opengraph-image.png.

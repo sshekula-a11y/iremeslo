@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_CUSTOMERS, FAQ_TRADESMEN, faqJsonLd } from "@/lib/faq";
 
@@ -15,6 +16,7 @@ export default function FaqPage() {
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd([...FAQ_CUSTOMERS, ...FAQ_TRADESMEN])) }} />
+      <JsonLd trail={[["Časté otázky", "/caste-otazky"]]} />
       <SiteHeader />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
         <h1 className="font-display text-[32px] font-extrabold leading-tight sm:text-[40px]">Časté otázky</h1>

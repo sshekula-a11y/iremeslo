@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
+import { SOFTWARE_APP } from "@/lib/seo";
 import { PLANS, PRICE_FROM, kc } from "@/lib/pricing";
 
 export const metadata: Metadata = {
@@ -55,6 +57,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
 export default function PricingPage() {
   return (
     <main>
+      <JsonLd trail={[["Ceník", "/cenik"]]} nodes={[SOFTWARE_APP]} />
       <SiteHeader current="cenik" />
 
       <div className="mx-auto max-w-5xl px-5 py-10 sm:py-14">

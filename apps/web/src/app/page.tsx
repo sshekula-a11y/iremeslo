@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { OPERATOR } from "@/lib/operator";
+import Image from "next/image";
 import { SITE_URL } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { ORGANIZATION, ORG_ID, SOFTWARE_APP } from "@/lib/seo";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InquiryRow } from "@/components/InquiryCard";
@@ -9,30 +11,13 @@ import { createClient } from "@/lib/supabase/server";
 import type { InquiryList } from "@/lib/inquiries";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_CUSTOMERS, FAQ_TRADESMEN } from "@/lib/faq";
-import { CUSTOMER_STEPS, FEATURES, TRADESMAN_STEPS, TRUST } from "@/lib/marketing";
-import { PRICE_FROM } from "@/lib/pricing";
+import { CUSTOMER_STEPS, FEATURES, SECURITY, TRADESMAN_STEPS } from "@/lib/marketing";
+import { PLANS, kc } from "@/lib/pricing";
 
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-/** Strukturovaná data pro vyhledávače: kdo web provozuje a jak se jmenuje. */
-const JSON_LD = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${SITE_URL}/#org`,
-      name: "iRemeslo.cz",
-      legalName: OPERATOR.name,
-      url: SITE_URL,
-      logo: `${SITE_URL}/brand/logo.png`,
-      email: OPERATOR.email,
-      vatID: OPERATOR.dic,
-      address: { "@type": "PostalAddress", streetAddress: "Hybernská 1007/20", postalCode: "110 00", addressLocality: "Praha", addressCountry: "CZ" },
-    },
-    { "@type": "WebSite", "@id": `${SITE_URL}/#web`, name: "iRemeslo.cz", url: SITE_URL, inLanguage: "cs", publisher: { "@id": `${SITE_URL}/#org` } },
-  ],
-};
+const WEBSITE = { "@type": "WebSite", "@id": `${SITE_URL}/#web`, name: "iRemeslo.cz", url: SITE_URL, inLanguage: "cs", publisher: { "@id": ORG_ID } };
 
 /** Čtyři nejčastější otázky: dvě zákaznické, dvě řemeslnické. */
 const faq = [
@@ -68,58 +53,45 @@ export default async function Home() {
 
   return (
     <main>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <JsonLd nodes={[ORGANIZATION, WEBSITE, SOFTWARE_APP]} />
       <SiteHeader />
       <header className="bg-ink text-white">
-        <div className="mx-auto max-w-5xl px-5 pb-14 pt-10 sm:pt-14">
-          <h1 className="max-w-[60rem] font-display text-[32px] font-extrabold leading-[1.08] tracking-tight min-[390px]:text-[34px] sm:text-[50px]">
-            iRemeslo.cz je vaše virtuální kancelář <span className="block text-accent">+ veřejné poptávky</span>
+        <div className="mx-auto max-w-5xl px-5 pb-10 pt-6 sm:pb-14 sm:pt-12">
+          <h1 className="font-display text-[31px] font-extrabold leading-[1.08] tracking-tight min-[390px]:text-[34px] sm:text-[52px]">
+            Více zakázek. Lepší přehled. <span className="text-accent">Vyšší zisk.</span>
           </h1>
-          <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-white/80 sm:text-[19px]">
-            iRemeslo.cz propojuje zákazníky s řemeslníky. Zákazník zadá poptávku zdarma, řemeslník ji najde,
-            spočítá, pošle nabídku a vystaví fakturu – vše z telefonu.
+          <p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-white/80 sm:mt-4 sm:text-[19px]">
+            Program pro řemeslníky a veřejné poptávky v jednom. Najdete zakázky, spočítáte cenu i zisk a vystavíte nabídku,
+            smlouvu i fakturu – z telefonu.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <section className="flex flex-col rounded-2xl bg-white p-5 text-ink sm:p-6" aria-labelledby="hledam">
-              <p className="text-[13px] font-bold uppercase tracking-wider text-accent-ink">Pro zákazníky</p>
-              <h2 id="hledam" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Hledám řemeslníka</h2>
-              <p className="mt-2 text-[15px] text-muted">
-                Popište, co potřebujete – třeba zateplení fasády 180 m² v Brně. Zadání je zdarma a bez registrace,
-                řemeslníci se vám ozvou sami.
-              </p>
-              <div className="mt-auto pt-5">
+          <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
+            <section className="flex flex-col rounded-2xl bg-white p-4 text-ink sm:p-6" aria-labelledby="hledam">
+              <h2 id="hledam" className="font-display text-[21px] font-extrabold leading-tight sm:text-[24px]">Hledám řemeslníka</h2>
+              <p className="mt-1 text-[15px] text-muted">Poptávka zdarma a bez registrace. Řemeslníci se vám ozvou sami.</p>
+              <div className="mt-auto pt-3 sm:pt-5">
                 <Link href="/poptavky/nova" className="btn-primary w-full sm:w-auto">Zadat poptávku zdarma</Link>
               </div>
             </section>
-            <section className="flex flex-col rounded-2xl border border-white/15 bg-white/[0.06] p-5 sm:p-6" aria-labelledby="jsem">
-              <p className="text-[13px] font-bold uppercase tracking-wider text-accent">Pro řemeslníky</p>
-              <h2 id="jsem" className="mt-1 font-display text-[24px] font-extrabold leading-tight">Jsem řemeslník</h2>
-              <p className="mt-2 text-[15px] text-white/80">
-                iRemeslo.cz je virtuální kancelář, která především pomáhá vaší firmě uspořádat data: harmonogram, náklady, cenové nabídky, faktury,
-                smlouvy o dílo, předávací protokoly a další listiny s podpisem prstem i nové zakázky z poptávek – vše, co potřebujete, na jednom místě.
+            <section className="flex flex-col rounded-2xl border border-white/15 bg-white/[0.06] p-4 sm:p-6" aria-labelledby="jsem">
+              <h2 id="jsem" className="font-display text-[21px] font-extrabold leading-tight sm:text-[24px]">Jsem řemeslník</h2>
+              <p className="mt-1 text-[15px] text-white/80">
+                Zakázky s kalkulací a marží, nabídky, faktury a smlouvy s podpisem prstem. <strong className="text-accent">30 dní zdarma, bez karty.</strong>
               </p>
-              <p className="mt-3 text-[13px] font-semibold text-accent">30 dní zdarma · bez platební karty</p>
-              <div className="mt-auto flex flex-wrap gap-3 pt-5">
-                <Link href="/prihlaseni?rezim=registrace" className="btn bg-white text-ink hover:bg-white/90">Vyzkoušet zdarma</Link>
-                <Link href="/poptavky" className="btn border border-white/20 text-white hover:bg-white/10">Prohlédnout poptávky</Link>
+              <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 sm:pt-5">
+                <Link href="/prihlaseni?rezim=registrace" className="btn w-full bg-white text-ink hover:bg-white/90 sm:w-auto">Vyzkoušet zdarma</Link>
+                <Link href="/poptavky" className="text-[15px] font-semibold text-white/85 underline underline-offset-2 hover:text-white">Prohlédnout poptávky</Link>
               </div>
             </section>
           </div>
 
-          <p className="mt-6 text-[14px] text-white/60">
-            Pro malíře, fasádníky, pokrývače, obkladače, elektrikáře, instalatéry, zahradníky, firmy na čištění a renovace exteriérů i úklidové firmy.{" "}
-            <Link href="/remeslnici" className="font-semibold text-white/85 underline underline-offset-2 hover:text-white">Všechny obory</Link> ·{" "}
-            <Link href="/jak-to-funguje" className="font-semibold text-white/85 underline underline-offset-2 hover:text-white">Jak to funguje</Link>
-          </p>
+          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-[14px] text-white/70" aria-label="Proč iRemeslo.cz">
+            <li><span className="text-accent" aria-hidden="true">✓ </span>Data v EU, každá firma zvlášť</li>
+            <li><span className="text-accent" aria-hidden="true">✓ </span>Faktury podle zákona o DPH</li>
+            <li><span className="text-accent" aria-hidden="true">✓ </span>Česká firma a podpora</li>
+          </ul>
         </div>
       </header>
-
-      <p className="border-b border-line bg-white">
-        <span className="mx-auto block max-w-5xl px-5 py-4 text-center font-display text-[17px] font-bold sm:text-[19px]">
-          Více zakázek. <span className="text-accent-ink">Méně administrativy.</span> Lepší přehled o podnikání.
-        </span>
-      </p>
 
       <section className="mx-auto max-w-5xl px-5 pt-12" aria-labelledby="poptavky">
         <div className="card overflow-hidden">
@@ -162,6 +134,34 @@ export default async function Home() {
       </section>
 
       <div className="mx-auto max-w-5xl px-5">
+        <section className="pt-14" aria-labelledby="ukazka">
+          <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
+            <div>
+              <h2 id="ukazka" className="font-display text-[26px] font-extrabold sm:text-[30px]">Víte, kolik na zakázce vyděláte – dřív, než ji vezmete</h2>
+              <ul className="mt-4 space-y-3 text-[16px]">
+                <li className="flex gap-2"><span className="font-bold text-ok" aria-hidden="true">✓</span><span><strong>Kalkulace:</strong> práce, materiál, lidé a výdaje. Hned vidíte cenu, náklady, výdělek a marži.</span></li>
+                <li className="flex gap-2"><span className="font-bold text-ok" aria-hidden="true">✓</span><span><strong>Nabídka v PDF</strong> s vaším logem a razítkem jedním klepnutím ze zakázky.</span></li>
+                <li className="flex gap-2"><span className="font-bold text-ok" aria-hidden="true">✓</span><span><strong>Smlouva, předávací protokol a faktura</strong> z téže zakázky – nic nepřepisujete.</span></li>
+              </ul>
+              <Link href="/jak-to-funguje" className="mt-5 inline-block font-semibold text-accent-ink underline">Projít aplikaci krok za krokem →</Link>
+            </div>
+            <div className="grid grid-cols-2 items-start gap-4 md:w-[30rem]">
+              <figure>
+                <div className="overflow-hidden rounded-[1.6rem] border-[5px] border-ink bg-white shadow-[0_18px_40px_rgba(5,38,76,0.18)]">
+                  <Image src="/jak-to-funguje/zakazka-telefon.webp" alt="Zakázka na telefonu: materiál a souhrn s náklady, výdělkem a marží" width={780} height={1688} sizes="(min-width: 768px) 232px, 45vw" className="h-auto w-full" />
+                </div>
+                <figcaption className="mt-2 text-center text-[13px] text-muted">Zakázka na telefonu</figcaption>
+              </figure>
+              <figure className="pt-8">
+                <div className="overflow-hidden rounded-lg border border-line bg-white shadow-[0_18px_40px_rgba(5,38,76,0.14)]">
+                  <Image src="/jak-to-funguje/nabidka.webp" alt="Cenová nabídka v PDF s dodavatelem, odběratelem, položkami a součtem s DPH" width={1240} height={1753} sizes="(min-width: 768px) 232px, 45vw" className="h-auto w-full" />
+                </div>
+                <figcaption className="mt-2 text-center text-[13px] text-muted">Nabídka, kterou dostane zákazník</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
         <section className="pt-14" aria-labelledby="funkce">
           <h2 id="funkce" className="font-display text-[26px] font-extrabold sm:text-[30px]">Vše pro vaše řemeslo na jednom místě</h2>
           <p className="mt-1 text-[16px] text-muted">iRemeslo.cz je virtuální kancelář – na telefonu i na počítači.</p>
@@ -183,22 +183,39 @@ export default async function Home() {
           <Link href="/jak-to-funguje" className="mt-4 inline-block font-semibold text-accent-ink underline">Krok za krokem s ukázkami z aplikace →</Link>
         </section>
 
-        <section className="grid gap-4 pt-14 md:grid-cols-2" aria-label="Cena a důvěra">
-          <div className="card flex flex-col p-5 sm:p-6">
-            <h2 className="font-display text-[22px] font-extrabold">Cena</h2>
-            <p className="mt-2 text-[16px]">
-              Zadání poptávky je pro zákazníky <strong>vždy zdarma</strong>. Řemeslníci mají <strong>30 dní zdarma</strong>,
-              pak od <strong className="num">{PRICE_FROM} Kč</strong> měsíčně bez DPH.
-            </p>
-            <div className="mt-auto pt-4"><Link href="/cenik" className="btn-ghost">Zobrazit ceník</Link></div>
+        <section className="pt-14" aria-labelledby="cena">
+          <h2 id="cena" className="font-display text-[26px] font-extrabold sm:text-[30px]">Cena</h2>
+          <p className="mt-1 text-[16px] text-muted">Zákazníci zadávají poptávky <strong className="text-ink">vždy zdarma</strong>. Řemeslníci mají ve všech tarifech všechny funkce; ceny jsou bez DPH.</p>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-3">
+            {PLANS.map((p) => (
+              <li key={p.id} className={`card flex flex-col p-5 ${p.id === "zakladni" ? "ring-2 ring-accent" : ""}`}>
+                <h3 className="font-display text-[18px] font-bold">{p.name}</h3>
+                <p className="mt-2 font-display text-[28px] font-extrabold leading-none">
+                  {p.month ? <><span className="num">{kc(p.month)} Kč</span><span className="text-[15px] font-semibold text-muted"> / měsíc</span></> : "Zdarma"}
+                </p>
+                <p className="mt-1 text-[14px] text-muted">{p.year ? <>nebo <span className="num">{kc(p.year)} Kč</span> ročně</> : "bez platební karty"}</p>
+                <p className="mt-3 text-[15px]">{p.note}. Uživatelé: {p.users}.</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <Link href="/prihlaseni?rezim=registrace" className="btn-primary">Vyzkoušet 30 dní zdarma</Link>
+            <Link href="/cenik" className="font-semibold text-accent-ink underline">Celý ceník a co je v ceně →</Link>
           </div>
-          <div className="card p-5 sm:p-6">
-            <h2 className="font-display text-[22px] font-extrabold">Komu svěřujete data</h2>
-            <ul className="mt-2 space-y-1.5 text-[15px]">
-              {TRUST.map((t) => <li key={t} className="flex gap-2"><span className="text-ok" aria-hidden="true">✓</span><span>{t}</span></li>)}
-            </ul>
-            <Link href="/ochrana-osobnich-udaju" className="mt-3 inline-block text-[14px] font-semibold text-accent-ink underline">Ochrana osobních údajů</Link>
-          </div>
+        </section>
+
+        <section className="pt-14" aria-labelledby="bezpecnost">
+          <h2 id="bezpecnost" className="font-display text-[26px] font-extrabold sm:text-[30px]">Bezpečnost dat</h2>
+          <p className="mt-1 text-[16px] text-muted">Svěřujete nám zakázky, ceny a faktury. Takhle s nimi zacházíme.</p>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {SECURITY.map((x) => (
+              <li key={x.title} className="card p-5">
+                <h3 className="font-display text-[17px] font-bold"><span className="text-ok" aria-hidden="true">✓ </span>{x.title}</h3>
+                <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{x.text}</p>
+              </li>
+            ))}
+          </ul>
+          <Link href="/bezpecnost-dat" className="mt-4 inline-block font-semibold text-accent-ink underline">Kdo data zpracovává a co se s nimi stane, když skončíte →</Link>
         </section>
 
         <section className="pt-14" aria-labelledby="otazky">

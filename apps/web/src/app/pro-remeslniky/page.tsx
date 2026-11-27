@@ -3,14 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd } from "@/components/JsonLd";
+import { SOFTWARE_APP } from "@/lib/seo";
 import { FaqList } from "@/components/FaqList";
 import { FAQ_TRADESMEN } from "@/lib/faq";
 import { FEATURES, TRADESMAN_STEPS as STEPS, TRUST } from "@/lib/marketing";
 import { PRICE_FROM } from "@/lib/pricing";
 
 export const metadata: Metadata = {
-  title: "Pro řemeslníky – zakázky, nabídky a faktury na jednom místě",
-  description: `Virtuální kancelář pro řemeslníky: poptávky od zákazníků, kalkulace s marží, cenové nabídky v PDF, faktury s ISDOC, smlouva o dílo, podpis prstem a kalendář. 30 dní zdarma, pak od ${PRICE_FROM} Kč měsíčně bez DPH.`,
+  title: "Program pro řemeslníky – zakázky, nabídky, faktury",
+  description: `Poptávky od zákazníků, kalkulace s marží, nabídky v PDF, faktury, smlouvy s podpisem prstem a kalendář. 30 dní zdarma, pak od ${PRICE_FROM} Kč měsíčně.`,
   alternates: { canonical: "/pro-remeslniky" },
 };
 
@@ -26,6 +28,7 @@ export default function TradesmenPage() {
   const faq = FAQ_TRADESMEN.filter((f) => FAQ_PICK.includes(f.q));
   return (
     <main>
+      <JsonLd trail={[["Pro řemeslníky", "/pro-remeslniky"]]} nodes={[SOFTWARE_APP]} />
       <SiteHeader current="pro-remeslniky" />
 
       <header className="bg-ink text-white">
@@ -101,6 +104,7 @@ export default function TradesmenPage() {
             <ul className="mt-2 space-y-1.5 text-[15px]">
               {TRUST.map((t) => <li key={t} className="flex gap-2"><span className="text-ok" aria-hidden="true">✓</span><span>{t}</span></li>)}
             </ul>
+            <Link href="/bezpecnost-dat" className="mt-3 inline-block text-[14px] font-semibold text-accent-ink underline">Bezpečnost dat →</Link>
           </div>
         </section>
 
