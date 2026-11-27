@@ -4,7 +4,7 @@ import { CookieSettingsLink } from "@/components/CookieSettingsLink";
 
 const link = "hover:text-ink hover:underline";
 
-/** Patička veřejného webu: čtyři sloupce (zákazníci, řemeslníci, podpora, právní) a provozovatel. */
+/** Patička veřejného webu: čtyři sloupce (zákazníci, řemeslníci, podpora, právní); údaje o provozovateli jsou na stránce Kontakt. */
 export function SiteFooter() {
   return (
     <footer data-place="paticka" className="mt-4 border-t border-line bg-white">
@@ -27,6 +27,7 @@ export function SiteFooter() {
         <Col title="Podpora">
           <Link href="/caste-otazky" className={link}>Časté otázky</Link>
           <Link href="/jak-to-funguje" className={link}>Jak to funguje</Link>
+          <Link href="/kontakt" className={link}>Kontakt</Link>
           <a href={`mailto:${OPERATOR.email}`} className={link}>{OPERATOR.email}</a>
         </Col>
         <Col title="Právní">
@@ -37,7 +38,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-5xl px-5 py-4 text-[13px] text-muted">
-          © 2026 iRemeslo.cz · Provozovatel: {OPERATOR.name}, IČO {OPERATOR.ico}, {OPERATOR.address}
+          © 2026 iRemeslo.cz · <Link href="/kontakt" className={link}>Kontakt a provozovatel</Link>
         </p>
       </div>
     </footer>

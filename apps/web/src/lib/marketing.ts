@@ -1,4 +1,3 @@
-import { OPERATOR } from "@/lib/operator";
 
 /**
  * Texty veřejného webu, které se opakují na více stránkách (úvod, Pro řemeslníky, Jak to funguje).
@@ -36,7 +35,7 @@ export const CUSTOMER_STEPS = [
 
 /** Komu svěřujete data. */
 export const TRUST = [
-  `Provozovatel ${OPERATOR.name}, IČO ${OPERATOR.ico}`,
+  "Česká firma, podpora e-mailem v češtině",
   "Data v EU (Frankfurt), oddělená pro každou firmu",
   "Faktury a doklady podle zákona o DPH, číslované bez mezer",
   "Analytické a reklamní cookies jen s vaším souhlasem",
