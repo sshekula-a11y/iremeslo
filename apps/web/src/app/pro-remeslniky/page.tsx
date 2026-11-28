@@ -9,6 +9,7 @@ import { FaqList } from "@/components/FaqList";
 import { FAQ_TRADESMEN } from "@/lib/faq";
 import { FEATURES, TRADESMAN_STEPS as STEPS, TRUST } from "@/lib/marketing";
 import { PRICE_FROM } from "@/lib/pricing";
+import { LANDINGS } from "@/lib/landings";
 
 export const metadata: Metadata = {
   title: "Program pro řemeslníky – zakázky, nabídky, faktury",
@@ -107,6 +108,15 @@ export default function TradesmenPage() {
             <Link href="/bezpecnost-dat" className="mt-3 inline-block text-[14px] font-semibold text-accent-ink underline">Bezpečnost dat →</Link>
           </div>
         </section>
+
+        <nav className="pt-12" aria-labelledby="podle-oboru">
+          <h2 id="podle-oboru" className="font-display text-[22px] font-extrabold">Podle toho, co potřebujete</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {LANDINGS.map((l) => (
+              <li key={l.slug}><Link href={`/${l.slug}`} className="inline-block rounded-full border border-line bg-white px-3.5 py-2 text-[14px] font-semibold hover:border-ink/30">{l.name}</Link></li>
+            ))}
+          </ul>
+        </nav>
 
         <section className="pt-12" aria-labelledby="otazky">
           <h2 id="otazky" className="mb-3 font-display text-[26px] font-extrabold">Časté otázky</h2>

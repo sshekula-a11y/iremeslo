@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 import { SITE_URL } from "@/lib/site";
+import { LANDINGS } from "@/lib/landings";
 import type { InquiryList } from "@/lib/inquiries";
 import { listProfessions } from "@/lib/professions";
 
@@ -22,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/bezpecnost-dat`, changeFrequency: "yearly", priority: 0.4 },
     { url: `${SITE_URL}/obchodni-podminky`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/ochrana-osobnich-udaju`, changeFrequency: "yearly", priority: 0.2 },
+    ...LANDINGS.map((l) => ({ url: `${SITE_URL}/${l.slug}`, changeFrequency: "monthly" as const, priority: 0.7 })),
   ];
 
   try {
