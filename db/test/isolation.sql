@@ -44,7 +44,8 @@ begin
   get diagnostics n = row_count;
   return n;
 end $$;
-grant execute on all functions in schema public to authenticated, anon;
+-- Jen pomocné testovací funkce; práva aplikačních funkcí určují migrace (stejně jako v produkci).
+grant execute on function public.t_login(uuid), public.t_eq(bigint, bigint, text), public.t_text(text, text, text), public.t_fails(text, text), public.t_affected(text) to authenticated, anon;
 
 set client_min_messages = notice;
 
@@ -360,8 +361,7 @@ select t_fails($q$select signup_with_password('NOVY.remeslnik@example.cz', 'jine
 select t_fails($q$select signup_with_password('neplatny-email', 'tajneheslo123')$q$, 'neplatný e-mail neprojde');
 select t_fails($q$select signup_with_password('kratke@example.cz', 'kratke')$q$, 'krátké heslo neprojde');
 select t_fails('select * from auth.users', 'anonym nevidí uživatele');
-select t_eq((select email_registered(' NOVY.remeslnik@example.cz ')::int), 1, 'existující e-mail: má účet (bez ohledu na velikost písmen)');
-select t_eq((select email_registered('nikdo@example.cz')::int), 0, 'neznámý e-mail: nemá účet');
+select t_fails($q$select email_registered('novy.remeslnik@example.cz')$q$, 'zjistit, jestli je e-mail registrovaný, bez přihlášení nejde');
 reset role;
 
 -- ---------- potvrzení e-mailu (010) ----------
@@ -1075,6 +1075,37 @@ select t_eq((select count(*)::int from net._test_requests where body -> 'to' ->>
 update app.inquiries set status = 'closed', remind14_at = null where id = :'fu';
 select t_eq(app.process_inquiry_followups(), 0, 'uzavřené poptávce už nepíšeme');
 reset role;
+
+-- ---------- bezpečnost (033) ----------
+set role authenticated;
+select t_login('00000000-0000-0000-0000-00000000000a');
+select t_fails($q$select email_registered('novy.remeslnik@example.cz')$q$, 'ani přihlášený uživatel nezjistí cizí e-mail');
+reset role;
+set role anon;
+select set_config('request.headers', '{"cf-connecting-ip":"192.0.2.44"}', false) \g /dev/null
+select t_eq((select count(*)::int from (select signup_with_password('robot-reg' || g || '@example.cz', 'tajneheslo123') from generate_series(1, 5) g) x), 5, 'pět registrací z jedné adresy projde');
+select t_fails($q$select signup_with_password('robot-reg6@example.cz', 'tajneheslo123')$q$, 'šestá registrace za hodinu z jedné adresy neprojde');
+select set_config('request.headers', '{"cf-connecting-ip":"192.0.2.45"}', false) \g /dev/null
+select t_eq((signup_with_password('jiny-clovek@example.cz', 'tajneheslo123') is not null)::int, 1, 'ostatní se registrují dál');
+select set_config('request.headers', '', false) \g /dev/null
+select report_error('web', '/app/zakazky', 'Cannot read properties of undefined', 'd1') \g /dev/null
+select report_error('web', '/app/zakazky', 'Cannot read properties of undefined', 'd1') \g /dev/null
+select report_error('web', '/cenik', 'Jiná chyba') \g /dev/null
+select t_fails('select * from app.error_log', 'záznam chyb není veřejně čitelný');
+select t_fails('select admin_errors()', 'chyby vidí jen administrátor');
+reset role;
+select t_eq((select count from app.error_log where route = '/app/zakazky'), 2, 'stejná chyba se sčítá do jednoho řádku');
+select t_eq((select count(*)::int from app.error_log), 2, 'různé chyby mají vlastní řádek');
+delete from net._test_requests;
+select t_eq(app.send_error_digest()::int, 1, 'denní souhrn chyb se odešle');
+select t_eq((select count(*)::int from net._test_requests where body ->> 'subject' like 'Chyby na webu%' and body ->> 'html' like '%2×%'), 1, 'souhrn obsahuje počet výskytů');
+update app.error_log set handled_at = now();
+select t_eq(app.send_error_digest()::int, 0, 'vyřešené chyby se neposílají');
+set role authenticated;
+select t_login('00000000-0000-0000-0000-0000000000ad');
+select t_eq(jsonb_array_length(admin_errors()), 2, 'administrátor vidí chyby');
+reset role;
+select t_eq((select count(*)::int from pg_policies where policyname = 'time_worker_insert' and with_check like '%( SELECT auth.uid()%'), 1, 'pravidla pracovníků vyhodnotí přihlášení jednou za dotaz');
 
 \echo
 \echo 'VŠECHNY DATABÁZOVÉ TESTY PROŠLY'

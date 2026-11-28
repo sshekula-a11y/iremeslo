@@ -223,3 +223,13 @@ export async function setContactHandled(_: AdminState, form: FormData): Promise<
   revalidatePath("/ssh/zpravy");
   return { ok: true, message: "Uloženo." };
 }
+
+export async function setErrorHandled(_: AdminState, form: FormData): Promise<AdminState> {
+  const { supabase } = await requireAdmin();
+  const id = Number(form.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return { error: "Neplatný záznam." };
+  const { error } = await supabase.rpc("admin_error_handled", { p_id: id, p_handled: form.get("handled") === "true" });
+  if (error) return fail(error, "Záznam se nepodařilo upravit.");
+  revalidatePath("/ssh/chyby");
+  return { ok: true, message: "Uloženo." };
+}

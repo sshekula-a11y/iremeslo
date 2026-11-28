@@ -1,26 +1,46 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { signIn, signUp, type AuthState } from "./actions";
+import { startTransition, useActionState, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { completeSignUp, signIn, type AuthState } from "./actions";
+
+/** Chyba z databáze při registraci → česká hláška. */
+function signupError(message: string): string {
+  if (message.includes("už je registrovaný")) return "Tento e-mail už je registrovaný. Přihlaste se.";
+  if (message.includes("jednoho místa")) return "Z vašeho připojení už přišlo několik registrací. Zkuste to prosím za hodinu.";
+  if (message.includes("příliš mnoho")) return "Právě je o registraci velký zájem. Zkuste to prosím za několik minut.";
+  if (message.includes("e-mail")) return "Zadejte platný e-mail.";
+  if (message.includes("heslo")) return "Heslo musí mít 8 až 72 znaků.";
+  return "Registrace se nezdařila. Zkuste to prosím znovu.";
+}
 
 export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initialMode: "login" | "register"; next: string; linkFailed?: boolean; confirmed?: boolean }) {
   const [mode, setMode] = useState(initialMode);
   // E-mail zůstane vyplněný i po chybě a po přepnutí na registraci.
   const [email, setEmail] = useState("");
   const [loginState, loginAction, loginPending] = useActionState<AuthState, FormData>(signIn, {});
-  const [regState, regAction, regPending] = useActionState<AuthState, FormData>(signUp, {});
+  const [regState, regAction, regPending] = useActionState<AuthState, FormData>(completeSignUp, {});
+  const [regError, setRegError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const state = mode === "login" ? loginState : regState;
-  const pending = mode === "login" ? loginPending : regPending;
+  const state: AuthState = mode === "login" ? loginState : regError ? { error: regError } : regState;
+  const pending = mode === "login" ? loginPending : regPending || creating;
 
-  // E-mail bez účtu: z přihlášení rovnou přepneme na registraci (e-mail i heslo zůstanou vyplněné).
-  const [switchedFrom, setSwitchedFrom] = useState<AuthState | null>(null);
-  if (loginState.noAccount && switchedFrom !== loginState) {
-    setSwitchedFrom(loginState);
-    setMode("register");
-  }
-  const autoSwitched = mode === "register" && switchedFrom !== null && !regState.error;
+  /** Registrace: účet založí databáze přímo z prohlížeče, pak server přihlásí a uloží souhlas. */
+  const register = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    if (data.get("terms") !== "on") { setRegError("Pro registraci je potřeba souhlasit s podmínkami."); return; }
+    const pw = String(data.get("password") ?? "");
+    if (pw.length < 8 || new TextEncoder().encode(pw).length > 72) { setRegError("Heslo musí mít 8 až 72 znaků."); return; }
+    setRegError(null);
+    setCreating(true);
+    createClient().rpc("signup_with_password", { p_email: String(data.get("email") ?? "").trim().toLowerCase(), p_password: pw }).then(({ error }) => {
+      setCreating(false);
+      if (error) { setRegError(signupError(error.message)); return; }
+      startTransition(() => regAction(data));
+    }, () => { setCreating(false); setRegError("Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu."); });
+  };
 
   return (
     <>
@@ -53,7 +73,7 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
         ))}
       </div>
 
-      <form action={mode === "login" ? loginAction : regAction} className="space-y-4">
+      <form action={mode === "login" ? loginAction : undefined} onSubmit={mode === "register" ? (e) => { e.preventDefault(); register(e.currentTarget); } : undefined} className="space-y-4">
         <input type="hidden" name="next" value={next} />
         <div>
           <label className="label" htmlFor="email">E-mail</label>
@@ -97,12 +117,16 @@ export function AuthForm({ initialMode, next, linkFailed, confirmed }: { initial
           </label>
         )}
 
-        {autoSwitched && (
-          <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-[14px]" role="status">
-            E-mail <strong>{email}</strong> u nás zatím nemá účet. Zaškrtněte souhlas s podmínkami a účet vytvoříte během několika sekund.
-          </p>
+        {state.error && (
+          <div className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">
+            {state.error}
+            {mode === "login" && loginState.noAccount && (
+              <> Nemáte ještě účet?{" "}
+                <button type="button" className="font-semibold underline" onClick={() => setMode("register")}>Vytvořit účet zdarma</button>
+              </>
+            )}
+          </div>
         )}
-        {state.error && <p className="rounded-xl bg-warn-soft px-3 py-2.5 text-[14px] text-warn" role="alert">{state.error}</p>}
         {state.info && <p className="rounded-xl bg-ok-soft px-3 py-2.5 text-[14px] text-ok" role="status">{state.info}</p>}
 
         <button className="btn-primary w-full" disabled={pending}>

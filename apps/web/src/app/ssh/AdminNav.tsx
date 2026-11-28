@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/ssh/profese", label: "Profese" },
   { href: "/ssh/emaily", label: "E-maily" },
   { href: "/ssh/zpravy", label: "Zprávy" },
+  { href: "/ssh/chyby", label: "Chyby" },
   { href: "/ssh/ai", label: "AI" },
 ];
 
